@@ -160,3 +160,100 @@ describe('deplacement et collisions', () => {
     }
   });
 });
+
+describe('sortie de blocage (cases devenues solides sous le joueur)', () => {
+  /**
+   * Regression : une porte qui se ferme sur le joueur, ou une bombe qui se
+   * fige sous lui, faisait chevaucher son corps avec une case solide.
+   * `moveBody` bloquait alors les DEUX axes et le joueur ne pouvait plus
+   * bouger du tout.
+   */
+  const stuckBody = (): Body => {
+    const b = body(2, 4);
+    b.x += TILE * 0.5; // a cheval sur les cases 2 et 3
+    return b;
+  };
+
+  it('peut se degager vers la gauche quand la case de droite devient solide', () => {
+    const g = grid();
+    g.setTile(3, 4, TileKind.Block); // la case chevauchee devient solide
+    const b = stuckBody();
+    const startX = b.x;
+    sim(b, g, -1, 0, 0.6);
+    expect(b.x).toBeLessThan(startX - 8);
+    expect(cellOf(b).x).toBeLessThanOrEqual(2);
+    // Plus aucun chevauchement avec la case devenue solide.
+    expect(b.x + b.radius).toBeLessThanOrEqual(3 * TILE + 0.5);
+  });
+
+  it('peut se degager perpendiculairement', () => {
+    const g = grid();
+    g.setTile(3, 4, TileKind.Block);
+    const b = stuckBody();
+    const startY = b.y;
+    sim(b, g, 0, 1, 0.6, opts(g, false, false));
+    expect(Math.abs(b.y - startY)).toBeGreaterThan(8);
+  });
+
+  it('n\'est jamais immobile dans les quatre directions', () => {
+    const g = grid();
+    g.setTile(3, 4, TileKind.Block);
+    let freed = 0;
+    for (const [ix, iy] of [
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [1, 0],
+    ]) {
+      const b = stuckBody();
+      const before = { x: b.x, y: b.y };
+      sim(b, g, ix, iy, 0.5, opts(g, false, false));
+      if (Math.hypot(b.x - before.x, b.y - before.y) > 4) freed++;
+    }
+    expect(freed).toBeGreaterThanOrEqual(3);
+  });
+
+  it('se repousse tout seul hors de la case solide, sans commande', () => {
+    const g = grid();
+    g.setTile(3, 4, TileKind.Block);
+    const b = stuckBody();
+    for (let i = 0; i < 120; i++) moveBody(b, 0, 0, 1 / 60, opts(g, false, false));
+    // Plus aucun chevauchement avec la case solide.
+    expect(b.x + b.radius).toBeLessThanOrEqual(3 * TILE + 0.5);
+  });
+
+  it('continue de bloquer normalement un mur aborde de l\'exterieur', () => {
+    const g = grid();
+    g.setTile(4, 4, TileKind.Block);
+    const b = body(2, 4);
+    sim(b, g, 1, 0, 2);
+    expect(cellOf(b).x).toBe(3);
+    expect(b.x + b.radius).toBeLessThanOrEqual(4 * TILE + 0.5);
+  });
+});
+
+describe('le degagement ne permet pas de tricher', () => {
+  it('ne traverse pas un mur en etant coince dedans', () => {
+    const g = grid();
+    // Mur d'une case d'epaisseur, le joueur demarre a cheval dessus.
+    g.setTile(3, 4, TileKind.Wall);
+    const b = body(2, 4);
+    b.x += TILE * 0.5;
+    // Il pousse vers le mur pendant 3 secondes.
+    sim(b, g, 1, 0, 3, opts(g, false, false));
+    // Il n'est jamais passe de l'autre cote.
+    expect(b.x).toBeLessThan(4 * TILE);
+    expect(cellOf(b).x).toBeLessThanOrEqual(3);
+  });
+
+  it('ne s\'enfonce pas davantage dans la case solide', () => {
+    const g = grid();
+    g.setTile(3, 4, TileKind.Block);
+    const b = body(2, 4);
+    b.x += TILE * 0.5;
+    const penetrationAvant = b.x + b.radius - 3 * TILE;
+    sim(b, g, 1, 0, 1, opts(g, false, false));
+    const penetrationApres = b.x + b.radius - 3 * TILE;
+    expect(penetrationApres).toBeLessThanOrEqual(penetrationAvant + 0.5);
+  });
+});

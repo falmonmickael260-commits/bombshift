@@ -265,6 +265,10 @@ export class GameScene extends Phaser.Scene {
       },
       playerPos: () => self.player.pos,
       playerCell: () => self.player.cell,
+      playerOccupies: (cx, cy) => {
+        const span = bodyCellRange(self.player.body);
+        return cx >= span.minX && cx <= span.maxX && cy >= span.minY && cy <= span.maxY;
+      },
       actorBlocked: (cx, cy, selfCell) => self.actorBlocked(cx, cy, selfCell),
       playerBlocked: (cx, cy) => self.grid.isSolid(cx, cy) || self.bombs.blocksPlayer(cx, cy),
       notify: (text, tone = 'info') => self.notify(text, tone),

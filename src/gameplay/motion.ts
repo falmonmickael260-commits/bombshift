@@ -31,6 +31,54 @@ export interface MotionResult {
 
 const EPS = 0.0001;
 
+/** Vitesse de degagement automatique hors d'une case devenue solide (px/s). */
+const UNSTICK_SPEED = 300;
+
+interface OverlapInfo {
+  /** Nombre de cases solides chevauchees. */
+  count: number;
+  /** Vecteur de sortie le plus court (px). */
+  pushX: number;
+  pushY: number;
+}
+
+/**
+ * Analyse le chevauchement du corps avec les cases solides.
+ *
+ * Indispensable pour les cas ou une case devient solide SOUS l'acteur :
+ * porte temporisee qui se referme, bombe qui se fige en fin de glissade,
+ * mur de glace invoque par un boss. Sans cela, l'acteur se retrouve
+ * enferme dans la geometrie et ne peut plus bouger du tout.
+ */
+export function solidOverlap(
+  x: number,
+  y: number,
+  radius: number,
+  blocked: (cx: number, cy: number) => boolean,
+): OverlapInfo {
+  const info: OverlapInfo = { count: 0, pushX: 0, pushY: 0 };
+  const x0 = Math.floor((x - radius) / TILE);
+  const x1 = Math.floor((x + radius) / TILE);
+  const y0 = Math.floor((y - radius) / TILE);
+  const y1 = Math.floor((y + radius) / TILE);
+
+  for (let cy = y0; cy <= y1; cy++) {
+    for (let cx = x0; cx <= x1; cx++) {
+      if (!blocked(cx, cy)) continue;
+      info.count++;
+      const left = cx * TILE;
+      const top = cy * TILE;
+      const ox = Math.min(x + radius, left + TILE) - Math.max(x - radius, left);
+      const oy = Math.min(y + radius, top + TILE) - Math.max(y - radius, top);
+      if (ox <= 0 || oy <= 0) continue;
+      // On sort par le cote le moins enfonce.
+      if (ox <= oy) info.pushX += x < left + TILE / 2 ? -ox : ox;
+      else info.pushY += y < top + TILE / 2 ? -oy : oy;
+    }
+  }
+  return info;
+}
+
 /**
  * Deplacement continu avec collisions sur grille.
  *
@@ -65,10 +113,37 @@ export function moveBody(
 
   const result: MotionResult = { moved: false, dir: null, hitX: false, hitY: false };
 
+  // Le corps chevauche-t-il deja une case solide ? (porte refermee dessus,
+  // bombe figee sous les pieds...) Dans ce cas on ne bloque plus : on
+  // autorise tout deplacement qui n'aggrave pas la situation, et on repousse.
+  const stuck = solidOverlap(body.x, body.y, body.radius, opts.blocked);
+  const trapped = stuck.count > 0;
+  const stuckDepth = Math.abs(stuck.pushX) + Math.abs(stuck.pushY);
+
+  /**
+   * En mode degagement, un deplacement n'est accepte que s'il ne touche pas
+   * davantage de cases solides ET ne s'enfonce pas plus profondement.
+   * Sans ce second critere, un acteur coince pourrait traverser l'obstacle.
+   */
+  const improves = (nx: number, ny: number): boolean => {
+    const after = solidOverlap(nx, ny, body.radius, opts.blocked);
+    if (after.count > stuck.count) return false;
+    if (after.count < stuck.count) return true;
+    return Math.abs(after.pushX) + Math.abs(after.pushY) <= stuckDepth + 0.01;
+  };
+
   // --- axe X ---
   if (Math.abs(body.vx) > EPS) {
     const nx = body.x + body.vx * dt;
-    if (collides(nx, body.y, body.radius, opts.blocked)) {
+    if (trapped) {
+      if (improves(nx, body.y)) {
+        body.x = nx;
+        result.moved = true;
+      } else {
+        body.vx = 0;
+        result.hitX = true;
+      }
+    } else if (collides(nx, body.y, body.radius, opts.blocked)) {
       // On colle l'acteur contre la paroi.
       const sign = Math.sign(body.vx);
       const edge =
@@ -87,7 +162,15 @@ export function moveBody(
   // --- axe Y ---
   if (Math.abs(body.vy) > EPS) {
     const ny = body.y + body.vy * dt;
-    if (collides(body.x, ny, body.radius, opts.blocked)) {
+    if (trapped) {
+      if (improves(body.x, ny)) {
+        body.y = ny;
+        result.moved = true;
+      } else {
+        body.vy = 0;
+        result.hitY = true;
+      }
+    } else if (collides(body.x, ny, body.radius, opts.blocked)) {
       const sign = Math.sign(body.vy);
       const edge =
         sign > 0
@@ -99,6 +182,21 @@ export function moveBody(
     } else {
       body.y = ny;
       result.moved = true;
+    }
+  }
+
+  // --- degagement automatique ---
+  if (trapped) {
+    const len = Math.hypot(stuck.pushX, stuck.pushY);
+    if (len > EPS) {
+      const step = Math.min(len, UNSTICK_SPEED * dt);
+      const px = body.x + (stuck.pushX / len) * step;
+      const py = body.y + (stuck.pushY / len) * step;
+      if (improves(px, py)) {
+        body.x = px;
+        body.y = py;
+        result.moved = true;
+      }
     }
   }
 

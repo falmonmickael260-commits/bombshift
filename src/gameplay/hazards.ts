@@ -153,10 +153,11 @@ export class HazardController {
             : 0;
       const idx = this.world.grid.idx(x, y);
 
-      // Une porte ne se referme jamais sur un acteur : securite anti-blocage.
+      // Une porte ne se referme jamais sur le joueur. On teste son CORPS
+      // entier : tester seulement sa case centrale laissait la porte se
+      // fermer sur un joueur a cheval, qui se retrouvait bloque.
       const pc = this.world.playerCell();
-      const occupied = pc.x === x && pc.y === y;
-      const nextActive = occupied ? false : closed;
+      const nextActive = this.world.playerOccupies(x, y) ? false : closed;
 
       if (t.active !== nextActive || t.frame !== frame) {
         if (this.lastDoorState.get(idx) !== nextActive) {

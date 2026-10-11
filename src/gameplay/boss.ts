@@ -557,11 +557,16 @@ export class Cryon extends Boss {
       this.wallsAt = this.cd(7000);
       const pc = this.world.playerCell();
       const candidates = this.ringCells(pc, 2).filter(
-        (c) => this.world.grid.kindAt(c.x, c.y) === TileKind.Ice && !this.world.hasBombAt(c),
+        (c) =>
+          this.world.grid.kindAt(c.x, c.y) === TileKind.Ice &&
+          !this.world.hasBombAt(c) &&
+          !this.world.playerOccupies(c.x, c.y),
       );
       const chosen = candidates.filter((_, i) => i % 2 === 0).slice(0, 4);
       this.telegraph(chosen, 800, (cells) => {
         for (const c of cells) {
+          // Dernier controle au moment de la materialisation.
+          if (this.world.playerOccupies(c.x, c.y)) continue;
           this.world.grid.setTile(c.x, c.y, TileKind.Block, 0);
           this.world.onTileChanged(c);
         }

@@ -208,6 +208,9 @@ export class BombManager {
       b.y = center.y;
       b.cell = current;
       b.slide = null;
+      // Elle ne redevient un obstacle qu'une fois le joueur degage : sinon
+      // une bombe qui s'arrete sous lui le bloquerait sur place.
+      b.solidForPlayer = false;
       this.world.fx.puff({ x: b.x, y: b.y + 12 }, 0xd6f7ff);
       return;
     }

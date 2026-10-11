@@ -38,6 +38,11 @@ export interface World {
   playerPos(): Vec2;
   playerCell(): Vec2;
   /**
+   * La case est-elle (meme partiellement) occupee par le corps du joueur ?
+   * Sert a ne jamais refermer une porte ni figer une bombe sous ses pieds.
+   */
+  playerOccupies(cx: number, cy: number): boolean;
+  /**
    * Case bloquante pour un acteur : murs, props, portes fermees et bombes.
    * `selfCell` permet a un acteur de quitter la case ou il vient de poser
    * une bombe (regle classique : la bombe ne devient solide qu'une fois quittee).
