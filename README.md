@@ -15,11 +15,24 @@
   <img src="docs/screenshot-boss.png" width="240" alt="Le Gardien" />
 </p>
 
+<p align="center">
+  <b>▶ Jouer en ligne : <a href="https://falmonmickael260-commits.github.io/bombshift/">falmonmickael260-commits.github.io/bombshift</a></b><br />
+  <sub>Sur telephone : ouvrez le lien, puis « Ajouter a l'ecran d'accueil » — le jeu s'installe et fonctionne ensuite hors ligne.</sub>
+</p>
+
 Une sequence de jeu complete est disponible : [`docs/gameplay.mp4`](docs/gameplay.mp4).
 
 ---
 
-## Lancer le jeu
+## Jouer
+
+- **En ligne** : https://falmonmickael260-commits.github.io/bombshift/
+  (deploye automatiquement a chaque push sur `main`, apres typecheck et tests).
+- **Installe** : ouvrez ce lien sur telephone et choisissez « Ajouter a l'ecran
+  d'accueil ». L'application se lance en plein ecran et fonctionne hors ligne.
+- **En natif** : voir la section Capacitor ci-dessous.
+
+## Lancer le jeu en local
 
 ```bash
 npm install
