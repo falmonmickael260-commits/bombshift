@@ -222,6 +222,9 @@ export class GameScene extends Phaser.Scene {
 
     if (this.cfg.snapshot) this.applySnapshot(this.cfg.snapshot);
 
+    // Le mode combat de la musique est propre a une rencontre de boss :
+    // il ne doit jamais survivre a une tentative precedente.
+    audio.setBossMode(this.boss?.active === true && this.boss.alive);
     audio.playMusic(this.def.theme);
     this.lastCell = { ...this.player.cell };
     this.emitHud(true);
@@ -404,6 +407,7 @@ export class GameScene extends Phaser.Scene {
     // Partie terminee : on laisse vivre les effets, mais plus aucune entite
     // ne bouge et le joueur conserve son animation de fin.
     if (this.phase === 'victory' || this.phase === 'defeat') {
+      this.updateCompass();
       this.player.idleUpdate();
       this.followPlayer(Math.min(50, delta));
       return;
@@ -950,9 +954,11 @@ export class GameScene extends Phaser.Scene {
       this.fxLayer.flash(0xffffff, 320);
     }
 
-    // Securite : plus aucune bombe, flamme ou projectile ne reste actif.
+    // Securite : plus aucune bombe, flamme ou projectile ne reste actif,
+    // et la musique repasse en mode normal.
     this.bombs.clear();
     this.projectiles.clear();
+    audio.setBossMode(false);
 
     const stats: RunStats = {
       ...this.stats,
@@ -1009,6 +1015,7 @@ export class GameScene extends Phaser.Scene {
 
   private cleanup(): void {
     this.destroyed = true;
+    audio.setBossMode(false);
     for (const m of this.dangerMarks) m.destroy();
     this.dangerMarks = [];
     this.compass?.destroy();
@@ -1126,7 +1133,10 @@ export class GameScene extends Phaser.Scene {
     for (const e of this.enemies) e.destroy();
     this.enemies = [];
     for (const e of snap.enemies) {
-      const enemy = new Enemy(this.world, e.kind as EnemyKind, { x: e.cx, y: e.cy }, null);
+      const kind = e.kind as EnemyKind;
+      const home =
+        kind === 'guardian' ? (this.nearestPropCell({ x: e.cx, y: e.cy }) ?? { x: e.cx, y: e.cy }) : null;
+      const enemy = new Enemy(this.world, kind, { x: e.cx, y: e.cy }, home);
       enemy.hp = e.hp;
       if (!e.asleep) enemy.wake();
       this.enemies.push(enemy);
@@ -1141,6 +1151,9 @@ export class GameScene extends Phaser.Scene {
       snap.objectives,
       snap.boss ? !snap.boss.alive : false,
     );
+    // Les dalles-mecanismes enclenchees doivent etre recomptees, sinon la
+    // grille qu'elles ouvrent resterait verrouillee pour toujours.
+    this.hazards.syncMechanismsFromGrid();
     if (this.boss && snap.boss) {
       this.boss.restoreState(snap.boss.hp, snap.boss.active, snap.boss.phase, snap.boss.alive);
     }

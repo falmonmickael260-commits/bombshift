@@ -62,6 +62,23 @@ export class HazardController {
     return { done: this.mechanismDone, total: this.mechanismTotal };
   }
 
+  /**
+   * Recompte les dalles-mecanismes deja enclenchees d'apres la grille.
+   * Indispensable apres une reprise de partie : sans cela, les dalles
+   * sauvegardees comme enclenchees n'etaient plus comptabilisees et la
+   * grille de la chambre ne pouvait plus s'ouvrir.
+   */
+  syncMechanismsFromGrid(): void {
+    let done = 0;
+    for (const cell of this.parsed.mechanisms) {
+      const t = this.world.grid.tileAt(cell.x, cell.y);
+      if (t?.latched) done++;
+    }
+    this.mechanismDone = done;
+    this.hooks.onMechanismProgress(done, this.mechanismTotal);
+    if (done >= this.mechanismTotal && this.mechanismTotal > 0) this.hooks.onMechanismComplete();
+  }
+
   update(dtMs: number): void {
     void dtMs;
     const now = this.world.elapsedMs;

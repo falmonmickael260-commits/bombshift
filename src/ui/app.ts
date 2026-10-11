@@ -99,6 +99,8 @@ export class App {
   private wasPlayingBeforeHide = false;
   private debugClock = 0;
   private pendingRun: RunSnapshot | null = null;
+  private bootWatchdog: ReturnType<typeof setInterval> | null = null;
+  private bootRecoveries = 0;
 
   start(): void {
     this.bindStaticButtons();
@@ -116,7 +118,25 @@ export class App {
   private createGame(): void {
     const fill = document.getElementById('loading-fill');
     const text = document.getElementById('loading-text');
+
+    // Phaser ne peut pas terminer son demarrage dans un onglet masque : sa
+    // boucle repose sur requestAnimationFrame, et l'evenement de fin de
+    // chargement des textures peut etre emis avant qu'il ne l'ecoute. On
+    // attend donc que la page soit reellement affichee.
+    if (document.visibilityState === 'hidden') {
+      if (text) text.textContent = 'Le jeu demarre des que cet onglet est affiche.';
+      document.addEventListener(
+        'visibilitychange',
+        () => {
+          if (document.visibilityState === 'visible' && !this.game) this.createGame();
+        },
+        { once: true },
+      );
+      return;
+    }
+
     if (fill) fill.style.width = '35%';
+    if (text) text.textContent = 'Forge des textures...';
 
     this.game = new Phaser.Game({
       type: detectRenderer(),
@@ -140,10 +160,64 @@ export class App {
 
     this.game.events.once(BootScene.READY_EVENT, () => {
       this.ready = true;
+      if (this.bootWatchdog !== null) {
+        clearInterval(this.bootWatchdog);
+        this.bootWatchdog = null;
+      }
       if (fill) fill.style.width = '100%';
       if (text) text.textContent = 'Pret !';
       setTimeout(() => this.show('title'), 420);
     });
+
+    // Filet de securite : si la boucle de jeu n'a pas demarre au bout de
+    // quelques secondes, on le dit clairement plutot que de laisser une
+    // barre de chargement figee.
+    let waited = 0;
+    this.bootWatchdog = setInterval(() => {
+      waited += 1000;
+      if (this.ready) {
+        if (this.bootWatchdog !== null) clearInterval(this.bootWatchdog);
+        this.bootWatchdog = null;
+        return;
+      }
+      this.recoverStalledBoot();
+      if (waited >= 8000 && text) {
+        text.textContent = 'Demarrage plus long que prevu — touchez l\'ecran ou rechargez la page.';
+        const bar = document.getElementById('loading-fill');
+        if (bar) bar.style.width = '70%';
+      }
+    }, 1000);
+  }
+
+  /**
+   * Repare un demarrage interrompu.
+   *
+   * Si l'onglet devient masque pendant le boot de Phaser, sa boucle n'est
+   * jamais lancee (requestAnimationFrame suspendu) et le jeu reste bloque sur
+   * l'ecran de chargement, meme une fois l'onglet reaffiche. On repart alors
+   * sur une instance neuve — uniquement quand la page est visible, et deux
+   * fois au maximum pour ne jamais boucler.
+   */
+  private recoverStalledBoot(): void {
+    const game = this.game;
+    if (!game || this.ready) return;
+    if (document.visibilityState !== 'visible') return;
+    if (game.isBooted && game.isRunning) return;
+    if (!game.isBooted) return;
+    if (this.bootRecoveries >= 2) return;
+
+    this.bootRecoveries++;
+    try {
+      game.destroy(true);
+    } catch {
+      /* instance deja perdue : on repart quand meme */
+    }
+    this.game = null;
+    if (this.bootWatchdog !== null) {
+      clearInterval(this.bootWatchdog);
+      this.bootWatchdog = null;
+    }
+    this.createGame();
   }
 
   private get gameScene(): GameScene | null {
@@ -516,8 +590,10 @@ export class App {
         if (this.wasPlayingBeforeHide) this.pause();
         this.persistRun();
         audio.setMuted(true);
-      } else if (this.screen !== 'game') {
-        audio.setMuted(this.screen === 'pause');
+      } else {
+        if (this.screen !== 'game') audio.setMuted(this.screen === 'pause');
+        // Le demarrage a pu etre interrompu pendant que l'onglet etait masque.
+        if (!this.ready) this.recoverStalledBoot();
       }
     });
 
