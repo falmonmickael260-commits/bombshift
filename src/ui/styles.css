@@ -28,6 +28,12 @@
 
 * { box-sizing: border-box; }
 
+/*
+ * L'attribut `hidden` doit toujours l'emporter : sans cette regle, n'importe
+ * quelle classe declarant un `display` reaffiche un element masque par le code.
+ */
+[hidden] { display: none !important; }
+
 html, body {
   margin: 0;
   padding: 0;
