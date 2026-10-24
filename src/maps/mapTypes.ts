@@ -1,7 +1,19 @@
 import type { GridMap } from '../core/grid';
 import type { BossKind, EnemyKind, Rank, Theme, Vec2 } from '../core/types';
 
-export type MapId = 'volcano' | 'ice' | 'temple';
+export type MapId =
+  | 'volcano'
+  | 'ice'
+  | 'temple'
+  | 'volcano2'
+  | 'ice2'
+  | 'temple2'
+  | 'volcano3'
+  | 'ice3'
+  | 'temple3';
+
+/** Difficulte intrinseque de la carte, affichee dans la selection de niveau. */
+export type MapDifficulty = 'facile' | 'normal' | 'difficile';
 
 /** Cycle d'un groupe d'events de lave / de zones toxiques. */
 export interface CycleConfig {
@@ -45,6 +57,8 @@ export interface MapDefinition {
   index: number;
   name: string;
   tagline: string;
+  /** Difficulte affichee dans la selection de niveau (independante du reglage global). */
+  difficulty: MapDifficulty;
   theme: Theme;
   bossKind: BossKind;
   bossName: string;

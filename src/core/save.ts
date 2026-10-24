@@ -1,3 +1,4 @@
+import { MAPS } from '../maps';
 import type { Difficulty, Rank } from './types';
 
 export const SAVE_SCHEMA = 3;
@@ -108,7 +109,7 @@ export function migrate(raw: unknown): SaveData {
 
   const merged: SaveData = {
     schema: SAVE_SCHEMA,
-    unlockedMaps: clampInt(data.unlockedMaps ?? 1, 1, 3),
+    unlockedMaps: clampInt(data.unlockedMaps ?? 1, 1, MAPS.length),
     maps: {},
     settings: { ...base.settings, ...(data.settings ?? {}) },
     stats: { ...base.stats, ...(data.stats ?? {}) },
@@ -130,9 +131,12 @@ export function migrate(raw: unknown): SaveData {
   }
 
   // Coherence : le deblocage doit refleter les victoires reelles.
+  // Chaque carte debloque la suivante (dans l'ordre de MAPS) une fois terminee.
   let unlocked = 1;
-  if (merged.maps['volcano']?.cleared) unlocked = 2;
-  if (merged.maps['ice']?.cleared) unlocked = 3;
+  for (let i = 0; i < MAPS.length - 1; i++) {
+    if (merged.maps[MAPS[i].id]?.cleared) unlocked = i + 2;
+    else break;
+  }
   merged.unlockedMaps = Math.max(unlocked, 1);
 
   for (const s of [merged.settings]) {

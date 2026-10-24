@@ -21,6 +21,12 @@ const el = <K extends keyof HTMLElementTagNameMap>(
   return node;
 };
 
+const DIFFICULTY_LABELS: Record<MapDefinition['difficulty'], string> = {
+  facile: 'Facile',
+  normal: 'Normal',
+  difficile: 'Difficile',
+};
+
 /* ----------------------------------------------------- selection carte -- */
 
 export function renderMapList(
@@ -32,7 +38,10 @@ export function renderMapList(
   MAPS.forEach((def, i) => {
     const locked = i >= save.unlockedMaps;
     const progress = save.maps[def.id];
-    const card = el('button', `map-card map-card--${def.id}${locked ? ' map-card--locked' : ''}`);
+    const card = el(
+      'button',
+      `map-card map-card--${def.id} map-card--theme-${def.theme}${locked ? ' map-card--locked' : ''}`,
+    );
     card.type = 'button';
 
     card.appendChild(el('span', 'map-card__index', String(i + 1)));
@@ -46,6 +55,7 @@ export function renderMapList(
         el('span', 'tag tag--locked', `Terminez "${prev?.name ?? '???'}" pour debloquer`),
       );
     } else {
+      meta.appendChild(el('span', `tag tag--difficulty tag--difficulty-${def.difficulty}`, DIFFICULTY_LABELS[def.difficulty]));
       meta.appendChild(el('span', 'tag', `Boss : ${def.bossName}`));
       meta.appendChild(el('span', 'tag', `Objectifs : ${def.objectives.filter((o) => o.mandatory).length}`));
       if (progress?.bestRank) meta.appendChild(el('span', 'tag tag--rank', `RANG ${progress.bestRank}`));

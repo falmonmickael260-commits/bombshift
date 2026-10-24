@@ -519,25 +519,19 @@ export class App {
         if (p.bestTimeMs === null || result.stats.timeMs < p.bestTimeMs) {
           p.bestTimeMs = result.stats.timeMs;
         }
-        if (result.mapId === 'volcano') {
-          if (d.unlockedMaps < 2) {
-            d.unlockedMaps = 2;
-            unlockedMap = MAPS[1].name;
-          }
-          if (!d.abilities.shift) {
-            d.abilities.shift = true;
-            unlockedAbility = 'Bombe SHIFT';
-          }
+        // Debloque la carte suivante dans l'ordre de MAPS, quelle que soit la carte terminee.
+        const clearedIndex = MAPS.findIndex((m) => m.id === result.mapId);
+        if (clearedIndex >= 0 && clearedIndex + 1 < MAPS.length && d.unlockedMaps < clearedIndex + 2) {
+          d.unlockedMaps = clearedIndex + 2;
+          unlockedMap = MAPS[clearedIndex + 1].name;
         }
-        if (result.mapId === 'ice') {
-          if (d.unlockedMaps < 3) {
-            d.unlockedMaps = 3;
-            unlockedMap = MAPS[2].name;
-          }
-          if (!d.abilities.slow) {
-            d.abilities.slow = true;
-            unlockedAbility = 'Charge lente';
-          }
+        if (result.mapId === 'volcano' && !d.abilities.shift) {
+          d.abilities.shift = true;
+          unlockedAbility = 'Bombe SHIFT';
+        }
+        if (result.mapId === 'ice' && !d.abilities.slow) {
+          d.abilities.slow = true;
+          unlockedAbility = 'Charge lente';
         }
       }
     });
@@ -683,7 +677,7 @@ export class App {
       },
       unlockAll: (): void =>
         this.save.update((d) => {
-          d.unlockedMaps = 3;
+          d.unlockedMaps = MAPS.length;
           d.abilities.shift = true;
           d.abilities.slow = true;
         }),

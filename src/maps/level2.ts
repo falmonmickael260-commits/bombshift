@@ -11,6 +11,7 @@ export const ICE: MapDefinition = {
   index: 1,
   name: 'Le Labyrinthe de Glace',
   tagline: 'Complexe gele aux cristaux lumineux',
+  difficulty: 'normal',
   theme: 'ice',
   bossKind: 'cryon',
   bossName: 'CRYON',

@@ -249,9 +249,9 @@ html, body {
   transition: transform 120ms ease;
 }
 .map-card:active { transform: scale(0.985); }
-.map-card--volcano { background: linear-gradient(135deg, #4a1208, #1b0a08 60%), #1b0a08; }
-.map-card--ice { background: linear-gradient(135deg, #0f3b52, #081a26 60%), #081a26; }
-.map-card--temple { background: linear-gradient(135deg, #2b4420, #0f1a0d 60%), #0f1a0d; }
+.map-card--theme-volcano { background: linear-gradient(135deg, #4a1208, #1b0a08 60%), #1b0a08; }
+.map-card--theme-ice { background: linear-gradient(135deg, #0f3b52, #081a26 60%), #081a26; }
+.map-card--theme-temple { background: linear-gradient(135deg, #2b4420, #0f1a0d 60%), #0f1a0d; }
 .map-card--locked { filter: grayscale(0.85) brightness(0.55); cursor: not-allowed; }
 
 .map-card__index {
@@ -281,6 +281,10 @@ html, body {
 }
 .tag--rank { background: linear-gradient(180deg, #ffd27a, #d88b22); color: #2a1a04; font-weight: 700; }
 .tag--locked { background: rgba(255, 90, 106, 0.18); border-color: rgba(255, 90, 106, 0.4); }
+.tag--difficulty { font-weight: 700; }
+.tag--difficulty-facile { background: rgba(94, 214, 130, 0.2); border-color: rgba(94, 214, 130, 0.45); color: #8ff0ae; }
+.tag--difficulty-normal { background: rgba(255, 196, 80, 0.2); border-color: rgba(255, 196, 80, 0.45); color: #ffd98a; }
+.tag--difficulty-difficile { background: rgba(255, 90, 106, 0.2); border-color: rgba(255, 90, 106, 0.45); color: #ff9aa4; }
 
 /* -------------------------------------------------------- briefing ---- */
 

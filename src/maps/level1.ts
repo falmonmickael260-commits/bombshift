@@ -10,6 +10,7 @@ export const VOLCANO: MapDefinition = {
   index: 0,
   name: 'La Forteresse Volcanique',
   tagline: 'Forteresse batie dans un volcan actif',
+  difficulty: 'facile',
   theme: 'volcano',
   bossKind: 'magmaron',
   bossName: 'MAGMARON',

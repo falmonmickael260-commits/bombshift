@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Jeu mobile 2D de labyrinthe a bombes : <b>3 cartes</b>, <b>3 boss a phases</b>,
+  Jeu mobile 2D de labyrinthe a bombes : <b>9 niveaux</b>, <b>3 boss a phases</b>,
   ennemis avec recherche de chemin et evitement de souffle, progression sauvegardee.
   <br />
   Phaser 3 · TypeScript · Vite · pret pour Capacitor (Android / iOS)
@@ -80,16 +80,34 @@ secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
 
-## Les trois cartes
+## Les neuf niveaux
 
-| # | Carte | Mecaniques propres | Boss |
-| --- | --- | --- | --- |
-| 1 | **La Forteresse Volcanique** | lave mortelle, events eruptifs cycliques, coulee de lave qui ferme des chemins en cours de partie, 3 valves a activer **dans l'ordre** | **MAGMARON** (6 PV) : vagues de feu en croix, flaques de lave, invocations, charge |
-| 2 | **Le Labyrinthe de Glace** | sols glissants a inertie, bombes qui derapent, portes temporisees en 2 cycles desynchronises, cristaux indestructibles, 3 generateurs a alimenter **par explosion** | **CRYON** (7 PV) : glisse et rebondit, **vulnerable seulement apres un impact**, eclats et murs de glace |
-| 3 | **Le Temple Oublie** (le plus dur) | dalles piegees a retardement, zones toxiques cycliques, 3 dalles-mecanismes qui ouvrent la chambre centrale, passages secrets, 3 reliques | **LE GARDIEN** (9 PV) : **vulnerable uniquement les yeux ouverts**, racines toxiques, ondes circulaires, teleportation, sentinelles, frenesie |
+Trois themes (volcan, glace, temple), chacun decline en trois variantes de
+difficulte croissante. Chaque niveau affiche son etiquette **Facile /
+Normal / Difficile** dans l'ecran de selection.
 
-Deblocage : carte 1 d'emblee, la 2 apres la victoire sur la 1, la 3 apres la 2.
-Battre la carte 1 debloque la bombe SHIFT, battre la carte 2 la charge lente.
+| # | Niveau | Difficulte | Mecaniques propres | Boss |
+| --- | --- | --- | --- | --- |
+| 1 | **La Forteresse Volcanique** | Facile | lave mortelle, events eruptifs cycliques, coulee de lave qui ferme des chemins en cours de partie, 3 valves a activer **dans l'ordre** | **MAGMARON** (6 PV) |
+| 2 | **Le Labyrinthe de Glace** | Normal | sols glissants a inertie, bombes qui derapent, portes temporisees en 2 cycles desynchronises, cristaux indestructibles, 3 generateurs a alimenter **par explosion** | **CRYON** (7 PV) |
+| 3 | **Le Temple Oublie** | Difficile | dalles piegees a retardement, zones toxiques cycliques, 3 dalles-mecanismes qui ouvrent la chambre centrale, passages secrets, 3 reliques | **LE GARDIEN** (9 PV) |
+| 4 | **La Caldeira Oubliee** | Facile | variante volcan allegee (moins de lave, pas d'events) : ideale pour s'entrainer | **MAGMARON** (5 PV) |
+| 5 | **Les Cavernes Scintillantes** | Normal | variante glace, meme mecaniques que la carte 2 | **CRYON** (7 PV) |
+| 6 | **La Crypte Interdite** | Difficile | variante temple, garde renforcee | **LE GARDIEN** (9 PV) |
+| 7 | **La Chambre Ardente** | Normal | volcan a pleine intensite : lave et events au complet, garnison doublee | **MAGMARON** (7 PV) |
+| 8 | **Le Glacier Interdit** | Difficile | glace avec portes accelerees | **CRYON** (8 PV) |
+| 9 | **Le Dernier Autel** | Difficile | temple avec cycles toxiques accelleres : le defi final | **LE GARDIEN** (10 PV) |
+
+**MAGMARON** : vagues de feu en croix, flaques de lave, invocations, charge.
+**CRYON** : glisse et rebondit, **vulnerable seulement apres un impact**,
+eclats et murs de glace. **LE GARDIEN** : **vulnerable uniquement les yeux
+ouverts**, racines toxiques, ondes circulaires, teleportation, sentinelles,
+frenesie.
+
+Deblocage : niveau 1 d'emblee, chaque niveau debloque le suivant une fois
+termine (objectifs obligatoires + boss vaincu + sortie atteinte).
+Battre la carte 1 (Volcan) debloque la bombe SHIFT, battre la carte 2
+(Glace) la charge lente.
 
 Une victoire n'est enregistree qu'apres validation reelle :
 objectifs obligatoires **+** boss vaincu **+** contact avec la sortie ouverte.
@@ -134,7 +152,7 @@ src/
 ├── gameplay/    joueur, bombes/explosions/chaines, ennemis + IA, boss,
 │                bonus, dangers, objectifs, projectiles, score, coach,
 │                rendu de la grille
-├── maps/        les 3 cartes (ASCII + reglages) et un parseur qui valide
+├── maps/        les 9 niveaux (ASCII + reglages) et un parseur qui valide
 ├── scenes/      BootScene (generation d'art) et GameScene (orchestration)
 ├── ui/          menus HTML/CSS, HUD, joystick tactile, mini-carte
 ├── dev/         auto-tests pilotant le jeu reel

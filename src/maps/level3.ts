@@ -11,6 +11,7 @@ export const TEMPLE: MapDefinition = {
   index: 2,
   name: 'Le Temple Oublie',
   tagline: 'Ruines envahies par les racines',
+  difficulty: 'difficile',
   theme: 'temple',
   bossKind: 'gardien',
   bossName: 'LE GARDIEN',
