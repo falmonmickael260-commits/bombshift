@@ -243,6 +243,13 @@ export class SaveManager {
     this.flush();
     for (const fn of this.listeners) fn(this.data);
   }
+
+  /** Replace with an account snapshot after validating/migrating it. */
+  replace(raw: unknown): void {
+    this.data = migrate(raw);
+    this.flush();
+    for (const fn of this.listeners) fn(this.data);
+  }
 }
 
 function safeStorage(): Storage | null {

@@ -5,6 +5,8 @@ import {
   loadRun,
   saveRun,
   SaveManager,
+  migrate,
+  type SaveData,
   type RunSnapshot,
   type Settings,
 } from '../core/save';
@@ -58,6 +60,44 @@ function detectRenderer(): number {
   }
 }
 
+function mergeProgress(remote: unknown, local: Readonly<SaveData>): SaveData {
+  const account = migrate(remote);
+  const device = migrate(local);
+  const rankValue: Record<string, number> = { C: 1, B: 2, A: 3, S: 4, SS: 5, SSS: 6 };
+  const maps: SaveData['maps'] = {};
+  for (const id of new Set([...Object.keys(account.maps), ...Object.keys(device.maps)])) {
+    const a = account.maps[id], b = device.maps[id];
+    if (!a || !b) { maps[id] = a ?? b; continue; }
+    const rank = !a.bestRank ? b.bestRank : !b.bestRank ? a.bestRank
+      : rankValue[a.bestRank] >= rankValue[b.bestRank] ? a.bestRank : b.bestRank;
+    const times = [a.bestTimeMs, b.bestTimeMs].filter((value): value is number => value !== null);
+    maps[id] = {
+      cleared: a.cleared || b.cleared,
+      bestScore: Math.max(a.bestScore, b.bestScore),
+      bestRank: rank,
+      bestTimeMs: times.length ? Math.min(...times) : null,
+      attempts: Math.max(a.attempts, b.attempts),
+      wins: Math.max(a.wins, b.wins),
+      secrets: [...new Set([...a.secrets, ...b.secrets])],
+      objectivesSeen: Math.max(a.objectivesSeen, b.objectivesSeen),
+    };
+  }
+  const stats = { ...account.stats };
+  for (const key of Object.keys(stats) as (keyof SaveData['stats'])[]) {
+    stats[key] = Math.max(stats[key] ?? 0, device.stats[key] ?? 0);
+  }
+  return migrate({
+    ...account,
+    unlockedMaps: Math.max(account.unlockedMaps, device.unlockedMaps),
+    maps,
+    stats,
+    abilities: {
+      shift: account.abilities.shift || device.abilities.shift,
+      slow: account.abilities.slow || device.abilities.slow,
+    },
+  });
+}
+
 type ScreenName =
   | 'loading'
   | 'title'
@@ -101,8 +141,15 @@ export class App {
   private pendingRun: RunSnapshot | null = null;
   private bootWatchdog: ReturnType<typeof setInterval> | null = null;
   private bootRecoveries = 0;
+  private accountSyncOrigin: string | null = null;
+  private accountSyncLaunch: string | null = null;
+  private accountSyncReady = false;
+  private accountSyncTimer: number | null = null;
+  private accountSyncRetry: number | null = null;
+  private accountSyncLastSent = '';
 
   start(): void {
+    this.bindAccountProgressSync();
     this.bindStaticButtons();
     this.controls.applySettings(this.save.get().settings);
     this.controls.setPauseHandler(() => this.togglePause());
@@ -111,6 +158,96 @@ export class App {
     this.createGame();
     this.bindLifecycle();
     this.unlockAudioOnFirstGesture();
+  }
+
+  /**
+   * Account progress is relayed by the Revanche Games iframe host. The game
+   * never receives a Supabase key or writes directly to the platform API.
+   */
+  private bindAccountProgressSync(): void {
+    const params = new URLSearchParams(window.location.search);
+    if (window.parent === window || !params.has('rg_token')) return;
+
+    try {
+      const referrerOrigin = document.referrer ? new URL(document.referrer).origin : '';
+      const allowedOrigins = [
+        'https://revanchegames-production.up.railway.app',
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+      ];
+      this.accountSyncOrigin = allowedOrigins.includes(referrerOrigin) ? referrerOrigin : null;
+    } catch { this.accountSyncOrigin = null; }
+    if (!this.accountSyncOrigin) return;
+
+    const sendReady = () => window.parent.postMessage(
+      { type: 'rg:ready', v: 1, game: 'bombshift' },
+      this.accountSyncOrigin!,
+    );
+    sendReady();
+    let retries = 0;
+    this.accountSyncRetry = window.setInterval(() => {
+      if (this.accountSyncReady || retries++ >= 20) {
+        if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
+        this.accountSyncRetry = null;
+        return;
+      }
+      sendReady();
+    }, 700);
+
+    window.addEventListener('message', (event: MessageEvent) => {
+      if (event.source !== window.parent || event.origin !== this.accountSyncOrigin) return;
+      const data = event.data;
+      if (!data || data.v !== 1 || data.game !== 'bombshift') return;
+      if (data.type === 'rg:bootstrap' && typeof data.launch === 'string') {
+        this.accountSyncReady = true;
+        this.accountSyncLaunch = data.launch;
+        if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
+        this.accountSyncRetry = null;
+        if (data.authenticated === true) {
+          // Monotonic merge keeps the best local progress when the player
+          // moves from this device to their account, without granting rewards.
+          this.save.replace(mergeProgress(data.progress, this.save.get()));
+          this.queueAccountProgressSave(0);
+          this.setAccountSyncStatus('Progression liée au compte Revanche Games');
+        } else if (data.syncUnavailable === true) {
+          this.setAccountSyncStatus('Synchronisation indisponible — progression conservée sur cet appareil');
+        } else {
+          this.setAccountSyncStatus('Progression enregistrée sur cet appareil');
+        }
+      } else if (data.launch !== this.accountSyncLaunch) return;
+      else if (data.type === 'rg:progress-saved') {
+        this.setAccountSyncStatus('Progression du compte synchronisée');
+      } else if (data.type === 'rg:progress-save-error') {
+        this.setAccountSyncStatus('Synchronisation du compte indisponible — progression conservée sur cet appareil');
+      }
+    });
+
+    this.save.onChange(() => this.queueAccountProgressSave());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.queueAccountProgressSave(0);
+    });
+    window.addEventListener('pagehide', () => this.queueAccountProgressSave(0));
+  }
+
+  private queueAccountProgressSave(delay = 800): void {
+    if (!this.accountSyncOrigin || !this.accountSyncLaunch) return;
+    if (this.accountSyncTimer !== null) window.clearTimeout(this.accountSyncTimer);
+    this.accountSyncTimer = window.setTimeout(() => {
+      this.accountSyncTimer = null;
+      const progress = JSON.stringify(this.save.get());
+      if (progress === this.accountSyncLastSent) return;
+      this.accountSyncLastSent = progress;
+      window.parent.postMessage({
+        type: 'rg:progress-save', v: 1, game: 'bombshift',
+        launch: this.accountSyncLaunch,
+        progress: JSON.parse(progress),
+      }, this.accountSyncOrigin!);
+    }, delay);
+  }
+
+  private setAccountSyncStatus(message: string): void {
+    const status = document.getElementById('account-sync-status');
+    if (status) status.textContent = message;
   }
 
   /* ----------------------------------------------------------- phaser ---- */
