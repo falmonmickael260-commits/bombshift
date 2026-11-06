@@ -10,7 +10,14 @@ export type MapId =
   | 'temple2'
   | 'volcano3'
   | 'ice3'
-  | 'temple3';
+  | 'temple3'
+  | `level-${number}`;
+
+/** Les quatre jalons miroir sont fixes dans la progression. */
+export const MIRROR_LEVELS = [10, 20, 30, 40] as const;
+export function isMirrorLevel(index: number): boolean {
+  return (MIRROR_LEVELS as readonly number[]).includes(index + 1);
+}
 
 /** Difficulte intrinseque de la carte, affichee dans la selection de niveau. */
 export type MapDifficulty = 'facile' | 'normal' | 'difficile';
@@ -59,6 +66,8 @@ export interface MapDefinition {
   tagline: string;
   /** Difficulte affichee dans la selection de niveau (independante du reglage global). */
   difficulty: MapDifficulty;
+  /** Les niveaux miroirs inversent les deux axes de déplacement. */
+  mirrorControls?: boolean;
   theme: Theme;
   bossKind: BossKind;
   bossName: string;

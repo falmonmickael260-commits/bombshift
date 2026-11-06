@@ -9,7 +9,7 @@ import {
   type Settings,
 } from '../core/save';
 import type { Difficulty, Rank } from '../core/types';
-import { getMap, MAPS, type MapDefinition, type MapId } from '../maps';
+import { getMap, isMirrorLevel, MAPS, type MapDefinition, type MapId } from '../maps';
 import { BootScene } from '../scenes/BootScene';
 import { GameScene, type GameSceneData, type HudState, type RunResult } from '../scenes/GameScene';
 import { TouchControls } from './controls';
@@ -401,6 +401,7 @@ export class App {
 
     audio.unlock();
     this.controls.reset();
+    this.controls.setMirrored(def.mirrorControls ?? isMirrorLevel(def.index));
     this.controls.setAbilities(this.save.get().abilities.shift, this.save.get().abilities.slow);
 
     const data: GameSceneData = {

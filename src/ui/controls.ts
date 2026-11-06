@@ -42,6 +42,7 @@ export class TouchControls {
   private readonly keys = new Set<string>();
   private onPause: (() => void) | null = null;
   private haptics = true;
+  private mirrored = false;
 
   constructor() {
     this.root = must('controls');
@@ -74,6 +75,15 @@ export class TouchControls {
 
   setPauseHandler(fn: () => void): void {
     this.onPause = fn;
+  }
+
+  /** Inverse uniquement les vecteurs de jeu, jamais les raccourcis de menu. */
+  setMirrored(value: boolean): void {
+    this.mirrored = value;
+    this.applyKeyVector();
+    if (this.stickPointer === null) return;
+    this.input.moveX *= -1;
+    this.input.moveY *= -1;
   }
 
   private bindButton(btn: HTMLElement, action: () => void): void {
@@ -198,8 +208,8 @@ export class TouchControls {
     // Au-dela de la zone morte on renormalise pour garder toute la plage utile.
     const scaled = (mag - DEAD_ZONE) / (1 - DEAD_ZONE);
     const len = Math.hypot(nx, ny) || 1;
-    this.input.moveX = (nx / len) * scaled;
-    this.input.moveY = (ny / len) * scaled;
+    this.input.moveX = (nx / len) * scaled * (this.mirrored ? -1 : 1);
+    this.input.moveY = (ny / len) * scaled * (this.mirrored ? -1 : 1);
     this.input.magnitude = scaled;
   }
 
@@ -239,6 +249,10 @@ export class TouchControls {
     const len = Math.hypot(x, y);
     this.input.moveX = len > 0 ? x / len : 0;
     this.input.moveY = len > 0 ? y / len : 0;
+    if (this.mirrored) {
+      this.input.moveX *= -1;
+      this.input.moveY *= -1;
+    }
     this.input.magnitude = len > 0 ? 1 : 0;
   }
 
