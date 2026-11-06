@@ -19,6 +19,7 @@ export class Hud {
   private readonly range = document.getElementById('hud-range')!;
   private readonly time = document.getElementById('hud-time')!;
   private readonly objectives = document.getElementById('hud-objectives')!;
+  private readonly objectivesToggle = document.getElementById('hud-objectives-toggle') as HTMLButtonElement;
   private readonly bossBox = document.getElementById('hud-boss')!;
   private readonly bossName = document.getElementById('hud-boss-name')!;
   private readonly bossFill = document.getElementById('hud-boss-fill')!;
@@ -34,6 +35,15 @@ export class Hud {
     objectives: '',
     boss: '',
   };
+
+  constructor() {
+    this.objectivesToggle.addEventListener('click', () => {
+      const expanded = this.objectivesToggle.getAttribute('aria-expanded') !== 'true';
+      this.objectivesToggle.setAttribute('aria-expanded', String(expanded));
+      this.objectives.hidden = !expanded;
+      this.objectivesToggle.querySelector('span')!.textContent = expanded ? '−' : '+';
+    });
+  }
 
   setVisible(visible: boolean): void {
     this.root.hidden = !visible;

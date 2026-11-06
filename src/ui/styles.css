@@ -340,11 +340,36 @@ html, body {
 .heart--empty { background: #4a3a42; }
 
 .hud-objectives {
-  margin-top: 8px;
+  position: absolute;
+  top: calc(var(--safe-t) + 92px);
+  left: calc(var(--safe-l) + 10px);
   display: flex;
   flex-direction: column;
   gap: 4px;
   max-width: min(62vw, 330px);
+  max-height: min(35vh, 240px);
+  overflow-y: auto;
+  pointer-events: auto;
+}
+.hud-objectives-toggle {
+  position: absolute;
+  top: calc(var(--safe-t) + 58px);
+  left: calc(var(--safe-l) + 10px);
+  pointer-events: auto;
+  color: #e8e0ec;
+  background: rgba(10, 8, 14, .76);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 999px;
+  padding: 7px 11px;
+  font: 700 10px var(--body-font);
+  letter-spacing: .08em;
+  backdrop-filter: blur(5px);
+}
+.hud-objectives-toggle[aria-expanded="true"] { border-color: rgba(255,138,60,.58); }
+.hud-objectives-toggle span { color: var(--fire-2); margin-left: 5px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  .hud-objectives-toggle { top: calc(var(--safe-t) + 52px); }
+  .hud-objectives { top: calc(var(--safe-t) + 84px); }
 }
 .hud-obj {
   background: rgba(10, 8, 14, 0.5);
