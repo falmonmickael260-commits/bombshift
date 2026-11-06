@@ -78,6 +78,13 @@ html, body {
   z-index: 10;
 }
 .screen--active { display: flex; }
+.account-sync-status {
+  min-height: 1.2em;
+  margin: 8px 4px 0;
+  color: rgba(220, 220, 238, 0.58);
+  font-size: 11px;
+  text-align: center;
+}
 .screen--overlay {
   background: rgba(6, 4, 10, 0.86);
   backdrop-filter: blur(6px);
