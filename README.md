@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Jeu mobile 2D de labyrinthe a bombes : <b>9 niveaux</b>, <b>3 boss a phases</b>,
+  Jeu mobile 2D de labyrinthe a bombes : <b>40 niveaux</b>, <b>3 boss a phases</b>,
   ennemis avec recherche de chemin et evitement de souffle, progression sauvegardee.
   <br />
   Phaser 3 · TypeScript · Vite · pret pour Capacitor (Android / iOS)
@@ -80,7 +80,60 @@ secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
 
-## Les neuf niveaux
+## Extension : quatre nouveaux univers, 40 niveaux au total
+
+Les niveaux 1 à 20 et leurs identifiants sont conservés. Les cartes 21 à 40
+ont des plans fixes, plusieurs dimensions et des arènes de boss placées au
+sud ou à l’est, des objectifs, des secrets et des briefings propres.
+
+| Niveaux | Univers | Objets, ambiance et mécanique |
+| --- | --- | --- |
+| 21–24 | Cité engloutie | Récifs, coraux destructibles, perles-balises, bulles, rayons sous-marins et courants qui poussent le joueur ; consoles pour les arrêter au 24 |
+| 25–29 | Désert des tombeaux | Colonnes brisées, jarres, obélisques, dunes, poussière, rafales précédées de flèches jaunes, dalles et sables mouvants ; sceaux coupe-vent au 28 |
+| 30 | Palais des Reflets | Deux ailes symétriques, commandes miroir, portails et gravité |
+| 31–34 | Station industrielle orbitale | Machines, ventilateurs animés, batteries, décharges, tapis transportant le joueur et les bombes ; consoles d’arrêt aux 32 et 34 |
+| 35–39 | Archipel cosmique | Roches flottantes, cristaux, étoiles, failles, portails, passerelles intermittentes et poussées gravitationnelles ; stabilisateurs au 37 |
+| 40 | Miroir de l’Infini | Commandes miroir, quatre portails, passerelles et gravité neutralisable |
+
+Les quatre univers ont des textures, objets d’objectif, obstacles, portes,
+dangers et sorties spécifiques, des particules et des compositions WebAudio.
+Les éléments d’ambiance restent sous les personnages et les dangers.
+Les réglages d’effets faibles et de réduction des flashs limitent les animations.
+Les trois IA de boss existantes sont conservées avec des noms de gardiens
+propres aux univers ; il ne s’agit pas de quatre nouvelles IA de boss.
+Les portails sont facultatifs et refusent une arrivée bloquée ou dangereuse.
+
+**Miroirs : niveaux 10, 20, 30 et 40.** Le clavier et le joystick tactile
+inversent les deux axes. Menus, bombes et raccourcis restent habituels.
+
+### Sauvegarde après chaque niveau
+
+La victoire est enregistrée **immédiatement au contact de la sortie**, avant
+les 900 ms d’animation. Scores, rangs, temps, secrets, capacités et niveau
+suivant sont écrits dans `bombshift.save`, puis dans une copie de secours.
+Une erreur d’écriture temporaire est réessayée au prochain enregistrement.
+L’écran de résultat indique si la sauvegarde locale a réussi.
+Une ancienne sauvegarde partielle ne reverrouille plus un niveau dont la
+victoire est connue. Le schéma reste 3 et les identifiants restent stables.
+
+En iframe, un compte connecté Revanche Games reçoit la progression via
+`rg:progress-save`, sans attendre l’écran de résultat. Un échec ou une absence
+d’accusé de réception déclenche une nouvelle tentative. La confirmation vient
+du message `rg:progress-saved` de la plateforme. La plateforme doit déployer
+son filtre des quarante identifiants, et sa migration existante
+`20261106010000_bombshift_account_progress.sql` doit être appliquée.
+Aucune récompense économique n’est liée à ces données.
+
+Validation : `npm test` et `npm run build`. Les essais Chromium couvrent les
+quarante chargements sur ordinateur et viewport mobile, les commandes,
+les portails, les objectifs et la victoire avec outils de développement,
+le déplacement du joueur et des bombes par tapis, leur arrêt par console,
+et la fermeture immédiate après victoire suivie d’une réouverture.
+Le relais de compte est testé avec un hôte local simulé ; les identifiants
+réels Supabase ne sont pas utilisés. Une partie humaine complète et un test
+sur appareils iOS/Android réels restent nécessaires pour l’équilibrage.
+
+## Les neuf niveaux d’origine
 
 Trois themes (volcan, glace, temple), chacun decline en trois variantes de
 difficulte croissante. Chaque niveau affiche son etiquette **Facile /
@@ -152,7 +205,7 @@ src/
 ├── gameplay/    joueur, bombes/explosions/chaines, ennemis + IA, boss,
 │                bonus, dangers, objectifs, projectiles, score, coach,
 │                rendu de la grille
-├── maps/        les 9 niveaux (ASCII + reglages) et un parseur qui valide
+├── maps/        les 40 niveaux (ASCII + reglages) et un parseur qui valide
 ├── scenes/      BootScene (generation d'art) et GameScene (orchestration)
 ├── ui/          menus HTML/CSS, HUD, joystick tactile, mini-carte
 ├── dev/         auto-tests pilotant le jeu reel

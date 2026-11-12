@@ -46,6 +46,42 @@ interface MusicPattern {
 }
 
 const MUSIC: Record<Theme, MusicPattern> = {
+  ocean: {
+    bpm: 82, scale: [0, 2, 5, 7, 9, 12, 14], rootMidi: 43,
+    bass: [0,-1,-1,-1,3,-1,-1,-1,4,-1,-1,-1,2,-1,-1,-1],
+    lead: [5,-1,4,-1,2,-1,3,-1,5,-1,6,4,-1,2,3,-1],
+    kick: [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+    snare: [0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0],
+    hat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+    leadWave: 'sine', bassWave: 'sine', filter: 1200,
+  },
+  desert: {
+    bpm: 108, scale: [0, 1, 4, 5, 7, 8, 11], rootMidi: 40,
+    bass: [0,-1,0,-1,3,-1,0,-1,1,-1,1,0,4,-1,3,-1],
+    lead: [0,-1,1,3,4,-1,3,-1,5,4,3,-1,1,0,-1,3],
+    kick: [1,0,0,1,0,0,1,0,1,0,0,0,1,0,1,0],
+    snare: [0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,1],
+    hat: [0,1,0,0,0,1,1,0,0,1,0,0,0,1,1,0],
+    leadWave: 'triangle', bassWave: 'triangle', filter: 1700,
+  },
+  electric: {
+    bpm: 126, scale: [0, 2, 3, 7, 9, 10, 12], rootMidi: 42,
+    bass: [0,-1,0,4,0,-1,3,-1,0,4,0,-1,5,-1,3,-1],
+    lead: [0,4,-1,6,3,-1,4,2,0,4,-1,5,3,2,4,-1],
+    kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    hat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1],
+    leadWave: 'square', bassWave: 'sawtooth', filter: 2400,
+  },
+  dimension: {
+    bpm: 96, scale: [0, 1, 4, 6, 7, 10, 12], rootMidi: 39,
+    bass: [0,-1,-1,3,-1,0,-1,-1,4,-1,-1,2,-1,5,-1,-1],
+    lead: [6,-1,3,-1,-1,4,2,-1,5,-1,0,-1,3,-1,6,-1],
+    kick: [1,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0],
+    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    hat: [0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,1],
+    leadWave: 'sine', bassWave: 'triangle', filter: 1800,
+  },
   // Forteresse volcanique : mineur harmonique, tempo soutenu, basse martelee.
   volcano: {
     bpm: 132,

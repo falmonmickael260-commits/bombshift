@@ -1,3 +1,4 @@
+import { isBiome } from '../core/biomeArt';
 import type Phaser from 'phaser';
 import { TEX, TILE } from '../core/constants';
 import { TileKind, type ObjectiveState, type Vec2 } from '../core/types';
@@ -54,9 +55,9 @@ export class ObjectiveController {
       const p = centerOf(spawn.cell);
       const texture =
         spawn.kind === 'valve' ? TEX.valve : spawn.kind === 'generator' ? TEX.generator : TEX.relic;
-      const sprite = world.scene.add.sprite(p.x, p.y, texture, 0);
+      const sprite = world.scene.add.sprite(p.x, p.y, isBiome(world.def.theme) ? TEX.biome(world.def.theme, 'prop') : texture, 0);
       sprite.setDepth(20);
-      if (spawn.kind === 'relic') sprite.play('relic', true);
+      if (spawn.kind === 'relic' && !isBiome(world.def.theme)) sprite.play('relic', true);
 
       let label: Phaser.GameObjects.Text | null = null;
       if (parsed.def.orderedProps) {
@@ -74,7 +75,7 @@ export class ObjectiveController {
 
     const exitCell = parsed.exit;
     const ep = centerOf(exitCell);
-    this.exitSprite = world.scene.add.sprite(ep.x, ep.y, TEX.exit, 0);
+    this.exitSprite = world.scene.add.sprite(ep.x, ep.y, isBiome(world.def.theme) ? TEX.biome(world.def.theme, 'exit') : TEX.exit, 0);
     this.exitSprite.setDepth(12);
     this.refreshPropsObjective();
   }
@@ -163,7 +164,7 @@ export class ObjectiveController {
   private completeProp(prop: Prop, message: string): void {
     prop.done = true;
     prop.sprite.setFrame(prop.spawn.kind === 'generator' ? 3 : 1);
-    if (prop.spawn.kind === 'generator') prop.sprite.play('generator-on', true);
+    if (prop.spawn.kind === 'generator' && !isBiome(this.world.def.theme)) prop.sprite.play('generator-on', true);
     if (prop.spawn.kind === 'relic') {
       // La relique rejoint le joueur : retour visuel fort.
       this.world.scene.tweens.add({
@@ -245,7 +246,8 @@ export class ObjectiveController {
     if (this.exitUnlocked) return;
     if (!this.propsComplete || !this.bossDead) return;
     this.exitUnlocked = true;
-    this.exitSprite?.play('exit-open', true);
+    if (isBiome(this.world.def.theme)) this.exitSprite?.setFrame(3);
+    else this.exitSprite?.play('exit-open', true);
     this.world.audio.play('gateOpen');
     this.world.notify('La sortie est ouverte !', 'good');
     this.world.fx.flash(0x7cf0c0, 260);

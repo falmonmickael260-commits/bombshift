@@ -1,3 +1,4 @@
+import { isBiome } from './biomeArt';
 import type Phaser from 'phaser';
 import { TEX, THEME_COLORS, TILE } from './constants';
 import { crack, css, glow, makeSheet, makeTexture, mix, roundRect, shade, speckle } from './paint';
@@ -640,6 +641,7 @@ function drawRelic(ctx: CanvasRenderingContext2D, frame: number, rng: Rng): void
 
 export function buildTileTextures(scene: Phaser.Scene, themes: readonly Theme[]): void {
   for (const theme of themes) {
+    if (isBiome(theme)) continue;
     for (let v = 0; v < 4; v++) {
       makeSheet(scene, TEX.floor(theme, v), T, T, 1, (ctx, _f, _w, _h, rng) =>
         drawFloor(ctx, theme, v, rng), 100 + v * 31 + theme.length * 7);

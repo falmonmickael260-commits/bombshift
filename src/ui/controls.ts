@@ -79,6 +79,7 @@ export class TouchControls {
 
   /** Inverse uniquement les vecteurs de jeu, jamais les raccourcis de menu. */
   setMirrored(value: boolean): void {
+    if (this.mirrored === value) return;
     this.mirrored = value;
     this.applyKeyVector();
     if (this.stickPointer === null) return;

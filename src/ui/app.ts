@@ -139,6 +139,7 @@ export class App {
   private wasPlayingBeforeHide = false;
   private debugClock = 0;
   private pendingRun: RunSnapshot | null = null;
+  private completedRun: { result: RunResult; meta: ReturnType<App['recordRunResult']> } | null = null;
   private bootWatchdog: ReturnType<typeof setInterval> | null = null;
   private bootRecoveries = 0;
   private accountSyncOrigin: string | null = null;
@@ -147,6 +148,10 @@ export class App {
   private accountSyncTimer: number | null = null;
   private accountSyncRetry: number | null = null;
   private accountSyncLastSent = '';
+  private accountSyncInFlight: string | null = null;
+  private accountSyncSaveRetry: number | null = null;
+  private accountSyncAuthenticated = false;
+  private accountSyncRequest = 0;
 
   start(): void {
     this.bindAccountProgressSync();
@@ -200,6 +205,7 @@ export class App {
       if (!data || data.v !== 1 || data.game !== 'bombshift') return;
       if (data.type === 'rg:bootstrap' && typeof data.launch === 'string') {
         this.accountSyncReady = true;
+        this.accountSyncAuthenticated = data.authenticated === true;
         this.accountSyncLaunch = data.launch;
         if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
         this.accountSyncRetry = null;
@@ -210,14 +216,23 @@ export class App {
           this.queueAccountProgressSave(0);
           this.setAccountSyncStatus('Progression liée au compte Revanche Games');
         } else if (data.syncUnavailable === true) {
+          this.accountSyncRetry = window.setTimeout(sendReady, 5000);
           this.setAccountSyncStatus('Synchronisation indisponible — progression conservée sur cet appareil');
         } else {
           this.setAccountSyncStatus('Progression enregistrée sur cet appareil');
         }
       } else if (data.launch !== this.accountSyncLaunch) return;
       else if (data.type === 'rg:progress-saved') {
+        if (data.requestId !== undefined && data.requestId !== this.accountSyncRequest) return;
+        if (this.accountSyncSaveRetry !== null) window.clearTimeout(this.accountSyncSaveRetry);
+        this.accountSyncSaveRetry = null;
+        this.accountSyncLastSent = this.accountSyncInFlight ?? this.accountSyncLastSent;
+        this.accountSyncInFlight = null;
         this.setAccountSyncStatus('Progression du compte synchronisée');
+        this.queueAccountProgressSave(0);
       } else if (data.type === 'rg:progress-save-error') {
+        if (data.requestId !== undefined && data.requestId !== this.accountSyncRequest) return;
+        this.accountSyncInFlight = null;
         this.setAccountSyncStatus('Synchronisation du compte indisponible — progression conservée sur cet appareil');
       }
     });
@@ -230,19 +245,31 @@ export class App {
   }
 
   private queueAccountProgressSave(delay = 800): void {
-    if (!this.accountSyncOrigin || !this.accountSyncLaunch) return;
+    if (!this.accountSyncOrigin || !this.accountSyncLaunch || !this.accountSyncAuthenticated) return;
     if (this.accountSyncTimer !== null) window.clearTimeout(this.accountSyncTimer);
-    this.accountSyncTimer = window.setTimeout(() => {
+    this.accountSyncTimer = null;
+    if (delay === 0) this.sendAccountProgress();
+    else this.accountSyncTimer = window.setTimeout(() => {
       this.accountSyncTimer = null;
-      const progress = JSON.stringify(this.save.get());
-      if (progress === this.accountSyncLastSent) return;
-      this.accountSyncLastSent = progress;
-      window.parent.postMessage({
-        type: 'rg:progress-save', v: 1, game: 'bombshift',
-        launch: this.accountSyncLaunch,
-        progress: JSON.parse(progress),
-      }, this.accountSyncOrigin!);
+      this.sendAccountProgress();
     }, delay);
+  }
+
+  private sendAccountProgress(): void {
+    if (!this.accountSyncOrigin || !this.accountSyncLaunch || !this.accountSyncAuthenticated || this.accountSyncInFlight !== null) return;
+    const progress = JSON.stringify(this.save.get());
+    if (progress === this.accountSyncLastSent) return;
+    this.accountSyncInFlight = progress;
+    window.parent.postMessage({
+      type: 'rg:progress-save', v: 1, game: 'bombshift',
+      launch: this.accountSyncLaunch, requestId: ++this.accountSyncRequest, progress: JSON.parse(progress),
+    }, this.accountSyncOrigin);
+    if (this.accountSyncSaveRetry !== null) window.clearTimeout(this.accountSyncSaveRetry);
+    this.accountSyncSaveRetry = window.setTimeout(() => {
+      this.accountSyncSaveRetry = null;
+      this.accountSyncInFlight = null;
+      this.sendAccountProgress();
+    }, 5000);
   }
 
   private setAccountSyncStatus(message: string): void {
@@ -373,6 +400,7 @@ export class App {
     }
 
     const inGame = name === 'game' || name === 'pause';
+    if (!inGame) this.controls.setMirrored(false);
     this.hud.setVisible(inGame);
     this.controls.setVisible(name === 'game');
     document.getElementById('game-root')?.setAttribute('aria-hidden', String(!inGame));
@@ -554,6 +582,9 @@ export class App {
         this.controls.setCooldowns(state.ability?.ratio ?? 0, state.ability2?.ratio ?? 0);
       },
       onNotify: (text, tone) => this.hud.toast(text, tone),
+      onComplete: (result) => {
+        this.completedRun = { result, meta: this.recordRunResult(result) };
+      },
       onEnd: (result) => this.onRunEnd(result),
     };
 
@@ -621,8 +652,7 @@ export class App {
     scene.resumeGame();
   }
 
-  private onRunEnd(result: RunResult): void {
-    const def = getMap(result.mapId);
+  private recordRunResult(result: RunResult): { victory: boolean; newRecord: boolean; unlockedMap: string | null; unlockedAbility: string | null; saved: boolean } {
     const mandatoryDone = result.objectives.filter((o) => o.mandatory).every((o) => o.done);
     // Garde-fou : une victoire n'est enregistree que si les objectifs
     // obligatoires sont reellement valides.
@@ -633,7 +663,7 @@ export class App {
     let unlockedAbility: string | null = null;
 
     this.save.update((d) => {
-      const p = d.maps[result.mapId]!;
+      const p = d.maps[result.mapId] ??= this.save.mapProgress(result.mapId);
       d.stats.totalKills += result.stats.kills;
       d.stats.totalBombs += result.stats.bombsPlaced;
       d.stats.totalBlocks += result.stats.blocksDestroyed;
@@ -673,9 +703,17 @@ export class App {
         }
       }
     });
-    this.save.flush();
+    const saved = this.save.flush();
+    this.queueAccountProgressSave(0);
     clearRun();
+    return { victory, newRecord, unlockedMap, unlockedAbility, saved };
+  }
 
+  private onRunEnd(result: RunResult): void {
+    const def = getMap(result.mapId);
+    const meta = this.completedRun?.result === result ? this.completedRun.meta : this.recordRunResult(result);
+    this.completedRun = null;
+    const { victory, newRecord, unlockedMap, unlockedAbility } = meta;
     audio.stopMusic();
     this.stopRun();
 
@@ -691,6 +729,13 @@ export class App {
         else this.show('title');
       },
     );
+    const receipt = document.createElement('p');
+    receipt.className = 'save-receipt';
+    receipt.setAttribute('role', 'status');
+    receipt.textContent = meta.saved
+      ? '✓ Progression sauvegardée sur cet appareil'
+      : 'Sauvegarde locale indisponible : autorisez le stockage du navigateur pour conserver la progression.';
+    document.getElementById('result-body')!.appendChild(receipt);
     this.show('result');
   }
 
@@ -721,6 +766,7 @@ export class App {
         this.wasPlayingBeforeHide = this.screen === 'game';
         if (this.wasPlayingBeforeHide) this.pause();
         this.persistRun();
+        this.save.flush();
         audio.setMuted(true);
       } else {
         if (this.screen !== 'game') audio.setMuted(this.screen === 'pause');

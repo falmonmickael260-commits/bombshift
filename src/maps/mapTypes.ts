@@ -1,5 +1,5 @@
 import type { GridMap } from '../core/grid';
-import type { BossKind, EnemyKind, Rank, Theme, Vec2 } from '../core/types';
+import type { BossKind, Dir, EnemyKind, Rank, Theme, Vec2 } from '../core/types';
 
 export type MapId =
   | 'volcano'
@@ -13,10 +13,10 @@ export type MapId =
   | 'temple3'
   | `level-${number}`;
 
-/** Les quatre jalons miroir sont fixes dans la progression. */
+/** Jalons miroir de la campagne actuelle (numéros affichés, à partir de 1). */
 export const MIRROR_LEVELS = [10, 20, 30, 40] as const;
 export function isMirrorLevel(index: number): boolean {
-  return (MIRROR_LEVELS as readonly number[]).includes(index + 1);
+  return Number.isInteger(index) && index >= 0 && (index + 1) % 10 === 0;
 }
 
 /** Difficulte intrinseque de la carte, affichee dans la selection de niveau. */
@@ -59,6 +59,20 @@ export interface MapObjectiveDef {
   total: number;
 }
 
+/** Rectangular zones, visibly marked, that push actors without changing their controls. */
+export interface FlowField {
+  x: number; y: number; width: number; height: number;
+  direction: Dir;
+  speed: number;
+  kind: 'current' | 'wind' | 'conveyor' | 'gravity';
+  affectsBombs?: boolean;
+  periodMs?: number;
+  warnMs?: number;
+  activeMs?: number;
+  offsetMs?: number;
+  stopsOnSwitches?: boolean;
+}
+
 export interface MapDefinition {
   id: MapId;
   index: number;
@@ -68,6 +82,9 @@ export interface MapDefinition {
   difficulty: MapDifficulty;
   /** Les niveaux miroirs inversent les deux axes de déplacement. */
   mirrorControls?: boolean;
+  /** Portails bidirectionnels : les deux extrémités portent la même lettre. */
+  portals?: readonly { a: Vec2; b: Vec2 }[];
+  flows?: readonly FlowField[];
   theme: Theme;
   bossKind: BossKind;
   bossName: string;

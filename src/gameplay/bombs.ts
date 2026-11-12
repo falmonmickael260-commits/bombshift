@@ -1,3 +1,4 @@
+import { displaceByFlow, flowAt } from './flowFields';
 import Phaser from 'phaser';
 import { BOMB, TEX, TILE } from '../core/constants';
 import { TileKind, type BombType, type Vec2 } from '../core/types';
@@ -152,6 +153,15 @@ export class BombManager {
 
       if (b.slide) {
         this.updateSlide(b, dt);
+      } else if (this.world.def.flows?.some((f) => f.affectsBombs)) {
+        const switches = this.world.grid.findCells((t) => t.kind === TileKind.Plate && t.group === 2);
+        const switched = switches.length > 0 && switches.every((c) => this.world.grid.tileAt(c.x, c.y)?.latched);
+        const flow = flowAt(this.world.def.flows ?? [], b.cell, now, true, switched);
+        const body = { x: b.x, y: b.y, vx: 0, vy: 0, radius: TILE * 0.35 };
+        displaceByFlow(body, flow, dtMs, (x, y) => this.world.grid.isSolid(x, y) ||
+          (this.bombAt(x, y)?.id ?? b.id) !== b.id);
+        b.x = body.x; b.y = body.y; b.cell = cellOf(body);
+        if (this.world.grid.isLethalFloor(b.cell.x, b.cell.y)) this.detonate(b);
       }
 
       // Pulsation d'alerte : la bombe accelere et grossit juste avant d'exploser.

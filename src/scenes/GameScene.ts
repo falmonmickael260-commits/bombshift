@@ -1,3 +1,6 @@
+import { displaceByFlow, flowAt } from '../gameplay/flowFields';
+import { WorldScenery } from '../gameplay/worldScenery';
+import { PortalController } from '../gameplay/portals';
 import Phaser from 'phaser';
 import { audio } from '../core/audio';
 import { BOMB, CAMERA, DIFFICULTIES, PLAYER, TEX, THEME_COLORS, TILE } from '../core/constants';
@@ -79,6 +82,8 @@ export interface GameSceneData {
   input: InputState;
   onHud: (state: HudState) => void;
   onNotify: (text: string, tone: 'info' | 'good' | 'bad') => void;
+  /** Synchronous save checkpoint, before the victory animation or any delay. */
+  onComplete?: (result: RunResult) => void;
   onEnd: (result: RunResult) => void;
 }
 
@@ -126,6 +131,8 @@ export class GameScene extends Phaser.Scene {
   private compass: Phaser.GameObjects.Image | null = null;
   private compassLabel: Phaser.GameObjects.Text | null = null;
   private dangerAt = 0;
+  private portals = new PortalController([]);
+  private scenery: WorldScenery | null = null;
 
   constructor() {
     super({ key: GameScene.KEY });
@@ -148,6 +155,7 @@ export class GameScene extends Phaser.Scene {
     this.def = getMap(this.cfg.mapId);
     this.parsed = parseMap(this.def);
     this.grid = this.parsed.grid;
+    this.portals = new PortalController(this.def.portals ?? []);
     this.danger = new DangerMap(this.grid.width, this.grid.height);
     this.rng = new Rng(0x51ed + Date.now() % 100000);
     const profile = DIFFICULTIES[settings.difficulty] ?? DIFFICULTIES.normal;
@@ -161,6 +169,8 @@ export class GameScene extends Phaser.Scene {
     this.fxLayer = new Fx(this);
     this.fxLayer.configure(settings);
     this.tiles = new TileRenderer(this, this.grid, this.def.theme);
+    this.drawPortals();
+    this.scenery = new WorldScenery(this, this.grid, this.def, settings);
 
     this.player = new Player(this.world, this.parsed.playerSpawn, profile.lives);
     this.bombs = new BombManager(this.world, {
@@ -220,7 +230,13 @@ export class GameScene extends Phaser.Scene {
     this.scale.on(Phaser.Scale.Events.RESIZE, this.setupCamera, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
 
-    if (this.cfg.snapshot) this.applySnapshot(this.cfg.snapshot);
+    if (this.cfg.snapshot) {
+      const snap = this.cfg.snapshot;
+      const sameLayout = snap.tileKinds.length === this.grid.tiles.length &&
+        (snap.mapLayout ? snap.mapLayout === this.def.rows.join('\n') : this.def.index < 20);
+      if (sameLayout) this.applySnapshot(snap);
+      else this.notify('Ce niveau a évolué : nouvelle tentative, progression conservée.', 'info');
+    }
 
     // Le mode combat de la musique est propre a une rencontre de boss :
     // il ne doit jamais survivre a une tentative precedente.
@@ -426,6 +442,11 @@ export class GameScene extends Phaser.Scene {
 
     const input = this.cfg.input;
     const intents = this.player.update(dt, input);
+    const progress = this.hazards.mechanismProgress;
+    const switched = progress.total > 0 && progress.done >= progress.total;
+    const force = flowAt(this.def.flows ?? [], this.player.cell, this.elapsed, false, switched);
+    displaceByFlow(this.player.body, force, dt, (x, y) => this.world.playerBlocked(x, y));
+    this.scenery?.update(this.elapsed, switched);
 
     // Les appuis sont a usage unique : un bouton maintenu ne spamme pas d'actions.
     input.bombPressed = false;
@@ -790,8 +811,44 @@ export class GameScene extends Phaser.Scene {
     const c = this.player.cell;
     if (c.x === this.lastCell.x && c.y === this.lastCell.y) return;
     this.lastCell = { ...c };
+    const destination = this.portals.enter(c, (cell) =>
+      !this.world.playerBlocked(cell.x, cell.y) &&
+      !this.grid.isLethalFloor(cell.x, cell.y) &&
+      !this.bombs.isFlameAt(cell.x, cell.y) &&
+      !this.danger.isDangerous(cell.x, cell.y, 1700) &&
+      !this.enemies.some((e) => e.alive && Math.hypot(e.pos.x - centerOf(cell).x, e.pos.y - centerOf(cell).y) < TILE),
+    );
+    if (destination) {
+      const p = centerOf(destination);
+      this.player.body.x = p.x;
+      this.player.body.y = p.y;
+      this.player.body.vx = 0;
+      this.player.body.vy = 0;
+      this.lastCell = { ...destination };
+      this.fxLayer.shockwave(p, 45, THEME_COLORS[this.def.theme].accent);
+      audio.play('switchOn');
+      return;
+    }
     this.hazards.onPlayerEnterCell(c);
     this.objectives.onPlayerEnterCell(c);
+  }
+
+  private drawPortals(): void {
+    const colors = [0x66f6ec, 0xe5a6ff];
+    this.def.portals?.forEach((pair, index) => {
+      for (const cell of [pair.a, pair.b]) {
+        const p = centerOf(cell);
+        const ring = this.add.ellipse(p.x, p.y, TILE * 0.78, TILE * 0.78, colors[index % 2], 0.13)
+          .setStrokeStyle(3, colors[index % 2], 0.9).setDepth(5);
+        this.add.text(p.x, p.y, String.fromCharCode(65 + index), {
+          fontFamily: 'sans-serif', fontSize: '18px', color: '#ffffff', stroke: '#171127', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(6);
+        if (this.cfg.settings.effects !== 'low' && !this.cfg.settings.reduceFlashes) {
+          this.tweens.add({ targets: ring, alpha: 0.45, scale: 0.88, duration: 1100,
+            yoyo: true, repeat: -1 });
+        }
+      }
+    });
   }
 
   private onTileDestroyed(cell: Vec2, kind: TileKind): void {
@@ -972,16 +1029,11 @@ export class GameScene extends Phaser.Scene {
     };
     const score = computeScore(stats, this.def, this.world.difficulty.scoreFactor);
 
-    this.time.delayedCall(victory ? 900 : 200, () => {
-      this.cfg.onEnd({
-        mapId: this.def.id,
-        victory,
-        stats,
-        score,
-        rank: score.rank,
-        objectives: this.objectives.list,
-      });
-    });
+    const result: RunResult = {
+      mapId: this.def.id, victory, stats, score, rank: score.rank, objectives: this.objectives.list,
+    };
+    this.cfg.onComplete?.(result);
+    this.time.delayedCall(victory ? 900 : 200, () => this.cfg.onEnd(result));
   }
 
   /* ------------------------------------------------------------ public ---- */
@@ -1036,6 +1088,8 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.objectives?.destroy();
     this.player?.destroy();
+    this.scenery?.destroy();
+    this.scenery = null;
     this.tiles?.destroy();
     this.fxLayer?.destroy();
     this.vignette?.destroy();
@@ -1064,6 +1118,7 @@ export class GameScene extends Phaser.Scene {
     return {
       v: 1,
       mapId: this.def.id,
+      mapLayout: this.def.rows.join('\n'),
       difficulty: this.cfg.settings.difficulty,
       elapsedMs: this.elapsed,
       savedAt: Date.now(),

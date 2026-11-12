@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { defaultSave, migrate, SaveManager, SAVE_SCHEMA } from '../core/save';
+import { defaultMapProgress, defaultSave, migrate, SaveManager, SAVE_SCHEMA } from '../core/save';
 
 class MemoryStorage implements Storage {
   private map = new Map<string, string>();
@@ -101,4 +101,44 @@ describe('sauvegarde', () => {
     m.reset();
     expect(m.get().unlockedMaps).toBe(1);
   });
+  it('ne reverrouille pas un niveau prouvé terminé dans une sauvegarde partielle', () => {
+    const m = migrate({ schema: 3, unlockedMaps: 21,
+      maps: { 'level-20': { ...defaultMapProgress(), cleared: true, bestScore: 12000 } } });
+    expect(m.unlockedMaps).toBe(21);
+    expect(m.maps['level-20'].bestScore).toBe(12000);
+  });
+
+  it('écrit le point de contrôle immédiatement, sans attendre le minuteur', () => {
+    const a = new SaveManager(storage);
+    a.update((d) => { d.maps.volcano = { ...defaultMapProgress(), cleared: true }; d.unlockedMaps = 2; });
+    expect(a.flush()).toBe(true);
+    expect(new SaveManager(storage).get().unlockedMaps).toBe(2);
+  });
+
+  it('récupère la progression si le fichier principal est endommagé', () => {
+    const a = new SaveManager(storage);
+    a.update((d) => { d.maps.volcano = { ...defaultMapProgress(), cleared: true, bestScore: 4500 }; });
+    a.flush();
+    storage.setItem('bombshift.save', '{truncated');
+    expect(new SaveManager(storage).get().maps.volcano.bestScore).toBe(4500);
+    expect(new SaveManager(storage).get().unlockedMaps).toBe(2);
+  });
+
+  it('réessaie après une erreur temporaire du stockage', () => {
+    let blocked = true;
+    const unstable = {
+      getItem: (key: string) => storage.getItem(key),
+      setItem: (key: string, value: string) => {
+        if (blocked) throw new Error('quota temporaire');
+        storage.setItem(key, value);
+      },
+    } as Storage;
+    const a = new SaveManager(unstable);
+    a.update((d) => { d.maps.volcano = { ...defaultMapProgress(), cleared: true }; });
+    expect(a.flush()).toBe(false);
+    blocked = false;
+    expect(a.flush()).toBe(true);
+    expect(new SaveManager(storage).get().unlockedMaps).toBe(2);
+  });
+
 });
