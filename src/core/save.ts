@@ -3,6 +3,7 @@ import type { Difficulty, Rank } from './types';
 
 export const SAVE_SCHEMA = 3;
 const STORAGE_KEY = 'bombshift.save';
+const BACKUP_KEY = 'bombshift.save.backup';
 
 export interface MapProgress {
   cleared: boolean;
@@ -135,9 +136,12 @@ export function migrate(raw: unknown): SaveData {
   let unlocked = 1;
   for (let i = 0; i < MAPS.length - 1; i++) {
     if (merged.maps[MAPS[i].id]?.cleared) unlocked = i + 2;
-    else break;
+    // Imported saves can contain only the last few completed maps.
+    // A missing earlier record must never relock a later proven victory.
   }
   merged.unlockedMaps = Math.max(unlocked, 1);
+  merged.abilities.shift ||= merged.maps.volcano?.cleared === true;
+  merged.abilities.slow ||= merged.maps.ice?.cleared === true;
 
   for (const s of [merged.settings]) {
     s.sfxVolume = clamp01(s.sfxVolume);
@@ -175,7 +179,7 @@ export class SaveManager {
   private data: SaveData;
   private listeners = new Set<Listener>();
   private writeTimer: ReturnType<typeof setTimeout> | null = null;
-  private storageOk = true;
+
 
   constructor(private readonly storage: Storage | null = safeStorage()) {
     this.data = this.read();
@@ -183,13 +187,18 @@ export class SaveManager {
 
   private read(): SaveData {
     if (!this.storage) return defaultSave();
-    try {
-      const raw = this.storage.getItem(STORAGE_KEY);
-      if (!raw) return defaultSave();
-      return migrate(JSON.parse(raw));
-    } catch {
-      return defaultSave();
+    for (const key of [STORAGE_KEY, BACKUP_KEY]) {
+      try {
+        const raw = this.storage.getItem(key);
+        if (!raw) continue;
+        const parsed: unknown = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') continue;
+        return migrate(parsed);
+      } catch {
+        // A damaged primary snapshot can be recovered from the last backup.
+      }
     }
+    return defaultSave();
   }
 
   get(): Readonly<SaveData> {
@@ -228,14 +237,21 @@ export class SaveManager {
     }, 180);
   }
 
-  flush(): void {
-    if (!this.storage || !this.storageOk) return;
-    try {
-      this.storage.setItem(STORAGE_KEY, JSON.stringify(this.data));
-    } catch {
-      // Quota ou mode prive : on continue en memoire uniquement.
-      this.storageOk = false;
+  /** Synchronous checkpoint. Failures are reported and retried on the next write. */
+  flush(): boolean {
+    if (this.writeTimer !== null) {
+      clearTimeout(this.writeTimer);
+      this.writeTimer = null;
     }
+    if (!this.storage) return false;
+    const snapshot = JSON.stringify(this.data);
+    try {
+      this.storage.setItem(STORAGE_KEY, snapshot);
+    } catch {
+      return false;
+    }
+    try { this.storage.setItem(BACKUP_KEY, snapshot); } catch { /* Primary is already durable. */ }
+    return true;
   }
 
   reset(): void {
@@ -255,9 +271,6 @@ export class SaveManager {
 function safeStorage(): Storage | null {
   try {
     if (typeof localStorage === 'undefined') return null;
-    const probe = '__bombshift_probe__';
-    localStorage.setItem(probe, '1');
-    localStorage.removeItem(probe);
     return localStorage;
   } catch {
     return null;
@@ -281,6 +294,8 @@ const RUN_VERSION = 1;
 export interface RunSnapshot {
   v: number;
   mapId: string;
+  /** Detect a redesigned map before applying a snapshot from an older layout. */
+  mapLayout?: string;
   difficulty: string;
   elapsedMs: number;
   savedAt: number;

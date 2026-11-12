@@ -800,3 +800,11 @@ input[type="range"]::-moz-range-thumb {
 
 .campaign-progress { color: #d5c7e8; font-size: 0.85rem; margin: 4px 0; }
 .campaign-world { font-size: 1rem; letter-spacing: 0.09em; color: #c5bee4; margin: 18px 0 2px; }
+
+.map-card--theme-ocean { background: linear-gradient(135deg, #0f3c4e, #102630); border-color: #548f8c; }
+.map-card--theme-desert { background: linear-gradient(135deg, #5b4433, #282329); border-color: #a3865b; }
+.map-card__world { display: block; width: calc(100% + 36px); max-width: none; height: 108px; object-fit: cover; margin: -18px -18px 15px; border-radius: 13px 13px 0 0; opacity: .95; }
+.save-receipt { padding: 14px; border-radius: 10px; border: 1px solid #669a89; background: #142c2a; color: #d2f4df; line-height: 1.5; }
+
+.map-card--illustrated { flex-shrink: 0; min-height: 268px; }
+.map-card__world { flex-shrink: 0; }

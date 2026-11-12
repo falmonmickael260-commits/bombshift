@@ -1,5 +1,5 @@
 import type { GridMap } from '../core/grid';
-import type { BossKind, EnemyKind, Rank, Theme, Vec2 } from '../core/types';
+import type { BossKind, Dir, EnemyKind, Rank, Theme, Vec2 } from '../core/types';
 
 export type MapId =
   | 'volcano'
@@ -59,6 +59,20 @@ export interface MapObjectiveDef {
   total: number;
 }
 
+/** Rectangular zones, visibly marked, that push actors without changing their controls. */
+export interface FlowField {
+  x: number; y: number; width: number; height: number;
+  direction: Dir;
+  speed: number;
+  kind: 'current' | 'wind' | 'conveyor' | 'gravity';
+  affectsBombs?: boolean;
+  periodMs?: number;
+  warnMs?: number;
+  activeMs?: number;
+  offsetMs?: number;
+  stopsOnSwitches?: boolean;
+}
+
 export interface MapDefinition {
   id: MapId;
   index: number;
@@ -70,6 +84,7 @@ export interface MapDefinition {
   mirrorControls?: boolean;
   /** Portails bidirectionnels : les deux extrémités portent la même lettre. */
   portals?: readonly { a: Vec2; b: Vec2 }[];
+  flows?: readonly FlowField[];
   theme: Theme;
   bossKind: BossKind;
   bossName: string;

@@ -1,10 +1,11 @@
+import { buildBiomeTextures } from '../core/biomeArt';
 import Phaser from 'phaser';
 import { registerAnims } from '../core/anims';
 import { buildCharacterTextures } from '../core/charArt';
 import { buildParticleTextures, buildTileTextures } from '../core/tileArt';
 import type { Theme } from '../core/types';
 
-const THEMES: readonly Theme[] = ['volcano', 'ice', 'temple', 'electric', 'dimension'];
+const THEMES: readonly Theme[] = ['volcano', 'ice', 'temple', 'electric', 'dimension', 'ocean', 'desert'];
 
 /**
  * Generation de tout l'art du jeu (textures canvas) et des animations.
@@ -21,6 +22,7 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     buildTileTextures(this, THEMES);
+    buildBiomeTextures(this);
     buildParticleTextures(this);
     buildCharacterTextures(this);
     registerAnims(this, THEMES);

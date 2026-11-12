@@ -40,9 +40,9 @@ export function renderMapList(
   container.appendChild(el('p', 'campaign-progress',
     `${cleared} / ${MAPS.length} niveaux terminés · Prochain miroir : ${nextMirror ? nextMirror.index + 1 : 'tous terminés'}`));
   const worlds: Record<number, string> = {
-    20: '21–24 · LE TEMPLE GLACÉ', 24: '25–29 · LE VOLCAN EN FUSION',
-    29: '30 · MONDE MIROIR', 30: '31–34 · LA CITÉ ÉLECTRIQUE',
-    34: '35–39 · LA DIMENSION INSTABLE', 39: '40 · LE MIROIR DU NEXUS',
+    20: '21–24 · LA CITÉ ENGLOUTIE', 24: '25–29 · LE DÉSERT DES TOMBEAUX',
+    29: '30 · MONDE MIROIR', 30: '31–34 · LA STATION ORBITALE',
+    34: '35–39 · L’ARCHIPEL COSMIQUE', 39: '40 · LE MIROIR DE L’INFINI',
   };
   MAPS.forEach((def, i) => {
     if (worlds[i]) container.appendChild(el('h2', 'campaign-world', worlds[i]));
@@ -53,6 +53,13 @@ export function renderMapList(
       `map-card map-card--${def.id} map-card--theme-${def.theme}${locked ? ' map-card--locked' : ''}`,
     );
     card.type = 'button';
+    if (def.index >= 20) {
+      card.classList.add('map-card--illustrated');
+      const thumbnail = el('img', 'map-card__world');
+      thumbnail.src = `${import.meta.env.BASE_URL}worlds/${def.theme}.svg`;
+      thumbnail.alt = ''; thumbnail.loading = 'lazy';
+      card.appendChild(thumbnail);
+    }
 
     card.appendChild(el('span', 'map-card__index', String(i + 1)));
     if (def.mirrorControls ?? isMirrorLevel(def.index)) {

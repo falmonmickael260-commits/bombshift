@@ -23,6 +23,14 @@ describe('extension de campagne', () => {
     expect(isMirrorLevel(49)).toBe(true);
   });
 
+  it('propose quatre univers distincts des trois mondes d’origine et plusieurs formats d’arène', () => {
+    const extension = MAPS.slice(20);
+    expect(new Set(extension.map((m) => m.theme))).toEqual(new Set(['ocean', 'desert', 'electric', 'dimension']));
+    expect(new Set(extension.map((m) => `${m.rows[0].length}x${m.rows.length}`)).size).toBeGreaterThanOrEqual(5);
+    expect(extension.every((m) => m.flows?.length)).toBe(true);
+    expect(extension.filter((m) => m.flows?.some((f) => f.affectsBombs)).map((m) => m.index + 1)).toEqual([31,32,33,34]);
+  });
+
   it('ne recycle aucune ancienne carte dans les vingt nouvelles', () => {
     expect(new Set(MAPS.slice(20).map((m) => m.rows.join('\n'))).size).toBe(20);
     const old = new Set(MAPS.slice(0, 20).map((m) => m.rows.join('\n')));
@@ -50,6 +58,8 @@ describe('extension de campagne', () => {
         return seen;
       };
       const before = flood();
+      for (const cell of p.mechanisms) expect(before.has(grid.idx(cell.x, cell.y))).toBe(true);
+      expect(p.mechanisms.length).toBe(def.objectives.find((o) => o.id === 'mechanism')?.total ?? 0);
       for (const prop of p.props) expect(before.has(grid.idx(prop.cell.x, prop.cell.y))).toBe(true);
       expect(before.has(grid.idx(p.bossSpawn.x, p.bossSpawn.y))).toBe(false);
       grid.openGates();

@@ -1,2427 +1,1378 @@
 import type { MapDefinition } from './mapTypes';
 
-/** Niveaux 21–40 : cartes et rencontres fixes, indépendantes des cartes d’origine. */
+/** Twenty authored worlds and encounters. Stable IDs preserve existing progress. */
 export const EXTENSION: readonly MapDefinition[] = [
   {
-    "id": "level-21",
-    "index": 20,
-    "name": "Le Parvis du Givre",
-    "tagline": "Freinez sur les îlots de pierre avant de viser les générateurs.",
-    "difficulty": "normal",
-    "theme": "ice",
-    "bossKind": "cryon",
-    "bossName": "CRYON",
-    "bossHp": 8,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": true,
-    "parTimeMs": 420000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#..1.....b..#.c..#......#",
-      "#...########D....#......#",
-      "#.b.........#..f.#......#",
-      "#.~~~~~~~~~~#~...#......#",
-      "#.~~~~~~~~~~#~.b.#......#",
-      "#*.............2.#......#",
-      "#..............g.#......#",
-      "#.#########......#......#",
-      "#..............b.#......#",
-      "#.b...#.~~~~~~~..#......#",
-      "#.....D.~~~~~~~..=...!..#",
-      "#.p...#.~~~~~~h..#......#",
-      "#...b.#b.......+.#......#",
-      "#..3.w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-21",
+    index: 20,
+    name: "Les Épaves de Nacre",
+    tagline: "Des coques éventrées, des coraux et deux courants à remonter.",
+    difficulty: "normal",
+    theme: "ocean",
+    bossKind: "cryon",
+    bossName: "LE GARDIEN DES MARÉES",
+    bossHp: 8,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 480000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#...b.....w.......2.p.#.....#",
+      "#..####b####...b......#.....#",
+      "#..........#..........#.....#",
+      "#....1..b..#.#######..#.....#",
+      "#..........#..........#.....#",
+      "#..h................p.#.....#",
+      "#*.####.###.c....b....#..!..#",
+      "#...........#.........#.....#",
+      "#...........#.........#.....#",
+      "#.................XX..=.....#",
+      "#...........#.........#.....#",
+      "#...######b####.b.....#.....#",
+      "#..................f..#.....#",
+      "#..c......g......3..+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Freinez sur les îlots de pierre avant de viser les générateurs.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Relâchez la direction avant les îlots de pierre : les personnages et les bombes glissent sur la glace."
+    intro: [
+      "Des coques éventrées, des coraux et deux courants à remonter.",
+      "Les bombes activent les trois perles-balises.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches claires indiquent les courants : nagez à contre-courant ou profitez de leur poussée. Les anémones brillent avant leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Perles-balises rallumées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE GARDIEN DES MARÉES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 6400,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7200,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 2, "y": 11, "width": 8, "height": 2, "direction": "right", "kind": "current", "speed": 45},
+      {"x": 14, "y": 8, "width": 6, "height": 2, "direction": "down", "kind": "current", "speed": 45},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-22",
-    "index": 21,
-    "name": "Les Cloîtres Gelés",
-    "tagline": "Deux cloîtres et des portes décalées : choisissez votre fenêtre.",
-    "difficulty": "normal",
-    "theme": "ice",
-    "bossKind": "cryon",
-    "bossName": "CRYON",
-    "bossHp": 8,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": true,
-    "parTimeMs": 420000,
-    "rows": [
+    id: "level-22",
+    index: 21,
+    name: "Les Jardins des Méduses",
+    tagline: "Les méduses s’illuminent avant la décharge ; attendez le reflux.",
+    difficulty: "normal",
+    theme: "ocean",
+    bossKind: "cryon",
+    bossName: "LE GARDIEN DES MARÉES",
+    bossHp: 8,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 480000,
+    rows: [
       "#########################",
-      "#@...............#......#",
-      "#..+.#~p~~b......#......#",
-      "#....#~~~~....2..#......#",
-      "#....#~~~~.......#......#",
-      "#.b#####d####..f.#......#",
-      "#................#......#",
-      "#.~.~~~~~~~#~~.b.#......#",
-      "#*.1.~~~~~~#~~...#......#",
-      "#.~.~~~~~~~#~~.g.#......#",
-      "#.....b..........#......#",
-      "#..####d#####..b.#......#",
-      "#.b..............#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b..p....+.#......#",
-      "#....w....c.3.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+      "#@......................#",
+      "#..+....................#",
+      "#....b...#.w..........p.#",
+      "#..#######..b.......2...#",
+      "#.......................#",
+      "#........#.#########....#",
+      "#..h.....#............g.#",
+      "#*.1.........p.#........#",
+      "#.....XX.......#........#",
+      "#.......................#",
+      "#...####D#####.#........#",
+      "#..............#..XX....#",
+      "#...b................f..#",
+      "#..c.......3........c.+.#",
+      "#.....................*.#",
+      "##################=######",
+      "#.......................#",
+      "#.......................#",
+      "#...........!...........#",
+      "#.....................E.#",
+      "#.......................#",
+      "#########################",
     ],
-    "intro": [
-      "Deux cloîtres et des portes décalées : choisissez votre fenêtre.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Relâchez la direction avant les îlots de pierre : les personnages et les bombes glissent sur la glace."
+    intro: [
+      "Les méduses s’illuminent avant la décharge ; attendez le reflux.",
+      "Les bombes activent les trois perles-balises.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches claires indiquent les courants : nagez à contre-courant ou profitez de leur poussée. Les anémones brillent avant leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Perles-balises rallumées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE GARDIEN DES MARÉES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 6360,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7160,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 3, "y": 6, "width": 5, "height": 2, "direction": "down", "kind": "current", "speed": 45, "periodMs": 7000, "warnMs": 1400, "activeMs": 3000},
+      {"x": 17, "y": 9, "width": 4, "height": 3, "direction": "left", "kind": "current", "speed": 45, "periodMs": 7000, "warnMs": 1400, "activeMs": 3000, "offsetMs": 3500},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7450, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8450, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-23",
-    "index": 22,
-    "name": "La Galerie des Cristaux",
-    "tagline": "Les piliers arrêtent les bombes glissantes ; visez depuis les traverses.",
-    "difficulty": "difficile",
-    "theme": "ice",
-    "bossKind": "cryon",
-    "bossName": "CRYON",
-    "bossHp": 8,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": true,
-    "parTimeMs": 420000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.1.p..b......#......#",
-      "#.~~~..#.b....c..#......#",
-      "#.~~~~.#....#....#......#",
-      "#.~~~~.#....#..f.#......#",
-      "#...........C....#......#",
-      "#.##C###....#..b.#......#",
-      "#*.......~~~#~~~.#......#",
-      "#........~~~~~~g.#......#",
-      "#.....b..~~~~~~~.#......#",
-      "#..............b.#......#",
-      "#.b.......####C..#......#",
-      "#..............2.=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#.3..w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-23",
+    index: 22,
+    name: "Le Canyon des Marées",
+    tagline: "Remontez un canyon de courants pour rallumer trois perles-balises.",
+    difficulty: "difficile",
+    theme: "ocean",
+    bossKind: "cryon",
+    bossName: "LE GARDIEN DES MARÉES",
+    bossHp: 8,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 480000,
+    rows: [
+      "###########################",
+      "#@..................#.....#",
+      "#..+................#.....#",
+      "#....p...#....#...p.#.....#",
+      "#...b....#.X..#..2..#.....#",
+      "#.########..........#.....#",
+      "#........#..b.#.....#.....#",
+      "#........D....#.....#.....#",
+      "#...1....#..........=.....#",
+      "#..w.....#........g.#.....#",
+      "#*.......#.#######..#..!..#",
+      "#........#..........#.....#",
+      "#...................#.....#",
+      "#........#..........#.....#",
+      "#..........b....XX..#.....#",
+      "#.#####.####........#.....#",
+      "#...................#.....#",
+      "#..............3.f..#.....#",
+      "#..c.....h......cb+*#...E.#",
+      "#...................#.....#",
+      "###########################",
     ],
-    "intro": [
-      "Les piliers arrêtent les bombes glissantes ; visez depuis les traverses.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Relâchez la direction avant les îlots de pierre : les personnages et les bombes glissent sur la glace."
+    intro: [
+      "Remontez un canyon de courants pour rallumer trois perles-balises.",
+      "Les bombes activent les trois perles-balises.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches claires indiquent les courants : nagez à contre-courant ou profitez de leur poussée. Les anémones brillent avant leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Perles-balises rallumées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE GARDIEN DES MARÉES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 3, "y": 7, "width": 3, "height": 6, "direction": "up", "kind": "current", "speed": 55},
+      {"x": 11, "y": 11, "width": 5, "height": 2, "direction": "right", "kind": "current", "speed": 55},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7400, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8400, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-24",
-    "index": 23,
-    "name": "Le Dégel du Sanctuaire",
-    "tagline": "Glace, portes et dalles : quittez les couloirs avant leur fermeture.",
-    "difficulty": "difficile",
-    "theme": "ice",
-    "bossKind": "cryon",
-    "bossName": "CRYON",
-    "bossHp": 8,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": true,
-    "parTimeMs": 420000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.bPp..b...2..#......#",
-      "#........b....c..#......#",
-      "#..###P#######...#......#",
-      "#.~~~~~.#...b..f.#......#",
-      "#..~~~~.#........#......#",
-      "#.1.~~~.P......b.#......#",
-      "#*.~~~~.#........#......#",
-      "#.P............g.#......#",
-      "#...#######P##...#......#",
-      "#........~~~~~~~.#......#",
-      "#.b.#....~~~~~~~.#......#",
-      "#...#....~~~~~~~.=...!..#",
-      "#.p.#....~~~~~h~.#......#",
-      "#...#..b..p...P+.#......#",
-      "#....w....3.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-24",
+    index: 23,
+    name: "Le Palais sous la Mer",
+    tagline: "Trois conques de commande arrêtent les courants du palais.",
+    difficulty: "difficile",
+    theme: "ocean",
+    bossKind: "cryon",
+    bossName: "LE GARDIEN DES MARÉES",
+    bossHp: 8,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 480000,
+    rows: [
+      "#############################",
+      "#@..........................#",
+      "#..+........................#",
+      "#..Q.c.......w............p.#",
+      "#...####.#######.####.......#",
+      "#...#......#........#...2...#",
+      "#...#......#...XX...#.......#",
+      "#..h...1...D....X.........g.#",
+      "#*..#...b..#...p....#.......#",
+      "#...#......#....b...#.......#",
+      "#...####.#######.####.......#",
+      "#.......................Q...#",
+      "#.....................b..f..#",
+      "#..c.........Q....3.......+.#",
+      "#.........................*.#",
+      "#######################=#####",
+      "#...........................#",
+      "#...........................#",
+      "#.............!...........E.#",
+      "#...........................#",
+      "#############################",
     ],
-    "intro": [
-      "Glace, portes et dalles : quittez les couloirs avant leur fermeture.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Relâchez la direction avant les îlots de pierre : les personnages et les bombes glissent sur la glace.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "Trois conques de commande arrêtent les courants du palais.",
+      "Les bombes activent les trois perles-balises.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les consoles rondes sont permanentes : enclenchez-les toutes pour arrêter les courants, tapis ou champs marqués.",
+      "Les flèches claires indiquent les courants : nagez à contre-courant ou profitez de leur poussée. Les anémones brillent avant leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Perles-balises rallumées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE GARDIEN DES MARÉES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
+      {"id": "mechanism", "label": "Consoles de stabilisation activées", "mandatory": false, "total": 3},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 5, "y": 11, "width": 14, "height": 2, "direction": "right", "kind": "current", "speed": 60, "stopsOnSwitches": true},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7350, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8350, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-25",
-    "index": 24,
-    "name": "Les Rives Incandescentes",
-    "tagline": "Contournez les bassins de lave pour ouvrir les trois valves dans l’ordre.",
-    "difficulty": "normal",
-    "theme": "volcano",
-    "bossKind": "magmaron",
-    "bossName": "MAGMARON",
-    "bossHp": 8,
-    "propKind": "valve",
-    "orderedProps": true,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 420000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b.LL...#......#",
-      "#..1.....b..LLc..#......#",
-      "#................#......#",
-      "#.b####V#####..f.#......#",
-      "#................#......#",
-      "#....LL..#.....b.#......#",
-      "#*...LL..V....2..#......#",
-      "#....LL..#.....g.#......#",
-      "#.....b..#.......#......#",
-      "#..............b.#......#",
-      "#.b.######V###...#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#..3.w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-25",
+    index: 24,
+    name: "Les Portes du Simoun",
+    tagline: "Les drapeaux de sable annoncent le simoun : abritez-vous derrière les colonnes.",
+    difficulty: "normal",
+    theme: "desert",
+    bossKind: "gardien",
+    bossName: "LE VEILLEUR DES SABLES",
+    bossHp: 8,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 480000,
+    rows: [
+      "###########################",
+      "#@..................#.....#",
+      "#..+................#.....#",
+      "#...bc...b......2.p.#.....#",
+      "#...................#.....#",
+      "#..####.#######.....#.....#",
+      "#.......#...........#.....#",
+      "#.......#...........#.....#",
+      "#..w1...#...b.....g.#.....#",
+      "#*......#..p........#..!..#",
+      "#...................#.....#",
+      "#....########.####..#.....#",
+      "#...................#.....#",
+      "#...........VV......=.....#",
+      "#................b..#.....#",
+      "#................f..#.....#",
+      "#..c.....h....3...+*#...E.#",
+      "#...................#.....#",
+      "###########################",
     ],
-    "intro": [
-      "Contournez les bassins de lave pour ouvrir les trois valves dans l’ordre.",
-      "Activez les valves dans l’ordre 1, 2, 3 pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Attendez la fin de l’éruption des évents avant de traverser."
+    intro: [
+      "Les drapeaux de sable annoncent le simoun : abritez-vous derrière les colonnes.",
+      "Réunissez les trois sceaux solaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches deviennent jaunes avant les rafales. Le vent pousse votre personnage sans inverser ses commandes. Les fosses sombres sont des sables mouvants mortels.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Valves activées dans l’ordre",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Sceaux solaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE VEILLEUR DES SABLES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "vents": [
-      {
-        "group": 1,
-        "periodMs": 7440,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 8040,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 2, "y": 7, "width": 15, "height": 2, "direction": "right", "kind": "wind", "speed": 48, "periodMs": 8000, "warnMs": 1600, "activeMs": 2600},
+    ],
+    vents: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+    ],
   },
   {
-    "id": "level-26",
-    "index": 25,
-    "name": "Le Pont des Éruptions",
-    "tagline": "Trois traverses sûres séparent les évents ; gardez une voie de repli.",
-    "difficulty": "difficile",
-    "theme": "volcano",
-    "bossKind": "magmaron",
-    "bossName": "MAGMARON",
-    "bossHp": 9,
-    "propKind": "valve",
-    "orderedProps": true,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 480000,
-    "rows": [
+    id: "level-26",
+    index: 25,
+    name: "Le Tombeau aux Cent Jarres",
+    tagline: "Ouvrez les jarres à la bombe et quittez les dalles avant la sortie des pointes.",
+    difficulty: "difficile",
+    theme: "desert",
+    bossKind: "gardien",
+    bossName: "LE VEILLEUR DES SABLES",
+    bossHp: 9,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 540000,
+    rows: [
       "#########################",
-      "#@...............#......#",
-      "#..+.b#p..b......#......#",
-      "#.....#..b....2..#......#",
-      "#.....#..........#......#",
-      "#.b.........b..f.#......#",
-      "#.##V#####V####..#......#",
-      "#......LL......b.#......#",
-      "#*.....LL........#......#",
-      "#..1...LL......g.#......#",
-      "#.....b..........#......#",
-      "#.####V#####V##b.#......#",
-      "#.b..............#......#",
-      "#..........#LL...=...!..#",
-      "#.p.......b#LLh..#......#",
-      "#...b..b..p#LL.+.#......#",
-      "#....w..3.c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+      "#@......................#",
+      "#..+....................#",
+      "#..........w..........p.#",
+      "#..##b##########.###....#",
+      "#...b..#...b............#",
+      "#......#...........2....#",
+      "#..h1............b....p.#",
+      "#*...P.#.....c.P........#",
+      "#..########D########....#",
+      "#.............#.........#",
+      "#..........VV.#..P......#",
+      "#...b.........#.........#",
+      "#..###.##########.##.f..#",
+      "#..c......3g...b...b..+.#",
+      "#.....................*.#",
+      "###################=#####",
+      "#.......................#",
+      "#.......................#",
+      "#...........!...........#",
+      "#.....................E.#",
+      "#.......................#",
+      "#########################",
     ],
-    "intro": [
-      "Trois traverses sûres séparent les évents ; gardez une voie de repli.",
-      "Activez les valves dans l’ordre 1, 2, 3 pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Attendez la fin de l’éruption des évents avant de traverser."
+    intro: [
+      "Ouvrez les jarres à la bombe et quittez les dalles avant la sortie des pointes.",
+      "Réunissez les trois sceaux solaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches deviennent jaunes avant les rafales. Le vent pousse votre personnage sans inverser ses commandes. Les fosses sombres sont des sables mouvants mortels.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Valves activées dans l’ordre",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Sceaux solaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE VEILLEUR DES SABLES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "vents": [
-      {
-        "group": 1,
-        "periodMs": 7400,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 8000,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 8, "y": 5, "width": 5, "height": 2, "direction": "down", "kind": "wind", "speed": 40, "periodMs": 9000, "warnMs": 1800, "activeMs": 2500},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7250, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8250, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    vents: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+    ],
   },
   {
-    "id": "level-27",
-    "index": 26,
-    "name": "Les Fourneaux Jumeaux",
-    "tagline": "Deux fourneaux décalés : traversez après l’avertissement jaune.",
-    "difficulty": "difficile",
-    "theme": "volcano",
-    "bossKind": "magmaron",
-    "bossName": "MAGMARON",
-    "bossHp": 9,
-    "propKind": "valve",
-    "orderedProps": true,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 480000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#........b....c..#......#",
-      "#...####V####....#......#",
-      "#.b.#.......b#.f.#......#",
-      "#...#.LL.....#...#......#",
-      "#...V.LL.....#.b.#......#",
-      "#*1.#.LL..LL.V.2.#......#",
-      "#...#.....LL.#.g.#......#",
-      "#...#.b...LL.#...#......#",
-      "#..............b.#......#",
-      "#.b..............#......#",
-      "#...####V####....=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#....w..3.c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-27",
+    index: 26,
+    name: "L’Oasis des Obélisques",
+    tagline: "Contournez le bassin de sables mouvants entre deux vents contraires.",
+    difficulty: "difficile",
+    theme: "desert",
+    bossKind: "gardien",
+    bossName: "LE VEILLEUR DES SABLES",
+    bossHp: 9,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 540000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#....b....w.........p.#.....#",
+      "#...######.######.2...#.....#",
+      "#.....................#.....#",
+      "#......#........#.....#.....#",
+      "#......#..LLL...#.....#.....#",
+      "#......#..LLL...#.....=.....#",
+      "#..h......LLL...#...p.#.....#",
+      "#*.1...#..LLL...D.....#..!..#",
+      "#......#..LLL...#.....#.....#",
+      "#......#........#.b...#.....#",
+      "#.....................#.....#",
+      "#........VVV..........#.....#",
+      "#...########.####.....#.....#",
+      "#.....................#.....#",
+      "#......b..........3f..#.....#",
+      "#..c......g.......c.+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Deux fourneaux décalés : traversez après l’avertissement jaune.",
-      "Activez les valves dans l’ordre 1, 2, 3 pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Attendez la fin de l’éruption des évents avant de traverser.",
-      "Une coulée annoncée gagne le nord de l’arène ; le passage sud reste ouvert."
+    intro: [
+      "Contournez le bassin de sables mouvants entre deux vents contraires.",
+      "Réunissez les trois sceaux solaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches deviennent jaunes avant les rafales. Le vent pousse votre personnage sans inverser ses commandes. Les fosses sombres sont des sables mouvants mortels.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Valves activées dans l’ordre",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Sceaux solaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE VEILLEUR DES SABLES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "lavaFlow": {
-      "cells": [
-        {
-          "x": 20,
-          "y": 2
-        },
-        {
-          "x": 20,
-          "y": 3
-        },
-        {
-          "x": 20,
-          "y": 4
-        },
-        {
-          "x": 20,
-          "y": 5
-        }
-      ],
-      "firstMs": 90000,
-      "intervalMs": 20000,
-      "warnMs": 4200
-    },
-    "vents": [
-      {
-        "group": 1,
-        "periodMs": 7360,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7960,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 3, "y": 6, "width": 2, "height": 8, "direction": "down", "kind": "wind", "speed": 50, "periodMs": 8000, "warnMs": 1600, "activeMs": 3000},
+      {"x": 18, "y": 7, "width": 2, "height": 8, "direction": "up", "kind": "wind", "speed": 50, "periodMs": 8000, "warnMs": 1600, "activeMs": 3000, "offsetMs": 4000},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7200, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8200, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    vents: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+    ],
   },
   {
-    "id": "level-28",
-    "index": 27,
-    "name": "La Faille des Valves",
-    "tagline": "Les valves imposent un détour ; les bombes nettoient les alcôves.",
-    "difficulty": "difficile",
-    "theme": "volcano",
-    "bossKind": "magmaron",
-    "bossName": "MAGMARON",
-    "bossHp": 9,
-    "propKind": "valve",
-    "orderedProps": true,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 480000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.bPp..b......#......#",
-      "#...1...#b..LLc..#......#",
-      "#.......#...LL...#......#",
-      "#.b.....P...LL.f.#......#",
-      "#.......#........#......#",
-      "#.......#......b.#......#",
-      "#*###P##..###P##.#......#",
-      "#.P............g.#......#",
-      "#..LL.b.#........#......#",
-      "#..LL...#......b.#......#",
-      "#.bLL...P........#......#",
-      "#.......#........=...!..#",
-      "#.p.....#.b...h..#......#",
-      "#...b..b#....2P+.#......#",
-      "#.3..w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-28",
+    index: 27,
+    name: "La Nécropole des Sceaux",
+    tagline: "Les trois sceaux coupent le vent de la nécropole ; choisissez leur ordre.",
+    difficulty: "difficile",
+    theme: "desert",
+    bossKind: "gardien",
+    bossName: "LE VEILLEUR DES SABLES",
+    bossHp: 9,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 540000,
+    rows: [
+      "###########################",
+      "#@........................#",
+      "#..+......................#",
+      "#....c......f..Q........p.#",
+      "#..#######.##########.....#",
+      "#.....#......#......#.....#",
+      "#..wb.#......#...2..#...g.#",
+      "#..1....Q....Dp...........#",
+      "#*....#....P.#..b...#.....#",
+      "#.....#.b....#....P.#.....#",
+      "#..#.############.###.....#",
+      "#...............VV.....c..#",
+      "#..Q........h..........3+.#",
+      "#.......................*.#",
+      "####################=######",
+      "#.........................#",
+      "#.........................#",
+      "#............!............#",
+      "#.......................E.#",
+      "#.........................#",
+      "###########################",
     ],
-    "intro": [
-      "Les valves imposent un détour ; les bombes nettoient les alcôves.",
-      "Activez les valves dans l’ordre 1, 2, 3 pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "Les trois sceaux coupent le vent de la nécropole ; choisissez leur ordre.",
+      "Réunissez les trois sceaux solaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les consoles rondes sont permanentes : enclenchez-les toutes pour arrêter les courants, tapis ou champs marqués.",
+      "Les flèches deviennent jaunes avant les rafales. Le vent pousse votre personnage sans inverser ses commandes. Les fosses sombres sont des sables mouvants mortels.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Valves activées dans l’ordre",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Sceaux solaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE VEILLEUR DES SABLES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
+      {"id": "mechanism", "label": "Consoles de stabilisation activées", "mandatory": false, "total": 3},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 4, "y": 11, "width": 17, "height": 2, "direction": "left", "kind": "wind", "speed": 65, "periodMs": 7500, "warnMs": 1500, "activeMs": 3000, "stopsOnSwitches": true},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7150, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8150, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    vents: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+    ],
   },
   {
-    "id": "level-29",
-    "index": 28,
-    "name": "La Couronne du Magma",
-    "tagline": "Le cœur reste dangereux ; circulez par les galeries périphériques.",
-    "difficulty": "difficile",
-    "theme": "volcano",
-    "bossKind": "magmaron",
-    "bossName": "MAGMARON",
-    "bossHp": 9,
-    "propKind": "valve",
-    "orderedProps": true,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 480000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#..1.....b....c..#......#",
-      "#................#......#",
-      "#.b..###V###b..f.#......#",
-      "#....#.....#..2..#......#",
-      "#....#.LL..#...b.#......#",
-      "#*...V.LL..V.....#......#",
-      "#....#.....#...g.#......#",
-      "#....#b....#.....#......#",
-      "#....###V###...b.#......#",
-      "#.b..........LL..#......#",
-      "#............LL..=...!..#",
-      "#.p.......b..Lh..#......#",
-      "#...b..b3......+.#......#",
-      "#....w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-29",
+    index: 28,
+    name: "La Pyramide du Soleil Noir",
+    tagline: "Des tombeaux en terrasses où la tempête et les pointes imposent leur rythme.",
+    difficulty: "difficile",
+    theme: "desert",
+    bossKind: "gardien",
+    bossName: "LE VEILLEUR DES SABLES",
+    bossHp: 9,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 540000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#.........w.......2.p.#.....#",
+      "#...b.................#.....#",
+      "#..#####.#######.###..#.....#",
+      "#....#................#.....#",
+      "#....#................#.....#",
+      "#.........b...........#.....#",
+      "#....#................#.....#",
+      "#..h.#############..p.#.....#",
+      "#*........#.cVVV..#...#..!..#",
+      "#...1..P..#.......#...#.....#",
+      "#.................D...#.....#",
+      "#.........#....P..#...#.....#",
+      "#.................#...#.....#",
+      "#..#########.#######..=.....#",
+      "#.....................#.....#",
+      "#..........b.....P....#.....#",
+      "#...............3..f..#.....#",
+      "#..c......g........b+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Le cœur reste dangereux ; circulez par les galeries périphériques.",
-      "Activez les valves dans l’ordre 1, 2, 3 pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Attendez la fin de l’éruption des évents avant de traverser.",
-      "Une coulée annoncée gagne le nord de l’arène ; le passage sud reste ouvert."
+    intro: [
+      "Des tombeaux en terrasses où la tempête et les pointes imposent leur rythme.",
+      "Réunissez les trois sceaux solaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les flèches deviennent jaunes avant les rafales. Le vent pousse votre personnage sans inverser ses commandes. Les fosses sombres sont des sables mouvants mortels.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Valves activées dans l’ordre",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Sceaux solaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE VEILLEUR DES SABLES", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "lavaFlow": {
-      "cells": [
-        {
-          "x": 20,
-          "y": 2
-        },
-        {
-          "x": 20,
-          "y": 3
-        },
-        {
-          "x": 20,
-          "y": 4
-        },
-        {
-          "x": 20,
-          "y": 5
-        }
-      ],
-      "firstMs": 75000,
-      "intervalMs": 20000,
-      "warnMs": 4200
-    },
-    "vents": [
-      {
-        "group": 1,
-        "periodMs": 7280,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7880,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 6, "y": 7, "width": 11, "height": 2, "direction": "right", "kind": "wind", "speed": 65, "periodMs": 6800, "warnMs": 1600, "activeMs": 2400},
+      {"x": 3, "y": 17, "width": 16, "height": 2, "direction": "left", "kind": "wind", "speed": 65, "periodMs": 6800, "warnMs": 1600, "activeMs": 2400, "offsetMs": 3400},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 7100, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8100, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    vents: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+    ],
   },
   {
-    "id": "level-30",
-    "index": 29,
-    "name": "Le Miroir des Failles",
-    "tagline": "MONDE MIROIR : les deux axes sont inversés ; les portails relient les ailes.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 9,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": true,
-    "slippery": false,
-    "parTimeMs": 480000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#..1.....b....c..#......#",
-      "#................#......#",
-      "#.b##D##..##D##f.#......#",
-      "#................#......#",
-      "#...XX..#...XX.b.#......#",
-      "#*..XX..#...XX...#......#",
-      "#...XX..#...X.2g.#......#",
-      "#.....b.#........#......#",
-      "#..............b.#......#",
-      "#.b##D##..##D##..#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#....w3...c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-30",
+    index: 29,
+    name: "Le Palais des Reflets",
+    tagline: "MONDE MIROIR : le palais se reflète, les portails échangent les deux ailes.",
+    difficulty: "difficile",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 9,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: true,
+    parTimeMs: 540000,
+    rows: [
+      "###########################",
+      "#@........................#",
+      "#..+......................#",
+      "#...1pb.....#.#.....b2..p.#",
+      "#...........#.#...........#",
+      "#..#######..#.#.#######...#",
+      "#..w........#.#.........g.#",
+      "#.....X.....D.D.....X.....#",
+      "#*..........#.#...........#",
+      "#...........#.#...........#",
+      "#..#######..#.#.#######...#",
+      "#......................f..#",
+      "#..c....b...h3....b...c.+.#",
+      "#.......................*.#",
+      "####################=######",
+      "#.........................#",
+      "#.........................#",
+      "#............!............#",
+      "#.......................E.#",
+      "#.........................#",
+      "###########################",
     ],
-    "intro": [
-      "MONDE MIROIR : les deux axes sont inversés ; les portails relient les ailes.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse."
+    intro: [
+      "MONDE MIROIR : gauche ↔ droite et haut ↔ bas pendant tout le niveau. Les bombes et les menus restent normaux.",
+      "MONDE MIROIR : le palais se reflète, les portails échangent les deux ailes.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 10, "y": 11, "width": 7, "height": 2, "direction": "right", "kind": "gravity", "speed": 40, "periodMs": 9000, "warnMs": 1600, "activeMs": 2400},
     ],
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 6040,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6840,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    portals: [
+      {"a": {"x": 3, "y": 8}, "b": {"x": 22, "y": 8}},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7240,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7840,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8440,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 7050, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8050, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-31",
-    "index": 30,
-    "name": "Le Réseau Néon",
-    "tagline": "Alimentez les générateurs par explosion et traversez les portes automatiques.",
-    "difficulty": "normal",
-    "theme": "electric",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 10,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 540000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#..1.....b....c..#......#",
-      "#................#......#",
-      "#.b###D#######.f.#......#",
-      "#......#.........#......#",
-      "#......#..XXX..b.#......#",
-      "#*.....D..XXX.2..#......#",
-      "#......#.......g.#......#",
-      "#.....b..........#......#",
-      "#..########D##.b.#......#",
-      "#.b..............#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#..3.w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-31",
+    index: 30,
+    name: "Le Dock Orbital",
+    tagline: "Les tapis de chargement transportent aussi vos bombes vers les batteries.",
+    difficulty: "normal",
+    theme: "electric",
+    bossKind: "magmaron",
+    bossName: "LE CŒUR HÉLIOS",
+    bossHp: 10,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 600000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#...b.....w.......2.p.#.....#",
+      "#..####.##########....#.....#",
+      "#.........#...........#.....#",
+      "#.........#....b......#.....#",
+      "#...1...b........XX...#.....#",
+      "#..h......#.........p.#.....#",
+      "#*........#.c.........#..!..#",
+      "#..############D##....#.....#",
+      "#.....................#.....#",
+      "#.....................=.....#",
+      "#.....................#.....#",
+      "#.....................#.....#",
+      "#..............3.b.f..#.....#",
+      "#..c......g.........+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Alimentez les générateurs par explosion et traversez les portes automatiques.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse."
+    intro: [
+      "Les tapis de chargement transportent aussi vos bombes vers les batteries.",
+      "Les bombes activent les trois batteries.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les tapis fléchés déplacent le personnage ET les bombes posées. Les champs électriques annoncent leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Batteries chargées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE CŒUR HÉLIOS", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 6000,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6800,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 3, "y": 12, "width": 15, "height": 2, "direction": "right", "kind": "conveyor", "speed": 65, "affectsBombs": true},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7200,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7800,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8400,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 7000, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 8000, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-32",
-    "index": 31,
-    "name": "Les Transformateurs",
-    "tagline": "Les champs énergétiques alternent ; les niches protègent vos préparatifs.",
-    "difficulty": "difficile",
-    "theme": "electric",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 10,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 540000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#........b....c..#......#",
-      "#..##X##..#####..#......#",
-      "#.b.........b..2.#......#",
-      "#.......#........#......#",
-      "#...XX..#...XX.b.#......#",
-      "#*1.XX..X...XX...#......#",
-      "#...XX..#...XX.g.#......#",
-      "#.....b.#........#......#",
-      "#..............b.#......#",
-      "#.b#####..##X##..#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b..p....+.#......#",
-      "#....w...3c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-32",
+    index: 31,
+    name: "Les Presses de Titane",
+    tagline: "Neutralisez les presses cycliques et coupez les tapis depuis les consoles.",
+    difficulty: "difficile",
+    theme: "electric",
+    bossKind: "magmaron",
+    bossName: "LE CŒUR HÉLIOS",
+    bossHp: 10,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 600000,
+    rows: [
+      "###########################",
+      "#@........................#",
+      "#..+......................#",
+      "#...Q.......w........Q..p.#",
+      "#.........................#",
+      "#..###D###########D###....#",
+      "#.......#.......#.........#",
+      "#..h..b.#..XXXX.#.......p.#",
+      "#*..1.........c......2....#",
+      "#.......#.......#.b.......#",
+      "#.......#.......#.........#",
+      "#..#########.#########....#",
+      "#.........................#",
+      "#......................f..#",
+      "#..c.......bg3..........+.#",
+      "#.......................*.#",
+      "####################=######",
+      "#.........................#",
+      "#.........................#",
+      "#............!............#",
+      "#.......................E.#",
+      "#.........................#",
+      "###########################",
     ],
-    "intro": [
-      "Les champs énergétiques alternent ; les niches protègent vos préparatifs.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse."
+    intro: [
+      "Neutralisez les presses cycliques et coupez les tapis depuis les consoles.",
+      "Les bombes activent les trois batteries.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les consoles rondes sont permanentes : enclenchez-les toutes pour arrêter les courants, tapis ou champs marqués.",
+      "Les tapis fléchés déplacent le personnage ET les bombes posées. Les champs électriques annoncent leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Batteries chargées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE CŒUR HÉLIOS", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
+      {"id": "mechanism", "label": "Consoles de stabilisation activées", "mandatory": false, "total": 2},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7160,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7760,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8360,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 4, "y": 12, "width": 17, "height": 2, "direction": "left", "kind": "conveyor", "speed": 75, "affectsBombs": true, "stopsOnSwitches": true},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 6950, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7950, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-33",
-    "index": 32,
-    "name": "Le Circuit des Portails",
-    "tagline": "Les portails A et B raccourcissent les trajets entre les générateurs.",
-    "difficulty": "difficile",
-    "theme": "electric",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 10,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 540000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b#p..b......#......#",
-      "#..1..#..b....c..#......#",
-      "#.....#..........#......#",
-      "#.b...#.....b..f.#......#",
-      "#................#......#",
-      "#.###d########.b.#......#",
-      "#*.........#.....#......#",
-      "#......XX..d...g.#......#",
-      "#.....bXX..#..2..#......#",
-      "#..........#...b.#......#",
-      "#.b..............#......#",
-      "#...######d####..=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#..3.w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-33",
+    index: 32,
+    name: "L’Anneau des Transferts",
+    tagline: "Deux lignes de fret opposées et un téléporteur autour d’un réacteur central.",
+    difficulty: "difficile",
+    theme: "electric",
+    bossKind: "magmaron",
+    bossName: "LE CŒUR HÉLIOS",
+    bossHp: 10,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 600000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#.........w..b....2.p.#.....#",
+      "#.....................#.....#",
+      "#..########.#######...#.....#",
+      "#.....................#.....#",
+      "#......#.........#....#.....#",
+      "#....b.#.........#....#.....#",
+      "#......#.........#....#.....#",
+      "#..h...D...XX....#..p.=.....#",
+      "#*..1..#....c....D....#..!..#",
+      "#......#.........#....#.....#",
+      "#......#.........#....#.....#",
+      "#.....................#.....#",
+      "#.....................#.....#",
+      "#..########.#######...#.....#",
+      "#.....................#.....#",
+      "#.....................#.....#",
+      "#...............b.3f..#.....#",
+      "#..c......g.........+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Les portails A et B raccourcissent les trajets entre les générateurs.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse."
+    intro: [
+      "Deux lignes de fret opposées et un téléporteur autour d’un réacteur central.",
+      "Les bombes activent les trois batteries.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les tapis fléchés déplacent le personnage ET les bombes posées. Les champs électriques annoncent leur décharge.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Batteries chargées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE CŒUR HÉLIOS", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 8, "y": 7, "width": 8, "height": 2, "direction": "right", "kind": "conveyor", "speed": 75, "affectsBombs": true},
+      {"x": 8, "y": 12, "width": 8, "height": 2, "direction": "left", "kind": "conveyor", "speed": 75, "affectsBombs": true},
     ],
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 5920,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6720,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    portals: [
+      {"a": {"x": 4, "y": 3}, "b": {"x": 19, "y": 18}},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7120,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7720,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8320,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 6900, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7900, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-34",
-    "index": 33,
-    "name": "Le Palais des Arcs",
-    "tagline": "Combinez les passages temporisés et les décharges annoncées.",
-    "difficulty": "difficile",
-    "theme": "electric",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 10,
-    "propKind": "generator",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 540000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.bPp..b......#......#",
-      "#........b....c2.#......#",
-      "#...####D####....#......#",
-      "#.b.#.......b..f.#......#",
-      "#...#..XXX.......#......#",
-      "#...#..XXX.....b.#......#",
-      "#*1..............#......#",
-      "#.P.####D####..g.#......#",
-      "#.....b......#...#......#",
-      "#......XXX...#.b.#......#",
-      "#.b....XXX...#...#......#",
-      "#................=...!..#",
-      "#.p.####D####.h..#......#",
-      "#...b..b......P+.#......#",
-      "#....w...3c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-34",
+    index: 33,
+    name: "Le Réacteur Hélios",
+    tagline: "Déplacez les bombes sur les tapis pour charger le réacteur entre deux arcs.",
+    difficulty: "difficile",
+    theme: "electric",
+    bossKind: "magmaron",
+    bossName: "LE CŒUR HÉLIOS",
+    bossHp: 10,
+    propKind: "generator",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 600000,
+    rows: [
+      "###########################",
+      "#@........................#",
+      "#..+......................#",
+      "#...Q.......w........Q..p.#",
+      "#..#########.#########....#",
+      "#......#..........#.......#",
+      "#..h...#..........#.....p.#",
+      "#...1..D......c...D..2....#",
+      "#*...b.#..XXXXXX..#.b.....#",
+      "#......#..........#.......#",
+      "#..#########.#########....#",
+      "#......................f..#",
+      "#..c..Q.....g3...b......+.#",
+      "#.......................*.#",
+      "####################=######",
+      "#.........................#",
+      "#.........................#",
+      "#............!............#",
+      "#.......................E.#",
+      "#.........................#",
+      "###########################",
     ],
-    "intro": [
-      "Combinez les passages temporisés et les décharges annoncées.",
-      "Faites exploser les trois générateurs pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "Déplacez les bombes sur les tapis pour charger le réacteur entre deux arcs.",
+      "Les bombes activent les trois batteries.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les consoles rondes sont permanentes : enclenchez-les toutes pour arrêter les courants, tapis ou champs marqués.",
+      "Les tapis fléchés déplacent le personnage ET les bombes posées. Les champs électriques annoncent leur décharge.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Générateurs alimentés par explosion",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Batteries chargées par explosion", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE CŒUR HÉLIOS", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
+      {"id": "mechanism", "label": "Consoles de stabilisation activées", "mandatory": false, "total": 3},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 5880,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6680,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 8, "y": 6, "width": 9, "height": 2, "direction": "right", "kind": "conveyor", "speed": 85, "affectsBombs": true, "stopsOnSwitches": true},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7080,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7680,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8280,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 6850, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7850, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-35",
-    "index": 34,
-    "name": "Les Îles Suspendues",
-    "tagline": "Les arches instables s’ouvrent par cycles ; traversez d’île en île.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 10,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 540000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p..b......#......#",
-      "#...1...#b....c..#......#",
-      "#.......#........#......#",
-      "#.b##D##D...b.2f.#......#",
-      "#.......#........#......#",
-      "#...XX.........b.#......#",
-      "#*..XX....##D##..#......#",
-      "#...XX.........g.#......#",
-      "#.....b.#........#......#",
-      "#.......#...XX.b.#......#",
-      "#.b##D###...XX...#......#",
-      "#.......#...XX...=...!..#",
-      "#.p.....#.b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#..3.w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-35",
+    index: 34,
+    name: "Les Îlots de l’Aurore",
+    tagline: "Des morceaux de roche flottent entre des ponts de lumière intermittents.",
+    difficulty: "normal",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 10,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 600000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#....c....w.b.....2.p.#.....#",
+      "#....b................#.....#",
+      "#..########.#######...#.....#",
+      "#.......#.......#.....#.....#",
+      "#.......#.LLLL..#.....#.....#",
+      "#.......#.LLLL..#X....#.....#",
+      "#..h1...D.LLLL..#...p.#.....#",
+      "#*......#.LLLL..D.....#..!..#",
+      "#.......#.LLLL..#.....#.....#",
+      "#.......#.......#.....=.....#",
+      "#.......#.......#.....#.....#",
+      "#..########.#######...#.....#",
+      "#.....................#.....#",
+      "#.....................#.....#",
+      "#................b3f..#.....#",
+      "#..c......g.........+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Les arches instables s’ouvrent par cycles ; traversez d’île en île.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse."
+    intro: [
+      "Des morceaux de roche flottent entre des ponts de lumière intermittents.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 3, "y": 15, "width": 16, "height": 2, "direction": "right", "kind": "gravity", "speed": 35, "periodMs": 9000, "warnMs": 1600, "activeMs": 2500},
     ],
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 5840,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6640,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    portals: [
+      {"a": {"x": 4, "y": 3}, "b": {"x": 19, "y": 16}},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7040,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7640,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8240,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 6800, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7800, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-36",
-    "index": 35,
-    "name": "Le Labyrinthe des Échos",
-    "tagline": "Trois couloirs décalés et deux portails : préparez votre itinéraire.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 11,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 600000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.bPp..b..#...#......#",
-      "#..1.....b...#c..#......#",
-      "#............#...#......#",
-      "#.####P#####b..f.#......#",
-      "#.....XXX........#......#",
-      "#.....XXX......b.#......#",
-      "#*...............#......#",
-      "#.P..######P###g.#......#",
-      "#...#.b...XXX....#......#",
-      "#...#.....XXX..b.#......#",
-      "#.b.#............#......#",
-      "#.####P#####...2.=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b......P+.#......#",
-      "#....w..3.c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-36",
+    index: 35,
+    name: "Les Orbites Croisées",
+    tagline: "Deux paires de portails croisent leurs orbites autour d’un puits de gravité.",
+    difficulty: "difficile",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 11,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 660000,
+    rows: [
+      "###########################",
+      "#@........................#",
+      "#..+......................#",
+      "#...........w...........p.#",
+      "#.........................#",
+      "#..#########.#########....#",
+      "#.......#........#........#",
+      "#..h....#........#......p.#",
+      "#*..1...D.....c..d...2....#",
+      "#.......#..XXX...#........#",
+      "#...b...#........#..b.....#",
+      "#..#########.#########....#",
+      "#.........................#",
+      "#......................f..#",
+      "#..c....b...g3..........+.#",
+      "#.......................*.#",
+      "####################=######",
+      "#.........................#",
+      "#.........................#",
+      "#............!............#",
+      "#.......................E.#",
+      "#.........................#",
+      "###########################",
     ],
-    "intro": [
-      "Trois couloirs décalés et deux portails : préparez votre itinéraire.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "Deux paires de portails croisent leurs orbites autour d’un puits de gravité.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 9, "y": 6, "width": 7, "height": 4, "direction": "down", "kind": "gravity", "speed": 45, "periodMs": 8000, "warnMs": 1600, "activeMs": 2600},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 7000,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7600,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8200,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    portals: [
+      {"a": {"x": 4, "y": 3}, "b": {"x": 21, "y": 13}},
+      {"a": {"x": 21, "y": 3}, "b": {"x": 4, "y": 13}},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 6750, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7750, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-37",
-    "index": 36,
-    "name": "Les Chambres Hors du Temps",
-    "tagline": "Chaque chambre possède son rythme : observez les portes avant de poser une bombe.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 11,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 600000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.b.p2.b......#......#",
-      "#........b....c..#......#",
-      "#..#####d#####...#......#",
-      "#.b..#.....#b..f.#......#",
-      "#....#.XX..#.....#......#",
-      "#....#.XX..#...b.#......#",
-      "#*.1.d.XX..d.....#......#",
-      "#....#.....#...g.#......#",
-      "#....#b....#.....#......#",
-      "#....#.....#...b.#......#",
-      "#.b#####d#####...#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b.......+.#......#",
-      "#....w....c.b.3.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-37",
+    index: 36,
+    name: "L’Observatoire Fracturé",
+    tagline: "Les consoles stabilisent l’attraction de l’observatoire et ses passerelles.",
+    difficulty: "difficile",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 11,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 660000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#....b....f........2p.#.....#",
+      "#...#######.#######...#.....#",
+      "#.....................#.....#",
+      "#.....#..........#....#.....#",
+      "#.....#.Q......Q.#....#.....#",
+      "#.....#...XXX....#....=.....#",
+      "#..w..#..........#..g.#.....#",
+      "#*.1..D.....p....d....#..!..#",
+      "#.....#..........#....#.....#",
+      "#.....#..........#....#.....#",
+      "#.....#....Q.....#....#.....#",
+      "#.....................#.....#",
+      "#...#######.#######...#.....#",
+      "#.....................#.....#",
+      "#.......b..........3..#.....#",
+      "#..c......h.......c.+*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Chaque chambre possède son rythme : observez les portes avant de poser une bombe.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse."
+    intro: [
+      "Les consoles stabilisent l’attraction de l’observatoire et ses passerelles.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les consoles rondes sont permanentes : enclenchez-les toutes pour arrêter les courants, tapis ou champs marqués.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
+      {"id": "mechanism", "label": "Consoles de stabilisation activées", "mandatory": false, "total": 3},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 7, "y": 11, "width": 9, "height": 2, "direction": "left", "kind": "gravity", "speed": 55, "periodMs": 7500, "warnMs": 1600, "activeMs": 2600, "stopsOnSwitches": true},
     ],
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 5760,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6560,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    portals: [
+      {"a": {"x": 3, "y": 3}, "b": {"x": 19, "y": 16}},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 6960,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7560,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8160,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 6700, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7700, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-38",
-    "index": 37,
-    "name": "La Spirale Brisée",
-    "tagline": "Les galeries concentriques mélangent dalles, passages et failles.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 11,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 600000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#.1+.bPp..b......#......#",
-      "#........b....c..#......#",
-      "#..#####D#####...#......#",
-      "#.b#........b.#f.#......#",
-      "#..#..........#..#......#",
-      "#..#..#####...#b.#......#",
-      "#*.D..#........2.#......#",
-      "#.P#..#..XXX..#g.#......#",
-      "#..#..#..XXX..D..#......#",
-      "#..#..#.......#b.#......#",
-      "#.b...........#..#......#",
-      "#.............#..=...!..#",
-      "#.p#######D###h..#......#",
-      "#...b..b......P+.#......#",
-      "#....w..3.c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-38",
+    index: 37,
+    name: "La Couronne des Comètes",
+    tagline: "La couronne se referme par cycles ; utilisez les portails pour changer d’aile.",
+    difficulty: "difficile",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 11,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 660000,
+    rows: [
+      "###########################",
+      "#@........................#",
+      "#..+......................#",
+      "#....c......w...........p.#",
+      "#..#########.########.....#",
+      "#......#..........#.......#",
+      "#..h...#..LLLLL...#.....p.#",
+      "#...1..D..LLLLL...d..2....#",
+      "#*...b.#..........#.b.....#",
+      "#......#..........#.......#",
+      "#..#########.########.....#",
+      "#....XX............XX..f..#",
+      "#..c....b...g3..........+.#",
+      "#.......................*.#",
+      "####################=######",
+      "#.........................#",
+      "#.........................#",
+      "#............!............#",
+      "#.......................E.#",
+      "#.........................#",
+      "###########################",
     ],
-    "intro": [
-      "Les galeries concentriques mélangent dalles, passages et failles.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "La couronne se referme par cycles ; utilisez les portails pour changer d’aile.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 8, "y": 8, "width": 9, "height": 2, "direction": "right", "kind": "gravity", "speed": 55, "periodMs": 7200, "warnMs": 1600, "activeMs": 2400},
     ],
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 5720,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6520,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
+    portals: [
+      {"a": {"x": 3, "y": 3}, "b": {"x": 22, "y": 12}},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 6920,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7520,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8120,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    doors: [
+      {"group": 1, "periodMs": 6650, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7650, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-39",
-    "index": 38,
-    "name": "Le Nexus Instable",
-    "tagline": "Réunissez les reliques au milieu des champs alternés et des portails.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 11,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": false,
-    "slippery": false,
-    "parTimeMs": 600000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.bPp..b......#......#",
-      "#...1...#b....c..#......#",
-      "#.......#........#......#",
-      "#.b.....#...b..f.#......#",
-      "#.###P##..##P###.#......#",
-      "#..............b.#......#",
-      "#*..XX......XX...#......#",
-      "#.P.XX......XX.2.#......#",
-      "#.....b..........#......#",
-      "#.###P##..##P###.#......#",
-      "#.b.....#........#......#",
-      "#.......#........=...!..#",
-      "#.p.....#.b...h..#......#",
-      "#...b..b#.p...P+.#......#",
-      "#...3w....c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-39",
+    index: 38,
+    name: "Le Nexus des Constellations",
+    tagline: "Quatre portails et deux attractions opposées déplacent le centre de l’épreuve.",
+    difficulty: "difficile",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 11,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: false,
+    parTimeMs: 660000,
+    rows: [
+      "#############################",
+      "#@....................#.....#",
+      "#..+..................#.....#",
+      "#....g....c........2..#.....#",
+      "#.....................#.....#",
+      "#..########.########..#.....#",
+      "#.....................#.....#",
+      "#.....#...........#...#.....#",
+      "#.....#...........#...#.....#",
+      "#...b.#...........#...#.....#",
+      "#..f..D.########..d.h.#.....#",
+      "#*.1..#...XXXX....#...#..!..#",
+      "#.....#...........#...#.....#",
+      "#.....#...........#...#.....#",
+      "#..................b..#.....#",
+      "#.....................#.....#",
+      "#..########.########..=.....#",
+      "#.....................#.....#",
+      "#.....................#.....#",
+      "#...........b......3..#.....#",
+      "#..p......w.......p.c*#...E.#",
+      "#.....................#.....#",
+      "#############################",
     ],
-    "intro": [
-      "Réunissez les reliques au milieu des champs alternés et des portails.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Les champs pulsent : l’avertissement précède toujours la phase dangereuse.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "Quatre portails et deux attractions opposées déplacent le centre de l’épreuve.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      },
-      {
-        "a": {
-          "x": 15,
-          "y": 2
-        },
-        "b": {
-          "x": 2,
-          "y": 15
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 7, "y": 7, "width": 10, "height": 2, "direction": "right", "kind": "gravity", "speed": 60, "periodMs": 6800, "warnMs": 1800, "activeMs": 2200},
+      {"x": 7, "y": 12, "width": 10, "height": 2, "direction": "left", "kind": "gravity", "speed": 60, "periodMs": 6800, "warnMs": 1800, "activeMs": 2200, "offsetMs": 3400},
     ],
-    "toxic": [
-      {
-        "group": 1,
-        "periodMs": 6880,
-        "warnMs": 1400,
-        "activeMs": 1600,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 7480,
-        "warnMs": 1400,
-        "activeMs": 1700,
-        "offsetMs": 2100
-      },
-      {
-        "group": 3,
-        "periodMs": 8080,
-        "warnMs": 1400,
-        "activeMs": 1800,
-        "offsetMs": 4200
-      }
-    ]
+    portals: [
+      {"a": {"x": 3, "y": 3}, "b": {"x": 20, "y": 19}},
+      {"a": {"x": 20, "y": 3}, "b": {"x": 3, "y": 19}},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 6600, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7600, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
   },
   {
-    "id": "level-40",
-    "index": 39,
-    "name": "Le Miroir du Nexus",
-    "tagline": "MONDE MIROIR : portails, glace, décharges et portes composent l’épreuve finale.",
-    "difficulty": "difficile",
-    "theme": "dimension",
-    "bossKind": "gardien",
-    "bossName": "LE GARDIEN",
-    "bossHp": 11,
-    "propKind": "relic",
-    "orderedProps": false,
-    "secretCount": 2,
-    "mirrorControls": true,
-    "slippery": true,
-    "parTimeMs": 600000,
-    "rows": [
-      "#########################",
-      "#@...............#......#",
-      "#..+.bPp..b......#......#",
-      "#..1.....b....c..#......#",
-      "#................#......#",
-      "#.b##D##..##D##f.#......#",
-      "#.......#........#......#",
-      "#...~~..#..~~..b.#......#",
-      "#*..~~..D..~~....#......#",
-      "#.P.~~..#..~~.2g.#......#",
-      "#.....b.#........#......#",
-      "#.......#......b.#......#",
-      "#.b##D##..##D##..#......#",
-      "#................=...!..#",
-      "#.p.......b...h..#......#",
-      "#...b..b......P+.#......#",
-      "#....w3...c.b.b.*#....E.#",
-      "#................#......#",
-      "#########################"
+    id: "level-40",
+    index: 39,
+    name: "Le Miroir de l’Infini",
+    tagline: "MONDE MIROIR : une arène symétrique, quatre portails et une attraction à stabiliser.",
+    difficulty: "difficile",
+    theme: "dimension",
+    bossKind: "gardien",
+    bossName: "LE SENTINELLE DU VIDE",
+    bossHp: 11,
+    propKind: "relic",
+    orderedProps: false,
+    secretCount: 2,
+    mirrorControls: true,
+    parTimeMs: 660000,
+    rows: [
+      "#############################",
+      "#@..........................#",
+      "#..+........................#",
+      "#....b......#fQ.#......b..p.#",
+      "#...........#...#...........#",
+      "#..#####.##.#...####.####...#",
+      "#...........#XXX#...........#",
+      "#..w........D...d.........g.#",
+      "#*..1...Q...#..p#...Q...2...#",
+      "#...........#...#...........#",
+      "#...........#...#...........#",
+      "#..########.#...#########...#",
+      "#...........................#",
+      "#........b....3....b........#",
+      "#..c.........h..........c.+.#",
+      "#.........................*.#",
+      "#####################=#######",
+      "#...........................#",
+      "#...........................#",
+      "#.............!.............#",
+      "#.........................E.#",
+      "#...........................#",
+      "#############################",
     ],
-    "intro": [
-      "MONDE MIROIR : portails, glace, décharges et portes composent l’épreuve finale.",
-      "Rassemblez les trois reliques pour ouvrir la grille du boss.",
-      "La sortie s’ouvre après la victoire sur le boss. Les faux murs cachent deux secrets.",
-      "Les portes se ferment par cycles ; elles ne se referment jamais sur votre personnage.",
-      "Relâchez la direction avant les îlots de pierre : les personnages et les bombes glissent sur la glace.",
-      "Les anneaux portant la même lettre sont reliés. La destination doit être libre et sans danger imminent ; ressortez de l’anneau pour le réutiliser.",
-      "Une dalle piégée frappe après un bref délai : continuez à avancer."
+    intro: [
+      "MONDE MIROIR : gauche ↔ droite et haut ↔ bas pendant tout le niveau. Les bombes et les menus restent normaux.",
+      "MONDE MIROIR : une arène symétrique, quatre portails et une attraction à stabiliser.",
+      "Réunissez les trois fragments stellaires.",
+      "La grille s’ouvre après les trois objectifs. Vainquez le gardien pour activer le portail de sortie.",
+      "Les consoles rondes sont permanentes : enclenchez-les toutes pour arrêter les courants, tapis ou champs marqués.",
+      "Les passerelles lumineuses se matérialisent par cycles. Les fosses sombres sont infranchissables. Les flèches signalent les poussées gravitationnelles.",
+      "Les anneaux portant la même lettre sont reliés. Ressortez de l’anneau d’arrivée pour le réutiliser. Une destination dangereuse bloque le transfert.",
     ],
-    "objectives": [
-      {
-        "id": "props",
-        "label": "Reliques réunies",
-        "mandatory": true,
-        "total": 3
-      },
-      {
-        "id": "boss",
-        "label": "Vaincre le boss",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "exit",
-        "label": "Rejoindre la sortie",
-        "mandatory": true,
-        "total": 1
-      },
-      {
-        "id": "secrets",
-        "label": "Passages secrets découverts",
-        "mandatory": false,
-        "total": 2
-      },
-      {
-        "id": "kills",
-        "label": "Éliminer les huit gardes",
-        "mandatory": false,
-        "total": 8
-      },
-      {
-        "id": "flawless",
-        "label": "Terminer sans perdre de vie",
-        "mandatory": false,
-        "total": 1
-      }
+    objectives: [
+      {"id": "props", "label": "Fragments stellaires réunis", "mandatory": true, "total": 3},
+      {"id": "boss", "label": "Vaincre LE SENTINELLE DU VIDE", "mandatory": true, "total": 1},
+      {"id": "exit", "label": "Activer le portail de sortie", "mandatory": true, "total": 1},
+      {"id": "secrets", "label": "Passages secrets découverts", "mandatory": false, "total": 2},
+      {"id": "kills", "label": "Éliminer les huit gardes", "mandatory": false, "total": 8},
+      {"id": "flawless", "label": "Terminer sans perdre de vie", "mandatory": false, "total": 1},
+      {"id": "mechanism", "label": "Consoles de stabilisation activées", "mandatory": false, "total": 3},
     ],
-    "rankScores": {
-      "C": 0,
-      "B": 5500,
-      "A": 8000,
-      "S": 10500,
-      "SS": 12500,
-      "SSS": 14000
-    },
-    "portals": [
-      {
-        "a": {
-          "x": 2,
-          "y": 3
-        },
-        "b": {
-          "x": 15,
-          "y": 16
-        }
-      },
-      {
-        "a": {
-          "x": 15,
-          "y": 2
-        },
-        "b": {
-          "x": 2,
-          "y": 15
-        }
-      }
+    rankScores: {"C": 0, "B": 5500, "A": 8000, "S": 10500, "SS": 12500, "SSS": 14000},
+    flows: [
+      {"x": 5, "y": 12, "width": 19, "height": 2, "direction": "right", "kind": "gravity", "speed": 55, "periodMs": 8000, "warnMs": 1800, "activeMs": 2500, "stopsOnSwitches": true},
     ],
-    "doors": [
-      {
-        "group": 1,
-        "periodMs": 5640,
-        "closedRatio": 0.42,
-        "offsetMs": 0
-      },
-      {
-        "group": 2,
-        "periodMs": 6440,
-        "closedRatio": 0.4,
-        "offsetMs": 2600
-      }
-    ]
-  }
+    portals: [
+      {"a": {"x": 3, "y": 3}, "b": {"x": 25, "y": 13}},
+      {"a": {"x": 25, "y": 3}, "b": {"x": 3, "y": 13}},
+    ],
+    doors: [
+      {"group": 1, "periodMs": 6550, "closedRatio": 0.36, "offsetMs": 0},
+      {"group": 2, "periodMs": 7550, "closedRatio": 0.36, "offsetMs": 3000},
+    ],
+    toxic: [
+      {"group": 1, "periodMs": 8100, "warnMs": 1600, "activeMs": 1800, "offsetMs": 0},
+      {"group": 2, "periodMs": 8700, "warnMs": 1600, "activeMs": 1800, "offsetMs": 2300},
+      {"group": 3, "periodMs": 9300, "warnMs": 1600, "activeMs": 1800, "offsetMs": 4600},
+    ],
+  },
 ];

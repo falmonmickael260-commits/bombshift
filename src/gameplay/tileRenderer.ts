@@ -1,3 +1,4 @@
+import { isBiome } from '../core/biomeArt';
 import type Phaser from 'phaser';
 import { TEX, TILE } from '../core/constants';
 import type { GridMap } from '../core/grid';
@@ -75,12 +76,15 @@ export class TileRenderer {
       return s;
     };
 
+    const biome = isBiome(this.theme);
+    const regional = (kind: string, fallback: string): string => biome ? TEX.biome(this.theme, kind) : fallback;
+    const wallKey = biome ? TEX.biome(this.theme, 'wall', t.variant % 4) : TEX.wall(this.theme);
     const floorKey =
       t.kind === TileKind.Ice ? TEX.ice(t.variant % 4) : TEX.floor(this.theme, t.variant % 4);
 
     switch (t.kind) {
       case TileKind.Wall:
-        setBase(TEX.wall(this.theme), 0, 8);
+        setBase(wallKey, 0, 8);
         clearObject();
         break;
 
@@ -91,7 +95,7 @@ export class TileRenderer {
           this.addRubble(cell, idx);
         } else {
           // Indiscernable d'un mur.
-          setBase(TEX.wall(this.theme), 0, 8);
+          setBase(wallKey, 0, 8);
           clearObject();
         }
         break;
@@ -103,38 +107,38 @@ export class TileRenderer {
 
       case TileKind.Crystal:
         setBase(floorKey, 0, 2);
-        setObject(TEX.crystal, 0, 10);
+        setObject(regional('crystal', TEX.crystal), 0, 10);
         break;
 
       case TileKind.Gate:
         setBase(floorKey, 0, 2);
-        setObject(TEX.gate, 0, 10);
+        setObject(regional('gate', TEX.gate), 0, 10);
         break;
 
       case TileKind.Door:
         setBase(floorKey, 0, 2);
-        setObject(TEX.door, t.frame, 10);
+        setObject(regional('door', TEX.door), t.frame, 10);
         break;
 
       case TileKind.Lava: {
-        const s = setBase(TEX.lava, 0, 3);
-        if (s.anims.currentAnim?.key !== 'lava') s.play('lava', true);
+        const s = setBase(regional('abyss', TEX.lava), 0, 3);
+        if (!biome && s.anims.currentAnim?.key !== 'lava') s.play('lava', true);
         clearObject();
         break;
       }
 
       case TileKind.Vent:
-        setBase(TEX.vent, t.frame, 3);
+        setBase(regional('hazard', TEX.vent), t.frame, 3);
         clearObject();
         break;
 
       case TileKind.Toxic:
-        setBase(TEX.toxic, t.frame, 3);
+        setBase(regional('hazard', TEX.toxic), t.frame, 3);
         clearObject();
         break;
 
       case TileKind.Plate:
-        setBase(TEX.plate, t.group === 2 ? (t.latched ? 1 : 0) : t.frame, 3);
+        setBase(regional('plate', TEX.plate), t.group === 2 ? (t.latched ? 1 : 0) : t.frame, 3);
         clearObject();
         break;
 

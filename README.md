@@ -80,43 +80,58 @@ secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
 
-## Extension : 40 niveaux au total
+## Extension : quatre nouveaux univers, 40 niveaux au total
 
-Les niveaux 1 à 20 et leurs identifiants de sauvegarde sont conservés.
-Les vingt cartes 21 à 40 possèdent des plans fixes distincts, des briefings,
-des objectifs, des secrets et un combat de boss qui débloque la sortie.
+Les niveaux 1 à 20 et leurs identifiants sont conservés. Les cartes 21 à 40
+ont des plans fixes, plusieurs dimensions et des arènes de boss placées au
+sud ou à l’est, des objectifs, des secrets et des briefings propres.
 
-| Niveaux | Monde | Défis |
+| Niveaux | Univers | Objets, ambiance et mécanique |
 | --- | --- | --- |
-| 21–24 | Temple glacé | Inertie, bombes glissantes, cristaux, portes et dalles |
-| 25–29 | Volcan en fusion | Valves ordonnées, bassins de lave, évents, coulées annoncées aux 27 et 29 |
-| 30 | Miroir des Failles | Deux axes inversés, portails et portes cycliques |
-| 31–34 | Cité électrique | Générateurs par explosion, portes, champs cycliques et portails au 33 |
-| 35–39 | Dimension instable | Portails, passages temporisés, champs et dalles piégées |
-| 40 | Miroir du Nexus | Inversion, deux paires de portails, glace, champs et portes |
+| 21–24 | Cité engloutie | Récifs, coraux destructibles, perles-balises, bulles, rayons sous-marins et courants qui poussent le joueur ; consoles pour les arrêter au 24 |
+| 25–29 | Désert des tombeaux | Colonnes brisées, jarres, obélisques, dunes, poussière, rafales précédées de flèches jaunes, dalles et sables mouvants ; sceaux coupe-vent au 28 |
+| 30 | Palais des Reflets | Deux ailes symétriques, commandes miroir, portails et gravité |
+| 31–34 | Station industrielle orbitale | Machines, ventilateurs animés, batteries, décharges, tapis transportant le joueur et les bombes ; consoles d’arrêt aux 32 et 34 |
+| 35–39 | Archipel cosmique | Roches flottantes, cristaux, étoiles, failles, portails, passerelles intermittentes et poussées gravitationnelles ; stabilisateurs au 37 |
+| 40 | Miroir de l’Infini | Commandes miroir, quatre portails, passerelles et gravité neutralisable |
 
-Les mondes électrique et dimensionnel ont leurs propres textures procédurales
-(circuits, machines, runes, fragments) et compositions WebAudio.
-Les trois familles de boss existantes sont réutilisées avec 8 à 11 PV.
-Les portails ne transportent pas vers une bombe, une flamme, un champ actif,
-un danger d’explosion imminent ou un ennemi proche. Sortir de l’anneau
-réarme le trajet retour. Ils sont facultatifs : les objectifs restent accessibles à pied.
+Les quatre univers ont des textures, objets d’objectif, obstacles, portes,
+dangers et sorties spécifiques, des particules et des compositions WebAudio.
+Les éléments d’ambiance restent sous les personnages et les dangers.
+Les réglages d’effets faibles et de réduction des flashs limitent les animations.
+Les trois IA de boss existantes sont conservées avec des noms de gardiens
+propres aux univers ; il ne s’agit pas de quatre nouvelles IA de boss.
+Les portails sont facultatifs et refusent une arrivée bloquée ou dangereuse.
 
 **Miroirs : niveaux 10, 20, 30 et 40.** Le clavier et le joystick tactile
 inversent les deux axes. Menus, bombes et raccourcis restent habituels.
-Le briefing et la sélection signalent les mondes miroir, même verrouillés.
-La fin du niveau rétablit les contrôles habituels.
 
-Les sauvegardes restent au schéma 3. Terminer les vingt premiers niveaux
-débloque le 21 après rechargement, sans perte des scores, rangs ou secrets.
-Le relais de sauvegarde Revanche Games reste inchangé.
+### Sauvegarde après chaque niveau
 
-Validation : `npm test` et `npm run build`. Les tests contrôlent aussi les
-identifiants, la continuité de progression, les portails, l’accessibilité sans lave
-et l’absence de cartes dupliquées dans l’extension. Les essais navigateur
-utilisent les outils de développement pour vérifier les vingt chargements,
-les commandes, l’ouverture des objectifs et la victoire ; ils ne remplacent
-pas une partie complète humaine de chaque carte ni un test sur appareil iOS/Android réel.
+La victoire est enregistrée **immédiatement au contact de la sortie**, avant
+les 900 ms d’animation. Scores, rangs, temps, secrets, capacités et niveau
+suivant sont écrits dans `bombshift.save`, puis dans une copie de secours.
+Une erreur d’écriture temporaire est réessayée au prochain enregistrement.
+L’écran de résultat indique si la sauvegarde locale a réussi.
+Une ancienne sauvegarde partielle ne reverrouille plus un niveau dont la
+victoire est connue. Le schéma reste 3 et les identifiants restent stables.
+
+En iframe, un compte connecté Revanche Games reçoit la progression via
+`rg:progress-save`, sans attendre l’écran de résultat. Un échec ou une absence
+d’accusé de réception déclenche une nouvelle tentative. La confirmation vient
+du message `rg:progress-saved` de la plateforme. La plateforme doit déployer
+son filtre des quarante identifiants, et sa migration existante
+`20261106010000_bombshift_account_progress.sql` doit être appliquée.
+Aucune récompense économique n’est liée à ces données.
+
+Validation : `npm test` et `npm run build`. Les essais Chromium couvrent les
+quarante chargements sur ordinateur et viewport mobile, les commandes,
+les portails, les objectifs et la victoire avec outils de développement,
+le déplacement du joueur et des bombes par tapis, leur arrêt par console,
+et la fermeture immédiate après victoire suivie d’une réouverture.
+Le relais de compte est testé avec un hôte local simulé ; les identifiants
+réels Supabase ne sont pas utilisés. Une partie humaine complète et un test
+sur appareils iOS/Android réels restent nécessaires pour l’équilibrage.
 
 ## Les neuf niveaux d’origine
 

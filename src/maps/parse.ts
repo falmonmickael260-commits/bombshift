@@ -168,6 +168,16 @@ export function parseMap(def: MapDefinition): ParsedMap {
   }
 
   // Bordure etanche : evite toute sortie de grille.
+  for (const flow of def.flows ?? []) {
+    if (![flow.x, flow.y, flow.width, flow.height].every(Number.isInteger) ||
+        flow.x < 1 || flow.y < 1 || flow.width < 1 || flow.height < 1 ||
+        flow.x + flow.width > width - 1 || flow.y + flow.height > height - 1 ||
+        !Number.isFinite(flow.speed) || flow.speed <= 0 || flow.speed > 120 ||
+        (flow.periodMs !== undefined && (flow.periodMs <= 0 ||
+          (flow.warnMs ?? 1200) + (flow.activeMs ?? 2500) > flow.periodMs))) {
+      throw new MapParseError(`${def.id}: champ de déplacement invalide`);
+    }
+  }
   const portalCells = new Set<number>();
   for (const pair of def.portals ?? []) {
     for (const cell of [pair.a, pair.b]) {

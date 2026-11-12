@@ -1,3 +1,5 @@
+import { displaceByFlow, flowAt } from '../gameplay/flowFields';
+import { WorldScenery } from '../gameplay/worldScenery';
 import { PortalController } from '../gameplay/portals';
 import Phaser from 'phaser';
 import { audio } from '../core/audio';
@@ -80,6 +82,8 @@ export interface GameSceneData {
   input: InputState;
   onHud: (state: HudState) => void;
   onNotify: (text: string, tone: 'info' | 'good' | 'bad') => void;
+  /** Synchronous save checkpoint, before the victory animation or any delay. */
+  onComplete?: (result: RunResult) => void;
   onEnd: (result: RunResult) => void;
 }
 
@@ -128,6 +132,7 @@ export class GameScene extends Phaser.Scene {
   private compassLabel: Phaser.GameObjects.Text | null = null;
   private dangerAt = 0;
   private portals = new PortalController([]);
+  private scenery: WorldScenery | null = null;
 
   constructor() {
     super({ key: GameScene.KEY });
@@ -165,6 +170,7 @@ export class GameScene extends Phaser.Scene {
     this.fxLayer.configure(settings);
     this.tiles = new TileRenderer(this, this.grid, this.def.theme);
     this.drawPortals();
+    this.scenery = new WorldScenery(this, this.grid, this.def, settings);
 
     this.player = new Player(this.world, this.parsed.playerSpawn, profile.lives);
     this.bombs = new BombManager(this.world, {
@@ -224,7 +230,13 @@ export class GameScene extends Phaser.Scene {
     this.scale.on(Phaser.Scale.Events.RESIZE, this.setupCamera, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
 
-    if (this.cfg.snapshot) this.applySnapshot(this.cfg.snapshot);
+    if (this.cfg.snapshot) {
+      const snap = this.cfg.snapshot;
+      const sameLayout = snap.tileKinds.length === this.grid.tiles.length &&
+        (snap.mapLayout ? snap.mapLayout === this.def.rows.join('\n') : this.def.index < 20);
+      if (sameLayout) this.applySnapshot(snap);
+      else this.notify('Ce niveau a évolué : nouvelle tentative, progression conservée.', 'info');
+    }
 
     // Le mode combat de la musique est propre a une rencontre de boss :
     // il ne doit jamais survivre a une tentative precedente.
@@ -430,6 +442,11 @@ export class GameScene extends Phaser.Scene {
 
     const input = this.cfg.input;
     const intents = this.player.update(dt, input);
+    const progress = this.hazards.mechanismProgress;
+    const switched = progress.total > 0 && progress.done >= progress.total;
+    const force = flowAt(this.def.flows ?? [], this.player.cell, this.elapsed, false, switched);
+    displaceByFlow(this.player.body, force, dt, (x, y) => this.world.playerBlocked(x, y));
+    this.scenery?.update(this.elapsed, switched);
 
     // Les appuis sont a usage unique : un bouton maintenu ne spamme pas d'actions.
     input.bombPressed = false;
@@ -1012,16 +1029,11 @@ export class GameScene extends Phaser.Scene {
     };
     const score = computeScore(stats, this.def, this.world.difficulty.scoreFactor);
 
-    this.time.delayedCall(victory ? 900 : 200, () => {
-      this.cfg.onEnd({
-        mapId: this.def.id,
-        victory,
-        stats,
-        score,
-        rank: score.rank,
-        objectives: this.objectives.list,
-      });
-    });
+    const result: RunResult = {
+      mapId: this.def.id, victory, stats, score, rank: score.rank, objectives: this.objectives.list,
+    };
+    this.cfg.onComplete?.(result);
+    this.time.delayedCall(victory ? 900 : 200, () => this.cfg.onEnd(result));
   }
 
   /* ------------------------------------------------------------ public ---- */
@@ -1076,6 +1088,8 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.objectives?.destroy();
     this.player?.destroy();
+    this.scenery?.destroy();
+    this.scenery = null;
     this.tiles?.destroy();
     this.fxLayer?.destroy();
     this.vignette?.destroy();
@@ -1104,6 +1118,7 @@ export class GameScene extends Phaser.Scene {
     return {
       v: 1,
       mapId: this.def.id,
+      mapLayout: this.def.rows.join('\n'),
       difficulty: this.cfg.settings.difficulty,
       elapsedMs: this.elapsed,
       savedAt: Date.now(),

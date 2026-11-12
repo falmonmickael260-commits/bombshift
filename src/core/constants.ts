@@ -120,6 +120,8 @@ export const DROP_TABLE: Readonly<Record<Theme, Readonly<Record<string, number>>
   volcano: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.04, pierce: 0.03, life: 0.012 },
   ice: { range: 0.09, bomb: 0.08, speed: 0.05, shield: 0.05, pierce: 0.035, life: 0.01 },
   temple: { range: 0.08, bomb: 0.07, speed: 0.045, shield: 0.05, pierce: 0.04, life: 0.008 },
+  ocean: { range: 0.09, bomb: 0.09, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
+  desert: { range: 0.1, bomb: 0.08, speed: 0.06, shield: 0.05, pierce: 0.04, life: 0.015 },
   electric: { range: 0.09, bomb: 0.09, speed: 0.05, shield: 0.05, pierce: 0.04, life: 0.012 },
   dimension: { range: 0.09, bomb: 0.08, speed: 0.05, shield: 0.06, pierce: 0.04, life: 0.012 },
 };
@@ -187,6 +189,16 @@ export const THEME_COLORS: Readonly<
     }
   >
 > = {
+  ocean: {
+    floorA: 0x125364, floorB: 0x185e6b, grout: 0x092e3f,
+    wallTop: 0x557f75, wallSide: 0x173c49, blockTop: 0xec9c8b, blockSide: 0x854f69,
+    accent: 0x8ce9c5, hazard: 0xf99cba, glow: 0xa1f3e4, bg: 0x061c30, fog: 0x164b60,
+  },
+  desert: {
+    floorA: 0xc49b61, floorB: 0xb58b51, grout: 0x77542f,
+    wallTop: 0xe2b97b, wallSide: 0x7c5439, blockTop: 0xb57946, blockSide: 0x6b4230,
+    accent: 0x8de2d8, hazard: 0xf4cb76, glow: 0xffdca0, bg: 0x382a26, fog: 0x755537,
+  },
   electric: {
     floorA: 0x172c3b, floorB: 0x142533, grout: 0x091522,
     wallTop: 0x36566b, wallSide: 0x132a3a, blockTop: 0x42627c, blockSide: 0x1f3449,
@@ -246,6 +258,7 @@ export const TEX = {
   floor: (t: Theme, v: number) => `tile-floor-${t}-${v}`,
   wall: (t: Theme) => `tile-wall-${t}`,
   block: (t: Theme, v: number) => `tile-block-${t}-${v}`,
+  biome: (t: Theme, kind: string, v = 0) => `biome-${t}-${kind}-${v}`,
   crystal: 'tile-crystal',
   ice: (v: number) => `tile-ice-${v}`,
   lava: 'tile-lava',
