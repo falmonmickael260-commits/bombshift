@@ -1,3 +1,4 @@
+import { PortalController } from '../gameplay/portals';
 import Phaser from 'phaser';
 import { audio } from '../core/audio';
 import { BOMB, CAMERA, DIFFICULTIES, PLAYER, TEX, THEME_COLORS, TILE } from '../core/constants';
@@ -126,6 +127,7 @@ export class GameScene extends Phaser.Scene {
   private compass: Phaser.GameObjects.Image | null = null;
   private compassLabel: Phaser.GameObjects.Text | null = null;
   private dangerAt = 0;
+  private portals = new PortalController([]);
 
   constructor() {
     super({ key: GameScene.KEY });
@@ -148,6 +150,7 @@ export class GameScene extends Phaser.Scene {
     this.def = getMap(this.cfg.mapId);
     this.parsed = parseMap(this.def);
     this.grid = this.parsed.grid;
+    this.portals = new PortalController(this.def.portals ?? []);
     this.danger = new DangerMap(this.grid.width, this.grid.height);
     this.rng = new Rng(0x51ed + Date.now() % 100000);
     const profile = DIFFICULTIES[settings.difficulty] ?? DIFFICULTIES.normal;
@@ -161,6 +164,7 @@ export class GameScene extends Phaser.Scene {
     this.fxLayer = new Fx(this);
     this.fxLayer.configure(settings);
     this.tiles = new TileRenderer(this, this.grid, this.def.theme);
+    this.drawPortals();
 
     this.player = new Player(this.world, this.parsed.playerSpawn, profile.lives);
     this.bombs = new BombManager(this.world, {
@@ -790,8 +794,44 @@ export class GameScene extends Phaser.Scene {
     const c = this.player.cell;
     if (c.x === this.lastCell.x && c.y === this.lastCell.y) return;
     this.lastCell = { ...c };
+    const destination = this.portals.enter(c, (cell) =>
+      !this.world.playerBlocked(cell.x, cell.y) &&
+      !this.grid.isLethalFloor(cell.x, cell.y) &&
+      !this.bombs.isFlameAt(cell.x, cell.y) &&
+      !this.danger.isDangerous(cell.x, cell.y, 1700) &&
+      !this.enemies.some((e) => e.alive && Math.hypot(e.pos.x - centerOf(cell).x, e.pos.y - centerOf(cell).y) < TILE),
+    );
+    if (destination) {
+      const p = centerOf(destination);
+      this.player.body.x = p.x;
+      this.player.body.y = p.y;
+      this.player.body.vx = 0;
+      this.player.body.vy = 0;
+      this.lastCell = { ...destination };
+      this.fxLayer.shockwave(p, 45, THEME_COLORS[this.def.theme].accent);
+      audio.play('switchOn');
+      return;
+    }
     this.hazards.onPlayerEnterCell(c);
     this.objectives.onPlayerEnterCell(c);
+  }
+
+  private drawPortals(): void {
+    const colors = [0x66f6ec, 0xe5a6ff];
+    this.def.portals?.forEach((pair, index) => {
+      for (const cell of [pair.a, pair.b]) {
+        const p = centerOf(cell);
+        const ring = this.add.ellipse(p.x, p.y, TILE * 0.78, TILE * 0.78, colors[index % 2], 0.13)
+          .setStrokeStyle(3, colors[index % 2], 0.9).setDepth(5);
+        this.add.text(p.x, p.y, String.fromCharCode(65 + index), {
+          fontFamily: 'sans-serif', fontSize: '18px', color: '#ffffff', stroke: '#171127', strokeThickness: 3,
+        }).setOrigin(0.5).setDepth(6);
+        if (this.cfg.settings.effects !== 'low' && !this.cfg.settings.reduceFlashes) {
+          this.tweens.add({ targets: ring, alpha: 0.45, scale: 0.88, duration: 1100,
+            yoyo: true, repeat: -1 });
+        }
+      }
+    });
   }
 
   private onTileDestroyed(cell: Vec2, kind: TileKind): void {

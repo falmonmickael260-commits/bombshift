@@ -2,7 +2,7 @@ import type { SaveData, SaveManager, Settings } from '../core/save';
 import { DIFFICULTIES } from '../core/constants';
 import type { Difficulty, ObjectiveState, Rank } from '../core/types';
 import type { RunResult } from '../scenes/GameScene';
-import { MAPS, type MapDefinition } from '../maps';
+import { isMirrorLevel, MAPS, type MapDefinition } from '../maps';
 
 const fmtTime = (ms: number | null): string => {
   if (ms === null) return '—';
@@ -35,7 +35,17 @@ export function renderMapList(
   onPick: (def: MapDefinition, locked: boolean) => void,
 ): void {
   container.replaceChildren();
+  const cleared = MAPS.filter((m) => save.maps[m.id]?.cleared).length;
+  const nextMirror = MAPS.find((m) => isMirrorLevel(m.index) && !save.maps[m.id]?.cleared);
+  container.appendChild(el('p', 'campaign-progress',
+    `${cleared} / ${MAPS.length} niveaux terminés · Prochain miroir : ${nextMirror ? nextMirror.index + 1 : 'tous terminés'}`));
+  const worlds: Record<number, string> = {
+    20: '21–24 · LE TEMPLE GLACÉ', 24: '25–29 · LE VOLCAN EN FUSION',
+    29: '30 · MONDE MIROIR', 30: '31–34 · LA CITÉ ÉLECTRIQUE',
+    34: '35–39 · LA DIMENSION INSTABLE', 39: '40 · LE MIROIR DU NEXUS',
+  };
   MAPS.forEach((def, i) => {
+    if (worlds[i]) container.appendChild(el('h2', 'campaign-world', worlds[i]));
     const locked = i >= save.unlockedMaps;
     const progress = save.maps[def.id];
     const card = el(
@@ -45,6 +55,10 @@ export function renderMapList(
     card.type = 'button';
 
     card.appendChild(el('span', 'map-card__index', String(i + 1)));
+    if (def.mirrorControls ?? isMirrorLevel(def.index)) {
+      card.classList.add('map-card--mirror');
+      card.appendChild(el('span', 'tag tag--mirror', '↔ MONDE MIROIR ↕'));
+    }
     card.appendChild(el('h3', 'map-card__name', def.name.toUpperCase()));
     card.appendChild(el('p', 'map-card__tag', def.tagline));
 
@@ -113,6 +127,10 @@ export function renderBriefing(
 ): void {
   container.replaceChildren();
   const progress = save.maps[def.id];
+
+  if (def.mirrorControls ?? isMirrorLevel(def.index)) {
+    container.appendChild(el('p', 'mirror-notice', 'MONDE MIROIR — Gauche ↔ droite, haut ↔ bas. Clavier et joystick inversés. Les bombes restent normales.'));
+  }
 
   // Le choix de difficulte se fait juste avant de lancer la tentative.
   container.appendChild(buildDifficultyPicker(save.settings.difficulty, onDifficulty));

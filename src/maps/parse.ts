@@ -168,6 +168,25 @@ export function parseMap(def: MapDefinition): ParsedMap {
   }
 
   // Bordure etanche : evite toute sortie de grille.
+  const portalCells = new Set<number>();
+  for (const pair of def.portals ?? []) {
+    for (const cell of [pair.a, pair.b]) {
+      if (!Number.isInteger(cell.x) || !Number.isInteger(cell.y) ||
+          !grid.inBounds(cell.x, cell.y) || grid.kindAt(cell.x, cell.y) !== TileKind.Floor) {
+        throw new MapParseError(`${def.id}: portail sur une case non libre`);
+      }
+      const idx = grid.idx(cell.x, cell.y);
+      if (portalCells.has(idx) ||
+          parsed.props.some((p) => p.cell.x === cell.x && p.cell.y === cell.y) ||
+          parsed.enemies.some((e) => e.cell.x === cell.x && e.cell.y === cell.y) ||
+          (bossSpawn.x === cell.x && bossSpawn.y === cell.y) ||
+          (playerSpawn.x === cell.x && playerSpawn.y === cell.y)) {
+        throw new MapParseError(`${def.id}: portail superposé à un autre élément`);
+      }
+      portalCells.add(idx);
+    }
+  }
+
   for (let x = 0; x < width; x++) {
     if (grid.kindAt(x, 0) !== TileKind.Wall || grid.kindAt(x, height - 1) !== TileKind.Wall) {
       throw new MapParseError(`${def.id}: bordure horizontale ouverte en x=${x}`);

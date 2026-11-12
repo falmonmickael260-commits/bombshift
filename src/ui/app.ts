@@ -373,6 +373,7 @@ export class App {
     }
 
     const inGame = name === 'game' || name === 'pause';
+    if (!inGame) this.controls.setMirrored(false);
     this.hud.setVisible(inGame);
     this.controls.setVisible(name === 'game');
     document.getElementById('game-root')?.setAttribute('aria-hidden', String(!inGame));

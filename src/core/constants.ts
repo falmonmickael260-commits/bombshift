@@ -120,6 +120,8 @@ export const DROP_TABLE: Readonly<Record<Theme, Readonly<Record<string, number>>
   volcano: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.04, pierce: 0.03, life: 0.012 },
   ice: { range: 0.09, bomb: 0.08, speed: 0.05, shield: 0.05, pierce: 0.035, life: 0.01 },
   temple: { range: 0.08, bomb: 0.07, speed: 0.045, shield: 0.05, pierce: 0.04, life: 0.008 },
+  electric: { range: 0.09, bomb: 0.09, speed: 0.05, shield: 0.05, pierce: 0.04, life: 0.012 },
+  dimension: { range: 0.09, bomb: 0.08, speed: 0.05, shield: 0.06, pierce: 0.04, life: 0.012 },
 };
 
 /** Duree des bonus temporaires. */
@@ -185,6 +187,16 @@ export const THEME_COLORS: Readonly<
     }
   >
 > = {
+  electric: {
+    floorA: 0x172c3b, floorB: 0x142533, grout: 0x091522,
+    wallTop: 0x36566b, wallSide: 0x132a3a, blockTop: 0x42627c, blockSide: 0x1f3449,
+    accent: 0x36f6e4, hazard: 0xffba52, glow: 0x65eaff, bg: 0x040e1b, fog: 0x12324b,
+  },
+  dimension: {
+    floorA: 0x2c2547, floorB: 0x211c37, grout: 0x120d23,
+    wallTop: 0x6a568a, wallSide: 0x302143, blockTop: 0x9269a8, blockSide: 0x4b365d,
+    accent: 0xe2a3ff, hazard: 0xeaa85d, glow: 0xb999ff, bg: 0x0c071a, fog: 0x30224e,
+  },
   volcano: {
     floorA: 0x2b2229,
     floorB: 0x221b21,

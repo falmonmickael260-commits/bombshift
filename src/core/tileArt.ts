@@ -6,6 +6,53 @@ import type { Theme } from './types';
 
 const T = TILE;
 
+/** Circuit boards / floating stone, with geometry distinct from the original worlds. */
+function drawNewWorld(ctx: CanvasRenderingContext2D, theme: 'electric' | 'dimension',
+  kind: 'floor' | 'wall' | 'block', variant = 0): void {
+  const c = THEME_COLORS[theme];
+  const raised = kind !== 'floor';
+  ctx.fillStyle = css(raised ? c.wallSide : c.floorA);
+  ctx.fillRect(0, 0, T, T);
+  ctx.fillStyle = css(raised ? (kind === 'block' ? c.blockTop : c.wallTop) : c.floorB);
+  roundRect(ctx, 3, 3, T - 6, T - (raised ? 12 : 6), theme === 'electric' ? 3 : 10);
+  ctx.fill();
+  ctx.lineWidth = raised ? 2 : 1;
+  ctx.strokeStyle = css(c.accent, raised ? 0.65 : 0.32);
+  if (theme === 'electric') {
+    // Etched circuits, solder points, metal ribs and riveted transformer crates.
+    for (let i = 0; i < (raised ? 3 : 2); i++) {
+      const y = 10 + i * 10;
+      ctx.beginPath(); ctx.moveTo(5, y); ctx.lineTo(16 + variant * 2, y);
+      ctx.lineTo(23 + variant * 2, y + 6); ctx.lineTo(42, y + 6); ctx.stroke();
+      ctx.fillStyle = css(c.accent, 0.65);
+      ctx.fillRect(38, y + 4, 4, 4);
+    }
+    if (raised) {
+      ctx.fillStyle = css(c.grout);
+      for (let i = 0; i < 4; i++) ctx.fillRect(12, 10 + i * 6, 19, 3);
+      ctx.fillStyle = css(0xd6eef8, 0.7);
+      for (const x of [7, 38]) for (const y of [7, 32]) ctx.fillRect(x, y, 3, 3);
+    }
+  } else {
+    // Nested rune diamonds and detached shards above a dark spatial seam.
+    ctx.beginPath(); ctx.moveTo(24, 7); ctx.lineTo(40, 22);
+    ctx.lineTo(24, 36); ctx.lineTo(8, 22); ctx.closePath(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(24, 22, raised ? 9 : 6, 0, Math.PI * 1.65); ctx.stroke();
+    if (raised) {
+      ctx.fillStyle = css(c.glow, 0.65);
+      ctx.beginPath(); ctx.moveTo(24, 10); ctx.lineTo(31, 22);
+      ctx.lineTo(24, 32); ctx.lineTo(17, 22); ctx.closePath(); ctx.fill();
+    }
+    ctx.fillStyle = css(c.glow, 0.45);
+    ctx.fillRect(5 + variant * 3, 39, 3, 3);
+    ctx.fillRect(36 - variant * 2, 6, 2, 2);
+  }
+  if (raised) {
+    ctx.fillStyle = css(0x000000, 0.35); ctx.fillRect(3, 38, T - 6, 7);
+  }
+}
+
+
 /* ------------------------------------------------------------------ sols */
 
 function drawFloor(
@@ -14,6 +61,9 @@ function drawFloor(
   variant: number,
   rng: Rng,
 ): void {
+  if (theme === 'electric' || theme === 'dimension') {
+    drawNewWorld(ctx, theme, 'floor', variant); return;
+  }
   const c = THEME_COLORS[theme];
   const base = variant % 2 === 0 ? c.floorA : c.floorB;
 
@@ -94,6 +144,9 @@ function drawFloor(
 }
 
 function drawWall(ctx: CanvasRenderingContext2D, theme: Theme, rng: Rng): void {
+  if (theme === 'electric' || theme === 'dimension') {
+    drawNewWorld(ctx, theme, 'wall'); return;
+  }
   const c = THEME_COLORS[theme];
   ctx.fillStyle = css(shade(c.wallSide, -0.35));
   ctx.fillRect(0, 0, T, T);
@@ -169,6 +222,9 @@ function drawBlock(
   variant: number,
   rng: Rng,
 ): void {
+  if (theme === 'electric' || theme === 'dimension') {
+    drawNewWorld(ctx, theme, 'block', variant); return;
+  }
   const c = THEME_COLORS[theme];
   ctx.clearRect(0, 0, T, T);
 

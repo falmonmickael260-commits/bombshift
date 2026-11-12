@@ -46,6 +46,24 @@ interface MusicPattern {
 }
 
 const MUSIC: Record<Theme, MusicPattern> = {
+  electric: {
+    bpm: 126, scale: [0, 2, 3, 7, 9, 10, 12], rootMidi: 42,
+    bass: [0,-1,0,4,0,-1,3,-1,0,4,0,-1,5,-1,3,-1],
+    lead: [0,4,-1,6,3,-1,4,2,0,4,-1,5,3,2,4,-1],
+    kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    hat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,1,1],
+    leadWave: 'square', bassWave: 'sawtooth', filter: 2400,
+  },
+  dimension: {
+    bpm: 96, scale: [0, 1, 4, 6, 7, 10, 12], rootMidi: 39,
+    bass: [0,-1,-1,3,-1,0,-1,-1,4,-1,-1,2,-1,5,-1,-1],
+    lead: [6,-1,3,-1,-1,4,2,-1,5,-1,0,-1,3,-1,6,-1],
+    kick: [1,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0],
+    snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+    hat: [0,0,1,0,0,1,0,0,0,0,1,0,0,1,0,1],
+    leadWave: 'sine', bassWave: 'triangle', filter: 1800,
+  },
   // Forteresse volcanique : mineur harmonique, tempo soutenu, basse martelee.
   volcano: {
     bpm: 132,

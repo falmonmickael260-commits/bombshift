@@ -13,10 +13,10 @@ export type MapId =
   | 'temple3'
   | `level-${number}`;
 
-/** Les quatre jalons miroir sont fixes dans la progression. */
+/** Jalons miroir de la campagne actuelle (numéros affichés, à partir de 1). */
 export const MIRROR_LEVELS = [10, 20, 30, 40] as const;
 export function isMirrorLevel(index: number): boolean {
-  return (MIRROR_LEVELS as readonly number[]).includes(index + 1);
+  return Number.isInteger(index) && index >= 0 && (index + 1) % 10 === 0;
 }
 
 /** Difficulte intrinseque de la carte, affichee dans la selection de niveau. */
@@ -68,6 +68,8 @@ export interface MapDefinition {
   difficulty: MapDifficulty;
   /** Les niveaux miroirs inversent les deux axes de déplacement. */
   mirrorControls?: boolean;
+  /** Portails bidirectionnels : les deux extrémités portent la même lettre. */
+  portals?: readonly { a: Vec2; b: Vec2 }[];
   theme: Theme;
   bossKind: BossKind;
   bossName: string;

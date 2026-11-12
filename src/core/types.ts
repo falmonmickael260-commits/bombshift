@@ -69,7 +69,7 @@ export interface Tile {
   latched: boolean;
 }
 
-export type Theme = 'volcano' | 'ice' | 'temple';
+export type Theme = 'volcano' | 'ice' | 'temple' | 'electric' | 'dimension';
 
 export type Difficulty = 'detente' | 'normal' | 'veteran';
 
