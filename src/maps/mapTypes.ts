@@ -14,7 +14,7 @@ export type MapId =
   | `level-${number}`;
 
 /** Jalons miroir de la campagne actuelle (numéros affichés, à partir de 1). */
-export const MIRROR_LEVELS = [10, 20, 30, 40] as const;
+export const MIRROR_LEVELS = [10, 20, 30, 40, 50, 60] as const;
 export function isMirrorLevel(index: number): boolean {
   return Number.isInteger(index) && index >= 0 && (index + 1) % 10 === 0;
 }
@@ -85,6 +85,8 @@ export interface MapDefinition {
   /** Portails bidirectionnels : les deux extrémités portent la même lettre. */
   portals?: readonly { a: Vec2; b: Vec2 }[];
   flows?: readonly FlowField[];
+  /** Certain consoles are powered by an explosion rather than footsteps. */
+  mechanismTrigger?: 'step' | 'blast';
   theme: Theme;
   bossKind: BossKind;
   bossName: string;

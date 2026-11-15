@@ -245,6 +245,7 @@ export class ObjectiveController {
   private unlockExitIfReady(): void {
     if (this.exitUnlocked) return;
     if (!this.propsComplete || !this.bossDead) return;
+    if (this.list.some((o) => o.mandatory && o.id !== 'exit' && !o.done)) return;
     this.exitUnlocked = true;
     if (isBiome(this.world.def.theme)) this.exitSprite?.setFrame(3);
     else this.exitSprite?.play('exit-open', true);

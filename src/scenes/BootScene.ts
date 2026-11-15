@@ -5,7 +5,7 @@ import { buildCharacterTextures } from '../core/charArt';
 import { buildParticleTextures, buildTileTextures } from '../core/tileArt';
 import type { Theme } from '../core/types';
 
-const THEMES: readonly Theme[] = ['volcano', 'ice', 'temple', 'electric', 'dimension', 'ocean', 'desert'];
+const THEMES: readonly Theme[] = ['volcano', 'ice', 'temple', 'electric', 'dimension', 'ocean', 'desert', 'fungal', 'sky', 'clockwork', 'haunted', 'mirror'];
 
 /**
  * Generation de tout l'art du jeu (textures canvas) et des animations.

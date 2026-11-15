@@ -255,16 +255,7 @@ export class HazardController {
     const idx = this.world.grid.idx(cell.x, cell.y);
 
     if (t.group === 2) {
-      // Mecanisme : enclenchement definitif.
-      if (t.latched) return;
-      t.latched = true;
-      t.frame = 1;
-      this.hooks.onTileChanged(cell);
-      this.mechanismDone++;
-      this.world.audio.play('switchOn');
-      this.world.fx.shockwave(centerOf(cell), 48, 0xc9a227);
-      this.hooks.onMechanismProgress(this.mechanismDone, this.mechanismTotal);
-      if (this.mechanismDone >= this.mechanismTotal) this.hooks.onMechanismComplete();
+      if (this.parsed.def.mechanismTrigger !== 'blast') this.activateMechanism(cell);
       return;
     }
 
@@ -276,6 +267,27 @@ export class HazardController {
     t.frame = 1;
     this.hooks.onTileChanged(cell);
     this.world.audio.play('warning');
+  }
+
+  /** The same latch handles walking and explosion-powered consoles; it can fire only once. */
+  private activateMechanism(cell: Vec2): void {
+    const t = this.world.grid.tileAt(cell.x, cell.y);
+    if (!t || t.kind !== TileKind.Plate || t.group !== 2) return;
+    // Mecanisme : enclenchement definitif.
+    if (t.latched) return;
+    t.latched = true;
+    t.frame = 1;
+    this.hooks.onTileChanged(cell);
+    this.mechanismDone++;
+    this.world.audio.play('switchOn');
+    this.world.fx.shockwave(centerOf(cell), 48, 0xc9a227);
+    this.hooks.onMechanismProgress(this.mechanismDone, this.mechanismTotal);
+    if (this.mechanismDone >= this.mechanismTotal) this.hooks.onMechanismComplete();
+  }
+
+  onBlastCells(cells: readonly Vec2[]): void {
+    if (this.parsed.def.mechanismTrigger !== 'blast') return;
+    for (const cell of cells) this.activateMechanism(cell);
   }
 
   private updatePlates(now: number): void {

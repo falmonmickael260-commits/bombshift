@@ -47,6 +47,8 @@ export enum TileKind {
   Exit = 11,
   /** Dalle piegee (carte temple). */
   Plate = 12,
+  /** Mycelium slows walkers without changing bomb/explosion rules. */
+  Moss = 13,
 }
 
 export interface Tile {
@@ -69,7 +71,7 @@ export interface Tile {
   latched: boolean;
 }
 
-export type Theme = 'volcano' | 'ice' | 'temple' | 'electric' | 'dimension' | 'ocean' | 'desert';
+export type Theme = 'volcano' | 'ice' | 'temple' | 'electric' | 'dimension' | 'ocean' | 'desert' | 'fungal' | 'sky' | 'clockwork' | 'haunted' | 'mirror';
 
 export type Difficulty = 'detente' | 'normal' | 'veteran';
 

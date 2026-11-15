@@ -27,6 +27,7 @@ const COLORS: Partial<Record<TileKind, string>> = {
   [TileKind.Gate]: '#c9a227',
   [TileKind.Ice]: '#2d5a7d',
   [TileKind.Plate]: '#8d8061',
+  [TileKind.Moss]: '#507853',
   [TileKind.Exit]: '#7cf0c0',
 };
 

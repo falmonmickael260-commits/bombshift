@@ -115,7 +115,7 @@ export class Enemy {
         const dx = target.x - this.x;
         const dy = target.y - this.y;
         const dist = Math.hypot(dx, dy);
-        const move = this.speed * dt;
+        const move = this.speed * this.world.grid.groundSpeedAt(cell.x, cell.y) * dt;
         if (dist <= move) {
           this.x = target.x;
           this.y = target.y;

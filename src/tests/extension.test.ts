@@ -5,14 +5,14 @@ import { MAPS, MIRROR_LEVELS, isMirrorLevel, parseMap } from '../maps';
 import { PortalController } from '../gameplay/portals';
 
 describe('extension de campagne', () => {
-  it('ajoute exactement vingt cartes sans déplacer les vingt identifiants existants', () => {
-    expect(MAPS).toHaveLength(40);
+  it('atteint soixante cartes avec des identifiants continus et stables', () => {
+    expect(MAPS).toHaveLength(60);
     expect(MAPS.slice(0, 9).map((m) => m.id)).toEqual([
       'volcano', 'ice', 'temple', 'volcano2', 'ice2', 'temple2', 'volcano3', 'ice3', 'temple3',
     ]);
-    expect(MAPS.slice(9).map((m) => m.id)).toEqual(Array.from({ length: 31 }, (_, i) => `level-${i + 10}`));
-    expect(new Set(MAPS.map((m) => m.id)).size).toBe(40);
-    expect(MAPS.map((m) => m.index)).toEqual(Array.from({ length: 40 }, (_, i) => i));
+    expect(MAPS.slice(9).map((m) => m.id)).toEqual(Array.from({ length: 51 }, (_, i) => `level-${i + 10}`));
+    expect(new Set(MAPS.map((m) => m.id)).size).toBe(60);
+    expect(MAPS.map((m) => m.index)).toEqual(Array.from({ length: 60 }, (_, i) => i));
   });
 
   it('place les commandes miroir exactement aux multiples de dix', () => {
@@ -24,7 +24,7 @@ describe('extension de campagne', () => {
   });
 
   it('propose quatre univers distincts des trois mondes d’origine et plusieurs formats d’arène', () => {
-    const extension = MAPS.slice(20);
+    const extension = MAPS.slice(20, 40);
     expect(new Set(extension.map((m) => m.theme))).toEqual(new Set(['ocean', 'desert', 'electric', 'dimension']));
     expect(new Set(extension.map((m) => `${m.rows[0].length}x${m.rows.length}`)).size).toBeGreaterThanOrEqual(5);
     expect(extension.every((m) => m.flows?.length)).toBe(true);
@@ -32,9 +32,9 @@ describe('extension de campagne', () => {
   });
 
   it('ne recycle aucune ancienne carte dans les vingt nouvelles', () => {
-    expect(new Set(MAPS.slice(20).map((m) => m.rows.join('\n'))).size).toBe(20);
+    expect(new Set(MAPS.slice(20, 40).map((m) => m.rows.join('\n'))).size).toBe(20);
     const old = new Set(MAPS.slice(0, 20).map((m) => m.rows.join('\n')));
-    for (const def of MAPS.slice(20)) expect(old.has(def.rows.join('\n'))).toBe(false);
+    for (const def of MAPS.slice(20, 40)) expect(old.has(def.rows.join('\n'))).toBe(false);
   });
 
   for (const def of MAPS.slice(20)) {
@@ -94,9 +94,9 @@ describe('extension de campagne', () => {
 
   it('conserve et recharge la progression jusqu’au dernier niveau', () => {
     const save = defaultSave();
-    for (const def of MAPS.slice(0, 39)) save.maps[def.id] = { ...defaultMapProgress(), cleared: true };
+    for (const def of MAPS.slice(0, 59)) save.maps[def.id] = { ...defaultMapProgress(), cleared: true };
     const restored = migrate(JSON.parse(JSON.stringify(save)));
-    expect(restored.unlockedMaps).toBe(40);
+    expect(restored.unlockedMaps).toBe(60);
   });
 });
 

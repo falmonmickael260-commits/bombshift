@@ -134,8 +134,8 @@ export function migrate(raw: unknown): SaveData {
   // Coherence : le deblocage doit refleter les victoires reelles.
   // Chaque carte debloque la suivante (dans l'ordre de MAPS) une fois terminee.
   let unlocked = 1;
-  for (let i = 0; i < MAPS.length - 1; i++) {
-    if (merged.maps[MAPS[i].id]?.cleared) unlocked = i + 2;
+  for (let i = 0; i < MAPS.length; i++) {
+    if (merged.maps[MAPS[i].id]?.cleared) unlocked = Math.min(MAPS.length, i + 2);
     // Imported saves can contain only the last few completed maps.
     // A missing earlier record must never relock a later proven victory.
   }

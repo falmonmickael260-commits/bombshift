@@ -200,6 +200,10 @@ export class GridMap {
     return false;
   }
 
+  groundSpeedAt(cx: number, cy: number): number {
+    return this.kindAt(cx, cy) === TileKind.Moss ? 0.68 : 1;
+  }
+
   isSlippery(cx: number, cy: number): boolean {
     return this.kindAt(cx, cy) === TileKind.Ice;
   }

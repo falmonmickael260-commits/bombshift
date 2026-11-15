@@ -29,6 +29,10 @@ export class WorldScenery {
       let node: Phaser.GameObjects.Arc | Phaser.GameObjects.Ellipse;
       if (def.theme === 'ocean') node = scene.add.circle(x, y, 2 + i % 3, 0xa6e6d2, 0.02).setStrokeStyle(1, 0xc0f5e2, 0.24);
       else if (def.theme === 'desert') node = scene.add.ellipse(x, y, 22 + i % 11, 1.5, 0xffdfa6, 0.18);
+      else if (def.theme === 'fungal') node = scene.add.circle(x, y, 1 + i % 2, i % 2 ? 0xd5eda1 : 0x9fddd1, 0.4);
+      else if (def.theme === 'sky') node = scene.add.ellipse(x, y, 60 + i % 25, 9 + i % 5, 0xf5f4df, 0.07);
+      else if (def.theme === 'haunted') node = scene.add.ellipse(x, y, 22, 5, 0xa4cdd1, 0.045);
+      else if (def.theme === 'mirror') node = scene.add.circle(x, y, i % 3 ? 1 : 2, i % 2 ? 0xffd1ef : 0xd3f7ff, 0.3);
       else if (def.theme === 'dimension') node = scene.add.circle(x, y, i % 3 === 0 ? 2 : 1, i % 2 ? 0xf2d7ff : 0xa6efff, 0.4);
       else node = scene.add.ellipse(x, y, 6, 14, 0xc0e0ef, 0.06);
       node.setDepth(6);
@@ -42,11 +46,11 @@ export class WorldScenery {
         rays.fillTriangle(i * 270, 0, i * 270 + 60, 0, i * 270 + 210, this.height);
       }
     }
-    if (def.theme === 'electric') {
+    if (def.theme === 'electric' || def.theme === 'clockwork') {
       grid.forEachTile((t, x, y) => {
         if (t.kind !== TileKind.Wall || (x * 7 + y * 13) % 17 !== 0) return;
         const fan = scene.add.graphics({ x: x * TILE + 24, y: y * TILE + 20 }).setDepth(10);
-        fan.fillStyle(0xb0c4ca, 0.55);
+        fan.fillStyle(def.theme === 'clockwork' ? 0xdec28a : 0xb0c4ca, 0.55);
         for (let i = 0; i < 4; i++) {
           const a = i * Math.PI / 2;
           fan.fillTriangle(0, 0, Math.cos(a) * 10, Math.sin(a) * 10, Math.cos(a + 0.8) * 10, Math.sin(a + 0.8) * 10);
@@ -68,6 +72,10 @@ export class WorldScenery {
       if (this.reduceMotion) continue;
       if (this.def.theme === 'ocean') m.node.setPosition(m.x + Math.sin(t * 0.6 + i) * 9, (m.y - t * m.speed % this.height + this.height) % this.height);
       else if (this.def.theme === 'desert') m.node.setPosition((m.x + t * m.speed * 3) % this.width, m.y + Math.sin(t + i) * 3);
+      else if (this.def.theme === 'fungal') m.node.setPosition(m.x + Math.sin(t * 0.5 + i) * 12, m.y + Math.cos(t * 0.4 + i) * 7);
+      else if (this.def.theme === 'sky') m.node.setPosition((m.x + t * m.speed * 0.8) % this.width, m.y);
+      else if (this.def.theme === 'haunted') m.node.setPosition(m.x + Math.sin(t * 0.2 + i) * 17, m.y + Math.cos(t * 0.2 + i) * 4);
+      else if (this.def.theme === 'mirror') m.node.setAlpha(0.18 + (Math.sin(t * 0.4 + i) + 1) * 0.1);
       else if (this.def.theme === 'dimension') m.node.setAlpha(0.25 + (Math.sin(t * 0.5 + i) + 1) * 0.15);
       else m.node.setPosition(m.x + Math.sin(t + i) * 4, (m.y - t * m.speed % this.height + this.height) % this.height);
     }
@@ -85,7 +93,7 @@ export class WorldScenery {
         const offset = active && !this.reduceMotion ? ((elapsed / 85) % 12) - 6 : 0;
         const px = x * TILE + 24 + dx * offset, py = y * TILE + 24 + dy * offset;
         if (f.kind === 'conveyor') {
-          g.fillStyle(0x101b29, 0.7); g.fillRect(x * TILE + 5, y * TILE + 4, 38, 40);
+          g.fillStyle(this.def.theme === 'clockwork' ? 0x3c302a : 0x101b29, 0.7); g.fillRect(x * TILE + 5, y * TILE + 4, 38, 40);
           g.lineStyle(2, 0x74838c, 0.6);
           for (let i = -1; i < 2; i++) g.lineBetween(x * TILE + 7, y * TILE + 24 + i * 12, x * TILE + 41, y * TILE + 24 + i * 12);
         }
