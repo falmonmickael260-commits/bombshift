@@ -1,3 +1,4 @@
+import { AdDemoPreferences, demoStorage, renderAdDemo } from './adDemo';
 import Phaser from 'phaser';
 import { audio } from '../core/audio';
 import {
@@ -106,6 +107,7 @@ type ScreenName =
   | 'settings'
   | 'progress'
   | 'howto'
+  | 'ad'
   | 'result'
   | 'pause'
   | 'game';
@@ -118,6 +120,7 @@ const SCREEN_IDS: Record<Exclude<ScreenName, 'game'>, string> = {
   settings: 'screen-settings',
   progress: 'screen-progress',
   howto: 'screen-howto',
+  ad: 'screen-ad',
   result: 'screen-result',
   pause: 'screen-pause',
 };
@@ -128,6 +131,8 @@ const SCREEN_IDS: Record<Exclude<ScreenName, 'game'>, string> = {
  */
 export class App {
   private readonly save = new SaveManager();
+  private readonly adDemo = new AdDemoPreferences(demoStorage());
+  private disposeAd: (() => void) | null = null;
   private readonly controls = new TouchControls();
   private readonly hud = new Hud();
   private game: Phaser.Game | null = null;
@@ -392,6 +397,7 @@ export class App {
   /* ----------------------------------------------------------- ecrans ---- */
 
   private show(name: ScreenName): void {
+    if (this.screen === 'ad' && name !== 'ad') { this.disposeAd?.(); this.disposeAd = null; }
     this.screen = name;
     for (const [key, id] of Object.entries(SCREEN_IDS)) {
       const el = document.getElementById(id);
@@ -405,7 +411,15 @@ export class App {
     this.controls.setVisible(name === 'game');
     document.getElementById('game-root')?.setAttribute('aria-hidden', String(!inGame));
 
-    if (name === 'title') this.refreshResumeButton();
+    if (name === 'title') {
+      this.refreshResumeButton();
+      const status = document.getElementById('ad-demo-status');
+      if (status) status.textContent = this.adDemo.state.removed
+        ? 'Sans pub activé pour cet essai · achat fictif'
+        : this.adDemo.shouldShow ? 'Essai actif après chaque victoire · aucun paiement' : 'Essai facultatif de Camouflip · aucun paiement';
+      const stop = document.getElementById('ad-demo-stop');
+      if (stop) stop.hidden = !this.adDemo.state.enabled;
+    }
     if (name === 'maps') {
       renderMapList(document.getElementById('map-list')!, this.save.get(), (def, locked) => {
         if (locked) {
@@ -473,6 +487,7 @@ export class App {
 
   /** Sauvegarde la tentative en cours (pause, mise en arriere-plan, fermeture). */
   private persistRun(): void {
+    if (this.screen !== 'game' && this.screen !== 'pause') return;
     const snap = this.gameScene?.serialize();
     if (snap) saveRun(snap);
   }
@@ -484,6 +499,14 @@ export class App {
       const action = target.getAttribute('data-action');
       audio.play(action === 'back-title' || action === 'back-maps' ? 'uiBack' : 'uiClick');
       switch (action) {
+        case 'ad-demo':
+          this.adDemo.set({ enabled: true, removed: false });
+          this.openAdDemo('title');
+          break;
+        case 'ad-demo-stop':
+          this.adDemo.set({ enabled: false, removed: false });
+          this.show('title');
+          break;
         case 'play':
           this.show('maps');
           break;
@@ -736,7 +759,19 @@ export class App {
       ? '✓ Progression sauvegardée sur cet appareil'
       : 'Sauvegarde locale indisponible : autorisez le stockage du navigateur pour conserver la progression.';
     document.getElementById('result-body')!.appendChild(receipt);
-    this.show('result');
+    if (victory && this.adDemo.shouldShow) this.openAdDemo('result');
+    else this.show('result');
+  }
+
+  private openAdDemo(returnTo: 'title' | 'result'): void {
+    this.show('ad');
+    this.disposeAd?.();
+    this.disposeAd = renderAdDemo(document.getElementById('screen-ad')!,
+      () => this.show(returnTo),
+      () => {
+        this.adDemo.set({ enabled: true, removed: true });
+        this.show(returnTo);
+      });
   }
 
   /* --------------------------------------------------------- systeme ---- */
