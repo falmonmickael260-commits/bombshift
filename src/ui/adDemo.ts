@@ -1,6 +1,13 @@
 const KEY = 'bombshift.ad-demo.v1';
 export const AD_DEMO_MS = 30_000;
-export interface AdDemoState { enabled: boolean; removed: boolean }
+export interface AdDemoState { enabled: boolean; removed: boolean; nextAd?: number }
+export const AD_CREATIVES = [
+  { id: 'camouflip', name: 'CAMOUFLIP', tagline: 'Cache-toi. Transforme-toi. Survis !', description: 'Un chasseur. Jusqu’à six fugitifs. Qui se cache dans le décor ?', accent: '#ffbf62' },
+  { id: 'la-meute', name: 'LA MEUTE', tagline: 'Un village. Des rôles secrets. Une nuit de trop.', description: 'Débusque les loups et protège ton village. Un jeu de déduction sociale de 6 à 15 joueurs.', accent: '#c5b4ff' },
+  { id: 'president', name: 'PRÉSIDENT', tagline: 'Du trône au trou du cul, un seul coup suffit.', description: 'Débarrasse-toi de tes cartes et vise le trône. Défie tes amis de 3 à 6 joueurs.', accent: '#f5cb79' },
+  { id: 'kilomax', name: 'KILOMAX', tagline: 'La route est à qui tient la distance.', description: 'Joue tes cartes, déjoue les attaques et fonce vers la victoire. Une course de 2 à 6 joueurs.', accent: '#ffb273' },
+] as const;
+export type AdCreative = typeof AD_CREATIVES[number];
 
 /** Isolated from real saves, accounts and future paid entitlements. */
 export class AdDemoPreferences {
@@ -9,12 +16,18 @@ export class AdDemoPreferences {
     try {
       const raw = JSON.parse(storage?.getItem(KEY) ?? 'null');
       this.state = { enabled: raw?.enabled === true, removed: raw?.removed === true };
+      if (Number.isInteger(raw?.nextAd) && raw.nextAd >= 0 && raw.nextAd < AD_CREATIVES.length) this.state.nextAd = raw.nextAd;
     } catch { /* The demo remains opt-in. */ }
   }
   get shouldShow(): boolean { return this.state.enabled && !this.state.removed; }
   set(state: AdDemoState): void {
-    this.state = { ...state };
+    this.state = { ...this.state, ...state };
     try { this.storage?.setItem(KEY, JSON.stringify(this.state)); } catch { /* Session-only demo. */ }
+  }
+  nextCreative(): AdCreative {
+    const index = this.state.nextAd ?? 0;
+    this.set({ ...this.state, nextAd: (index + 1) % AD_CREATIVES.length });
+    return AD_CREATIVES[index];
   }
 }
 
@@ -39,7 +52,7 @@ export function demoStorage(): Storage | null {
 }
 
 /** Local poster today; a video can later replace the poster without changing the gate. */
-export function renderAdDemo(container: HTMLElement, complete: () => void, simulatePurchase: () => void): () => void {
+export function renderAdDemo(container: HTMLElement, complete: () => void, simulatePurchase: () => void, creative: AdCreative = AD_CREATIVES[0]): () => void {
   container.innerHTML = `
     <div class="ad-demo__poster" aria-hidden="true"></div>
     <header class="ad-demo__header">
@@ -48,9 +61,9 @@ export function renderAdDemo(container: HTMLElement, complete: () => void, simul
     </header>
     <div class="ad-demo__copy">
       <p class="ad-demo__eyebrow">UN AUTRE JEU REVANCHE GAMES</p>
-      <h1>CAMOUFLIP</h1>
-      <p class="ad-demo__tagline">Cache-toi. Transforme-toi. Survis !</p>
-      <p class="ad-demo__description">Un chasseur. Jusqu’à six fugitifs.<br>Qui se cache dans le décor ?</p>
+      <h1></h1>
+      <p class="ad-demo__tagline"></p>
+      <p class="ad-demo__description"></p>
       <button type="button" class="ad-demo__download" id="ad-download">TÉLÉCHARGER <span>Essai sans lien</span></button>
       <p id="ad-demo-message" class="ad-demo__message" role="status"></p>
     </div>
@@ -69,7 +82,14 @@ export function renderAdDemo(container: HTMLElement, complete: () => void, simul
       </div>
     </div>`;
   const get = <T extends HTMLElement>(id: string): T => container.querySelector<T>(`#${id}`)!;
-  container.querySelector<HTMLElement>('.ad-demo__poster')!.style.backgroundImage = `url("${import.meta.env.BASE_URL}ads/camouflip.webp")`;
+  container.setAttribute('aria-label', `Publicité de démonstration pour ${creative.name}`);
+  container.dataset.adGame = creative.id;
+  const title = container.querySelector<HTMLElement>('h1')!;
+  title.textContent = creative.name;
+  title.style.color = creative.accent;
+  container.querySelector<HTMLElement>('.ad-demo__tagline')!.textContent = creative.tagline;
+  container.querySelector<HTMLElement>('.ad-demo__description')!.textContent = creative.description;
+  container.querySelector<HTMLElement>('.ad-demo__poster')!.style.backgroundImage = `url("${import.meta.env.BASE_URL}ads/${creative.id}.webp")`;
   const next = get<HTMLButtonElement>('ad-continue');
   const purchase = get('ad-purchase');
   const noAds = get<HTMLButtonElement>('ad-no-ads');

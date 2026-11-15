@@ -416,7 +416,7 @@ export class App {
       const status = document.getElementById('ad-demo-status');
       if (status) status.textContent = this.adDemo.state.removed
         ? 'Sans pub activé pour cet essai · achat fictif'
-        : this.adDemo.shouldShow ? 'Essai actif après chaque victoire · aucun paiement' : 'Essai facultatif de Camouflip · aucun paiement';
+        : this.adDemo.shouldShow ? 'Essai actif après chaque victoire · aucun paiement' : 'Camouflip · La Meute · Président · Kilomax · essai gratuit';
       const stop = document.getElementById('ad-demo-stop');
       if (stop) stop.hidden = !this.adDemo.state.enabled;
     }
@@ -771,7 +771,7 @@ export class App {
       () => {
         this.adDemo.set({ enabled: true, removed: true });
         this.show(returnTo);
-      });
+      }, this.adDemo.nextCreative());
   }
 
   /* --------------------------------------------------------- systeme ---- */

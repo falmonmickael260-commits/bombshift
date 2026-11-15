@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { AD_DEMO_MS, AdDemoPreferences, VisibleAdClock } from '../ui/adDemo';
+import { AD_CREATIVES, AD_DEMO_MS, AdDemoPreferences, VisibleAdClock } from '../ui/adDemo';
 
 describe('publicité de démonstration', () => {
+  it('alterne les quatre jeux même après un rechargement et une réactivation', () => {
+    let saved: string | null = null;
+    const storage = { getItem: () => saved, setItem: (_key: string, value: string) => { saved = value; } };
+    const demo = new AdDemoPreferences(storage);
+    expect(demo.nextCreative().id).toBe('camouflip');
+    const reloaded = new AdDemoPreferences(storage);
+    reloaded.set({ enabled: true, removed: false });
+    expect([reloaded.nextCreative().id, reloaded.nextCreative().id, reloaded.nextCreative().id]).toEqual(['la-meute', 'president', 'kilomax']);
+    expect(reloaded.nextCreative().id).toBe('camouflip');
+    expect(AD_CREATIVES).toHaveLength(4);
+  });
   it('exige trente secondes réellement visibles', () => {
     const clock = new VisibleAdClock();clock.sample(0,true);clock.sample(29_999,true);
     expect(clock.done).toBe(false);expect(clock.seconds).toBe(1);
