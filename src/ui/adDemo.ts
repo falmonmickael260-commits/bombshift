@@ -52,7 +52,7 @@ export function demoStorage(): Storage | null {
 }
 
 /** Local poster today; a video can later replace the poster without changing the gate. */
-export function renderAdDemo(container: HTMLElement, complete: () => void, simulatePurchase: () => void, creative: AdCreative = AD_CREATIVES[0]): () => void {
+export function renderAdDemo(container: HTMLElement, complete: () => void, purchase: () => void, creative: AdCreative = AD_CREATIVES[0]): () => void {
   container.innerHTML = `
     <div class="ad-demo__poster" aria-hidden="true"></div>
     <header class="ad-demo__header">
@@ -73,11 +73,11 @@ export function renderAdDemo(container: HTMLElement, complete: () => void, simul
     </footer>
     <div class="ad-demo__purchase" id="ad-purchase" hidden role="dialog" aria-modal="true" aria-labelledby="ad-purchase-title">
       <div class="ad-demo__purchase-card">
-        <span class="ad-demo__badge">DÉMONSTRATION GRATUITE</span>
+        <span class="ad-demo__badge">ACHAT UNIQUE · 0,99 €</span>
         <h2 id="ad-purchase-title">Jouer sans publicité</h2>
-        <p>Dans la version finale, un achat unique supprimera les publicités.</p>
-        <p><strong>Pour cet essai : aucun paiement, aucun débit.</strong> La suppression est simulée uniquement sur cet appareil.</p>
-        <button type="button" class="btn btn--primary" id="ad-confirm">SIMULER L’ACHAT GRATUITEMENT</button>
+        <p>Un achat unique de 0,99 € supprime les publicités de BombShift sur ton compte Revanche Games.</p>
+        <p>Paiement sécurisé par Stripe. L’option s’active après confirmation du paiement.</p><p id="ad-purchase-message" role="status"></p>
+        <button type="button" class="btn btn--primary" id="ad-confirm">ACHETER POUR 0,99 €</button>
         <button type="button" class="btn btn--ghost" id="ad-cancel">REVENIR À LA PUBLICITÉ</button>
       </div>
     </div>`;
@@ -91,12 +91,12 @@ export function renderAdDemo(container: HTMLElement, complete: () => void, simul
   container.querySelector<HTMLElement>('.ad-demo__description')!.textContent = creative.description;
   container.querySelector<HTMLElement>('.ad-demo__poster')!.style.backgroundImage = `url("${import.meta.env.BASE_URL}ads/${creative.id}.webp")`;
   const next = get<HTMLButtonElement>('ad-continue');
-  const purchase = get('ad-purchase');
+  const purchaseDialog = get('ad-purchase');
   const noAds = get<HTMLButtonElement>('ad-no-ads');
   const clock = new VisibleAdClock();
   let closed = false;
   const paint = (): void => {
-    clock.sample(performance.now(), !document.hidden && purchase.hidden);
+    clock.sample(performance.now(), !document.hidden && purchaseDialog.hidden);
     next.disabled = !clock.done;
     next.textContent = clock.done ? 'CONTINUER ✕' : `Continuer dans ${clock.seconds} s`;
     const elapsed = (AD_DEMO_MS - clock.remainingMs) / 1000;
@@ -111,20 +111,20 @@ export function renderAdDemo(container: HTMLElement, complete: () => void, simul
     document.removeEventListener('visibilitychange', paint);
     container.removeEventListener('keydown', keys);
   };
-  const closePurchase = (): void => { purchase.hidden = true; paint(); noAds.focus(); };
+  const closePurchase = (): void => { purchaseDialog.hidden = true; paint(); noAds.focus(); };
   const keys = (ev: KeyboardEvent): void => {
-    if (ev.key === 'Escape' && !purchase.hidden) { ev.preventDefault(); closePurchase(); }
+    if (ev.key === 'Escape' && !purchaseDialog.hidden) { ev.preventDefault(); closePurchase(); }
     if (ev.key !== 'Tab') return;
-    const scope = purchase.hidden ? container : purchase;
+    const scope = purchaseDialog.hidden ? container : purchaseDialog;
     const buttons = [...scope.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')].filter((b) => b.getClientRects().length);
     const first = buttons[0], last = buttons[buttons.length - 1];
     if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last?.focus(); }
     else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first?.focus(); }
   };
   next.onclick = () => { if (!clock.done || closed) return; dispose(); complete(); };
-  noAds.onclick = () => { purchase.hidden = false; paint(); get('ad-confirm').focus(); };
+  noAds.onclick = () => { purchaseDialog.hidden = false; paint(); get('ad-confirm').focus(); };
   get('ad-cancel').onclick = closePurchase;
-  get('ad-confirm').onclick = () => { if (closed) return; dispose(); simulatePurchase(); };
+  get('ad-confirm').onclick = () => { if (closed) return; purchase(); };
   get('ad-download').onclick = () => { get('ad-demo-message').textContent = 'Essai : aucun lien de téléchargement pour le moment.'; };
   document.addEventListener('visibilitychange', paint);
   container.addEventListener('keydown', keys);

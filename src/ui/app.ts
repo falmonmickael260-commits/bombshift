@@ -147,6 +147,8 @@ export class App {
   private completedRun: { result: RunResult; meta: ReturnType<App['recordRunResult']> } | null = null;
   private bootWatchdog: ReturnType<typeof setInterval> | null = null;
   private bootRecoveries = 0;
+  private paidNoAds = false;
+  private purchasePending = false;
   private accountSyncOrigin: string | null = null;
   private accountSyncLaunch: string | null = null;
   private accountSyncReady = false;
@@ -209,6 +211,9 @@ export class App {
       const data = event.data;
       if (!data || data.v !== 1 || data.game !== 'bombshift') return;
       if (data.type === 'rg:bootstrap' && typeof data.launch === 'string') {
+        this.paidNoAds = data.noAds === true;
+        this.refreshPurchaseStatus();
+        if (this.paidNoAds && this.screen === 'ad') this.show('title');
         this.accountSyncReady = true;
         this.accountSyncAuthenticated = data.authenticated === true;
         this.accountSyncLaunch = data.launch;
@@ -227,6 +232,10 @@ export class App {
           this.setAccountSyncStatus('Progression enregistrée sur cet appareil');
         }
       } else if (data.launch !== this.accountSyncLaunch) return;
+      else if (data.type === 'rg:purchase-error') {
+        this.purchasePending = false;
+        this.refreshPurchaseStatus(typeof data.error === 'string' ? data.error : 'Paiement indisponible.');
+      }
       else if (data.type === 'rg:progress-saved') {
         if (data.requestId !== undefined && data.requestId !== this.accountSyncRequest) return;
         if (this.accountSyncSaveRetry !== null) window.clearTimeout(this.accountSyncSaveRetry);
@@ -242,6 +251,12 @@ export class App {
       }
     });
 
+    let entitlementChecks = 0;
+    const entitlementTimer = window.setInterval(() => {
+      if (++entitlementChecks > 12 || this.paidNoAds) { window.clearInterval(entitlementTimer); return; }
+      sendReady();
+    }, 5000);
+    window.addEventListener('focus', sendReady);
     this.save.onChange(() => this.queueAccountProgressSave());
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.queueAccountProgressSave(0);
@@ -413,8 +428,9 @@ export class App {
 
     if (name === 'title') {
       this.refreshResumeButton();
+      this.refreshPurchaseStatus();
       const status = document.getElementById('ad-demo-status');
-      if (status) status.textContent = this.adDemo.state.removed
+      if (status) status.textContent = this.paidNoAds ? 'Sans publicité activé sur ton compte' : this.adDemo.state.removed
         ? 'Sans pub activé pour cet essai · achat fictif'
         : this.adDemo.shouldShow ? 'Essai actif après chaque victoire · aucun paiement' : 'Camouflip · La Meute · Président · Kilomax · essai gratuit';
       const stop = document.getElementById('ad-demo-stop');
@@ -499,6 +515,9 @@ export class App {
       const action = target.getAttribute('data-action');
       audio.play(action === 'back-title' || action === 'back-maps' ? 'uiBack' : 'uiClick');
       switch (action) {
+        case 'buy-no-ads':
+          this.purchaseNoAds();
+          break;
         case 'ad-demo':
           this.adDemo.set({ enabled: true, removed: false });
           this.openAdDemo('title');
@@ -625,12 +644,14 @@ export class App {
     const snap = this.pendingRun ?? loadRun();
     if (!snap) {
       this.refreshResumeButton();
+      this.refreshPurchaseStatus();
       return;
     }
     const map = MAPS.find((m) => m.id === snap.mapId);
     if (!map) {
       clearRun();
       this.refreshResumeButton();
+      this.refreshPurchaseStatus();
       return;
     }
     // La difficulte de la tentative sauvegardee prime : on reprend a l'identique.
@@ -759,19 +780,49 @@ export class App {
       ? '✓ Progression sauvegardée sur cet appareil'
       : 'Sauvegarde locale indisponible : autorisez le stockage du navigateur pour conserver la progression.';
     document.getElementById('result-body')!.appendChild(receipt);
-    if (victory && this.adDemo.shouldShow) this.openAdDemo('result');
+    if (victory && !this.paidNoAds && this.adDemo.shouldShow) this.openAdDemo('result');
     else this.show('result');
   }
 
   private openAdDemo(returnTo: 'title' | 'result'): void {
+    if (this.paidNoAds) { this.show(returnTo); return; }
     this.show('ad');
     this.disposeAd?.();
     this.disposeAd = renderAdDemo(document.getElementById('screen-ad')!,
       () => this.show(returnTo),
       () => {
-        this.adDemo.set({ enabled: true, removed: true });
-        this.show(returnTo);
+        this.purchaseNoAds();
       }, this.adDemo.nextCreative());
+  }
+
+  private refreshPurchaseStatus(message?: string): void {
+    const button = document.getElementById('buy-no-ads') as HTMLButtonElement | null;
+    if (button) {
+      button.disabled = this.paidNoAds || this.purchasePending;
+      button.textContent = this.paidNoAds ? 'SANS PUBLICITÉ ACTIVÉ' : this.purchasePending ? 'OUVERTURE DU PAIEMENT…' : 'SANS PUBLICITÉ · 0,99 €';
+    }
+    const note = document.getElementById('buy-no-ads-note');
+    if (note) note.textContent = message || (this.paidNoAds ? 'Achat restauré depuis ton compte Revanche Games.' : 'Achat unique de 0,99 € · compte Revanche Games requis');
+    const error = document.getElementById('ad-purchase-message');
+    if (error) error.textContent = message || '';
+    const confirm = document.getElementById('ad-confirm') as HTMLButtonElement | null;
+    if (confirm) confirm.disabled = this.purchasePending;
+  }
+
+  private purchaseNoAds(): void {
+    if (this.paidNoAds || this.purchasePending) return;
+    if (!this.accountSyncOrigin || !this.accountSyncLaunch) {
+      this.refreshPurchaseStatus('Ouvre BombShift depuis la plateforme Revanche Games pour acheter cette option.');
+      return;
+    }
+    this.purchasePending = true;
+    this.refreshPurchaseStatus('Ouverture du paiement sécurisé Stripe…');
+    window.parent.postMessage({ type: 'rg:purchase-no-ads', v: 1, game: 'bombshift', launch: this.accountSyncLaunch }, this.accountSyncOrigin);
+    window.setTimeout(() => {
+      if (!this.purchasePending) return;
+      this.purchasePending = false;
+      this.refreshPurchaseStatus('Le paiement ne s’est pas ouvert. Tu peux réessayer.');
+    }, 20000);
   }
 
   /* --------------------------------------------------------- systeme ---- */
