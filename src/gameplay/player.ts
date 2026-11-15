@@ -116,7 +116,7 @@ export class Player {
     const slippery = this.world.grid.isSlippery(cell.x, cell.y);
 
     const res = moveBody(this.body, input.moveX, input.moveY, dt, {
-      speed: this.speed * (input.magnitude > 0.01 ? Math.min(1, Math.max(0.35, input.magnitude)) : 0),
+      speed: this.speed * this.world.grid.groundSpeedAt(cell.x, cell.y) * (input.magnitude > 0.01 ? Math.min(1, Math.max(0.35, input.magnitude)) : 0),
       slippery,
       laneAssist: !slippery,
       blocked: (cx, cy) => this.world.playerBlocked(cx, cy),

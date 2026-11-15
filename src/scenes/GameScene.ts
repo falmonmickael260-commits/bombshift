@@ -177,6 +177,7 @@ export class GameScene extends Phaser.Scene {
       onTileDestroyed: (cell, kind) => this.onTileDestroyed(cell, kind),
       onBlast: (center, cells) => {
         this.objectives.onBlastCells(cells);
+        this.hazards.onBlastCells(cells);
         this.powerups.onBlastCells(cells);
         void center;
       },

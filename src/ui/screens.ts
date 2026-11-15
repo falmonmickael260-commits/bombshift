@@ -43,6 +43,9 @@ export function renderMapList(
     20: '21–24 · LA CITÉ ENGLOUTIE', 24: '25–29 · LE DÉSERT DES TOMBEAUX',
     29: '30 · MONDE MIROIR', 30: '31–34 · LA STATION ORBITALE',
     34: '35–39 · L’ARCHIPEL COSMIQUE', 39: '40 · LE MIROIR DE L’INFINI',
+    40: '41–44 · LA FORÊT DES LANTERNES', 44: '45–49 · LA CITÉ DES NUAGES',
+    49: '50 · LA GALERIE DES MILLE REFLETS', 50: '51–54 · LA MANUFACTURE DES HEURES',
+    54: '55–59 · LE MANOIR DES OMBRES', 59: '60 · LE MIROIR DU TEMPS PERDU',
   };
   MAPS.forEach((def, i) => {
     if (worlds[i]) container.appendChild(el('h2', 'campaign-world', worlds[i]));

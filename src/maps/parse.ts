@@ -66,6 +66,9 @@ export function parseMap(def: MapDefinition): ParsedMap {
         case '.':
           grid.tiles[i] = makeTile(TileKind.Floor, variant);
           break;
+        case 'm':
+          grid.tiles[i] = makeTile(TileKind.Moss, variant);
+          break;
         case '~':
           grid.tiles[i] = makeTile(TileKind.Ice, variant);
           break;

@@ -1,3 +1,4 @@
+import { isNextWorld } from '../core/nextWorldArt';
 import { isBiome } from '../core/biomeArt';
 import type Phaser from 'phaser';
 import { TEX, TILE } from '../core/constants';
@@ -127,6 +128,11 @@ export class TileRenderer {
         break;
       }
 
+      case TileKind.Moss:
+        setBase(regional('moss', TEX.floor(this.theme, t.variant % 4)), 0, 3);
+        clearObject();
+        break;
+
       case TileKind.Vent:
         setBase(regional('hazard', TEX.vent), t.frame, 3);
         clearObject();
@@ -138,7 +144,7 @@ export class TileRenderer {
         break;
 
       case TileKind.Plate:
-        setBase(regional('plate', TEX.plate), t.group === 2 ? (t.latched ? 1 : 0) : t.frame, 3);
+        setBase(regional(t.group === 1 && isNextWorld(this.theme) ? 'trap' : 'plate', TEX.plate), t.group === 2 ? (t.latched ? 1 : 0) : t.frame, 3);
         clearObject();
         break;
 

@@ -120,6 +120,11 @@ export const DROP_TABLE: Readonly<Record<Theme, Readonly<Record<string, number>>
   volcano: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.04, pierce: 0.03, life: 0.012 },
   ice: { range: 0.09, bomb: 0.08, speed: 0.05, shield: 0.05, pierce: 0.035, life: 0.01 },
   temple: { range: 0.08, bomb: 0.07, speed: 0.045, shield: 0.05, pierce: 0.04, life: 0.008 },
+  fungal: { range: 0.09, bomb: 0.08, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
+  sky: { range: 0.1, bomb: 0.08, speed: 0.05, shield: 0.06, pierce: 0.04, life: 0.015 },
+  clockwork: { range: 0.09, bomb: 0.1, speed: 0.05, shield: 0.05, pierce: 0.05, life: 0.015 },
+  haunted: { range: 0.09, bomb: 0.09, speed: 0.05, shield: 0.06, pierce: 0.05, life: 0.015 },
+  mirror: { range: 0.1, bomb: 0.09, speed: 0.05, shield: 0.06, pierce: 0.04, life: 0.015 },
   ocean: { range: 0.09, bomb: 0.09, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
   desert: { range: 0.1, bomb: 0.08, speed: 0.06, shield: 0.05, pierce: 0.04, life: 0.015 },
   electric: { range: 0.09, bomb: 0.09, speed: 0.05, shield: 0.05, pierce: 0.04, life: 0.012 },
@@ -189,6 +194,31 @@ export const THEME_COLORS: Readonly<
     }
   >
 > = {
+  fungal: {
+    floorA: 0x293e36, floorB: 0x2c4336, grout: 0x162b29, wallTop: 0x65405e, wallSide: 0x2e2939,
+    blockTop: 0xc67491, blockSide: 0x67506b, accent: 0xb1ee8c, hazard: 0xccde79,
+    glow: 0xbdedbb, bg: 0x0d2025, fog: 0x2d4942,
+  },
+  sky: {
+    floorA: 0x91b0bb, floorB: 0x9dbcc4, grout: 0x547c90, wallTop: 0xf2e7cc, wallSide: 0x899ca9,
+    blockTop: 0xdeb475, blockSide: 0x937b60, accent: 0xf7dea1, hazard: 0xa9f2ff,
+    glow: 0xffffff, bg: 0x496d8c, fog: 0xb1d1d8,
+  },
+  clockwork: {
+    floorA: 0x493c36, floorB: 0x433831, grout: 0x211e22, wallTop: 0xb18c56, wallSide: 0x5e483b,
+    blockTop: 0xba794c, blockSide: 0x694e3e, accent: 0xf0c77d, hazard: 0xf2e2b6,
+    glow: 0xf7df9a, bg: 0x1d1b22, fog: 0x63503c,
+  },
+  haunted: {
+    floorA: 0x3e3448, floorB: 0x45394a, grout: 0x201f2d, wallTop: 0x646479, wallSide: 0x303343,
+    blockTop: 0x856448, blockSide: 0x4c3c38, accent: 0xa6dfd1, hazard: 0xb6b3f3,
+    glow: 0xa8eadf, bg: 0x111b2b, fog: 0x3a4255,
+  },
+  mirror: {
+    floorA: 0x27384c, floorB: 0x2d4054, grout: 0x14283a, wallTop: 0x8dc5db, wallSide: 0x3f637e,
+    blockTop: 0xc3a3df, blockSide: 0x6c678f, accent: 0xffc9ed, hazard: 0xe8e3ff,
+    glow: 0xd9ffff, bg: 0x101a31, fog: 0x3b5c79,
+  },
   ocean: {
     floorA: 0x125364, floorB: 0x185e6b, grout: 0x092e3f,
     wallTop: 0x557f75, wallSide: 0x173c49, blockTop: 0xec9c8b, blockSide: 0x854f69,

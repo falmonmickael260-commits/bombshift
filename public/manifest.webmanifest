@@ -1,7 +1,7 @@
 {
   "name": "BOMBSHIFT",
   "short_name": "BOMBSHIFT",
-  "description": "Jeu de labyrinthe a bombes : 40 niveaux, 4 mondes miroir, une seule meche.",
+  "description": "Jeu de labyrinthe a bombes : 60 niveaux, 6 mondes miroir, une seule meche.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

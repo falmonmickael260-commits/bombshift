@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Jeu mobile 2D de labyrinthe a bombes : <b>40 niveaux</b>, <b>3 boss a phases</b>,
+  Jeu mobile 2D de labyrinthe a bombes : <b>60 niveaux</b>, <b>3 boss a phases</b>,
   ennemis avec recherche de chemin et evitement de souffle, progression sauvegardee.
   <br />
   Phaser 3 · TypeScript · Vite · pret pour Capacitor (Android / iOS)
@@ -80,7 +80,40 @@ secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
 
-## Extension : quatre nouveaux univers, 40 niveaux au total
+## Nouvelle extension : niveaux 41 à 60
+
+Vingt cartes fixes supplémentaires portent la campagne à **60 niveaux**.
+Les quarante premières cartes, leurs identifiants et leurs records sont conservés.
+
+| Niveaux | Univers | Défi propre |
+| --- | --- | --- |
+| 41–44 | Forêt des lanternes | Champignons géants, racines, spores et mycélium ralentissant le joueur comme les ennemis |
+| 45–49 | Cité des nuages | Terrasses suspendues, cloches, vents annoncés, éclairs, vide et régulateurs à activer dans l’ordre |
+| 50 | Galerie des Mille Reflets | Commandes inversées, prismes à charger par explosion et quatre portails autour d’une arène centrale |
+| 51–54 | Manufacture des heures | Rouages, chaudières, vapeur, transport des bombes sur rails et mécanismes obligatoires alimentés par explosion |
+| 55–59 | Manoir des ombres | Bibliothèques, portraits, spectres annoncés, passages et lanternes obligatoires allumées par explosion |
+| 60 | Miroir du Temps Perdu | Deux axes inversés, quatre portails, quatre sceaux à charger par explosion et gravité neutralisable |
+
+Les cinq identités visuelles ont leurs propres textures, illustrations de sélection,
+objets destructibles, objectifs, obstacles, dangers, sorties, particules et musique.
+Les nouvelles arènes sont à l’est, à l’ouest, au nord, au sud ou au centre de la carte.
+Les IA de boss existantes sont réutilisées et annoncées dans les briefings.
+Les ralentissements ne modifient pas les commandes et laissent passer les explosions.
+Une sortie exige désormais aussi la validation des consoles marquées obligatoires.
+
+**Mondes miroir : 10, 20, 30, 40, 50 et 60.** Les contrôles habituels reviennent
+au niveau suivant et dans les menus. La sauvegarde immédiate après chaque victoire
+et les copies de secours sont conservées, sans changement de schéma.
+Le filtre de compte Revanche Games accepte les 60 identifiants : cette correction
+plateforme doit être déployée avec le jeu, sans nouvelle migration SQL.
+
+Tests : cartes, accessibilité sans traverser le vide, objectifs et consoles accessibles,
+absence de cartes dupliquées, mycélium, activation par explosion et reprise des
+mécanismes, migration d’une progression 40 → 41 et rechargement jusqu’au 60.
+Les essais navigateur utilisent les outils de développement pour contrôler les
+victoires ; ils ne remplacent pas des parties humaines d’équilibrage.
+
+## Première extension : niveaux 21 à 40
 
 Les niveaux 1 à 20 et leurs identifiants sont conservés. Les cartes 21 à 40
 ont des plans fixes, plusieurs dimensions et des arènes de boss placées au
@@ -103,7 +136,7 @@ Les trois IA de boss existantes sont conservées avec des noms de gardiens
 propres aux univers ; il ne s’agit pas de quatre nouvelles IA de boss.
 Les portails sont facultatifs et refusent une arrivée bloquée ou dangereuse.
 
-**Miroirs : niveaux 10, 20, 30 et 40.** Le clavier et le joystick tactile
+**Miroirs : niveaux 10, 20, 30, 40, 50 et 60.** Le clavier et le joystick tactile
 inversent les deux axes. Menus, bombes et raccourcis restent habituels.
 
 ### Sauvegarde après chaque niveau
@@ -120,12 +153,12 @@ En iframe, un compte connecté Revanche Games reçoit la progression via
 `rg:progress-save`, sans attendre l’écran de résultat. Un échec ou une absence
 d’accusé de réception déclenche une nouvelle tentative. La confirmation vient
 du message `rg:progress-saved` de la plateforme. La plateforme doit déployer
-son filtre des quarante identifiants, et sa migration existante
+son filtre des soixante identifiants, et sa migration existante
 `20261106010000_bombshift_account_progress.sql` doit être appliquée.
 Aucune récompense économique n’est liée à ces données.
 
 Validation : `npm test` et `npm run build`. Les essais Chromium couvrent les
-quarante chargements sur ordinateur et viewport mobile, les commandes,
+soixante chargements sur ordinateur et viewport mobile, les commandes,
 les portails, les objectifs et la victoire avec outils de développement,
 le déplacement du joueur et des bombes par tapis, leur arrêt par console,
 et la fermeture immédiate après victoire suivie d’une réouverture.

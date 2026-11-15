@@ -808,3 +808,9 @@ input[type="range"]::-moz-range-thumb {
 
 .map-card--illustrated { flex-shrink: 0; min-height: 268px; }
 .map-card__world { flex-shrink: 0; }
+
+.map-card--theme-fungal { background: linear-gradient(135deg, #3e4051, #112b2c); border-color: #8aaf7c; }
+.map-card--theme-sky { background: linear-gradient(135deg, #536e88, #263f5c); border-color: #ddc993; }
+.map-card--theme-clockwork { background: linear-gradient(135deg, #65503d, #28232c); border-color: #be9c64; }
+.map-card--theme-haunted { background: linear-gradient(135deg, #403b53, #1b2938); border-color: #789f9e; }
+.map-card--theme-mirror { background: linear-gradient(135deg, #5b6d8d, #293c59); border-color: #dbc3e7; }
