@@ -1,3 +1,4 @@
+import { buildThirdWorldTextures, isThirdWorld, THIRD_WORLDS } from './thirdWorldArt';
 import { buildNextWorldTextures, isNextWorld, NEXT_WORLDS } from './nextWorldArt';
 import type Phaser from 'phaser';
 import { TEX, THEME_COLORS, TILE } from './constants';
@@ -5,7 +6,7 @@ import { css, glow, makeSheet, roundRect, shade, speckle } from './paint';
 import type { Rng } from './rng';
 import type { Theme } from './types';
 
-export const BIOMES = ['ocean', 'desert', 'electric', 'dimension', ...NEXT_WORLDS] as const;
+export const BIOMES = ['ocean', 'desert', 'electric', 'dimension', ...NEXT_WORLDS, ...THIRD_WORLDS] as const;
 export type Biome = typeof BIOMES[number];
 export function isBiome(theme: Theme): theme is Biome {
   return (BIOMES as readonly string[]).includes(theme);
@@ -220,6 +221,7 @@ function device(c: Context, theme: Biome, kind: string, f: number): void {
 
 export function buildBiomeTextures(scene: Phaser.Scene): void {
   for (const theme of BIOMES) {
+    if (isThirdWorld(theme)) { buildThirdWorldTextures(scene, theme); continue; }
     if (isNextWorld(theme)) { buildNextWorldTextures(scene, theme); continue; }
     for (let v = 0; v < 4; v++) {
       makeSheet(scene, TEX.floor(theme, v), T, T, 1, (c, _f, _w, _h, r) => floor(c, theme, v, r), 1200 + v);

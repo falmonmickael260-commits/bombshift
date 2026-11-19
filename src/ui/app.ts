@@ -1,4 +1,5 @@
 import { AdDemoPreferences, demoStorage, renderAdDemo } from './adDemo';
+import { mountSpeedLeaderboard } from './leaderboard';
 import Phaser from 'phaser';
 import { audio } from '../core/audio';
 import {
@@ -133,6 +134,7 @@ export class App {
   private readonly save = new SaveManager();
   private readonly adDemo = new AdDemoPreferences(demoStorage());
   private disposeAd: (() => void) | null = null;
+  private disposeLeaderboard: (() => void) | null = null;
   private readonly controls = new TouchControls();
   private readonly hud = new Hud();
   private game: Phaser.Game | null = null;
@@ -243,6 +245,7 @@ export class App {
         this.accountSyncLastSent = this.accountSyncInFlight ?? this.accountSyncLastSent;
         this.accountSyncInFlight = null;
         this.setAccountSyncStatus('Progression du compte synchronisée');
+        window.dispatchEvent(new Event('bombshift:account-synced'));
         this.queueAccountProgressSave(0);
       } else if (data.type === 'rg:progress-save-error') {
         if (data.requestId !== undefined && data.requestId !== this.accountSyncRequest) return;
@@ -412,6 +415,8 @@ export class App {
   /* ----------------------------------------------------------- ecrans ---- */
 
   private show(name: ScreenName): void {
+    this.disposeLeaderboard?.();
+    this.disposeLeaderboard = null;
     if (this.screen === 'ad' && name !== 'ad') { this.disposeAd?.(); this.disposeAd = null; }
     this.screen = name;
     for (const [key, id] of Object.entries(SCREEN_IDS)) {
@@ -456,6 +461,10 @@ export class App {
         });
         audio.play('uiClick');
       });
+    }
+    if (name === 'brief' || name === 'result') {
+      this.disposeLeaderboard = mountSpeedLeaderboard(document.getElementById(name === 'brief' ? 'brief-body' : 'result-body')!,
+        this.selected, this.accountSyncOrigin, this.accountSyncAuthenticated);
     }
     if (name === 'settings') {
       renderSettings(

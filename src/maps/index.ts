@@ -10,6 +10,7 @@ import { ICE_III } from './level8';
 import { TEMPLE_III } from './level9';
 import { EXTENSION } from './extension';
 import { EXTENSION_II } from './extension2';
+import { EXTENSION_III } from './extension3';
 
 // Temporary expedition pack. Each entry keeps the proven collision and
 // objective layout of its source map while providing its own progression ID.
@@ -51,6 +52,7 @@ export const MAPS: readonly MapDefinition[] = [
   ...EXPEDITION,
   ...EXTENSION,
   ...EXTENSION_II,
+  ...EXTENSION_III,
 ];
 
 export function getMap(id: MapId): MapDefinition {
