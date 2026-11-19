@@ -7,7 +7,7 @@ import { TileKind } from '../core/types';
 import { GridMap } from '../core/grid';
 import { computeBlast } from '../gameplay/blast';
 
-const pack = MAPS.slice(40);
+const pack = MAPS.slice(40,60);
 describe('nouveaux niveaux 41–60', () => {
   it('ajoute vingt cartes et cinq identités visuelles distinctes, dont deux miroirs', () => {
     expect(pack).toHaveLength(20);
@@ -36,7 +36,7 @@ describe('nouveaux niveaux 41–60', () => {
     expect(restored.unlockedMaps).toBe(60);
     expect(restored.maps['level-59'].bestScore).toBe(16000);
     const last=defaultSave();last.maps['level-60']={...defaultMapProgress(),cleared:true,bestScore:18000};
-    expect(migrate(JSON.parse(JSON.stringify(last))).unlockedMaps).toBe(60);
+    expect(migrate(JSON.parse(JSON.stringify(last))).unlockedMaps).toBe(61);
   });
 
   it('le mycélium ralentit sans devenir solide ni bloquer une explosion', () => {

@@ -851,3 +851,14 @@ input[type="range"]::-moz-range-thumb {
 @media (max-height: 520px) { .ad-demo__copy { padding-top: 18px; margin-bottom: 8px; } .ad-demo__copy h1 { font-size: 47px; } .ad-demo__description { display: none; } .ad-demo__tagline { margin-bottom: 10px; } }
 @media (prefers-reduced-motion: reduce) { .ad-demo__poster { animation: none; } .ad-demo__progress i { transition: none; } }
 .ad-demo { overflow-x: hidden; }
+
+/* Per-level speed records: public names only, with a single best time per player. */
+.speed-board { margin: 20px 0; padding: 18px; border: 1px solid #a9d7ed40; border-radius: 15px; background: #111f32c9; }
+.speed-board h3 { color: #b6edf4; font-size: 15px; margin: 0 0 10px; }
+.speed-board__note { color: #bec5d4; font-size: 12px; line-height: 1.5; }
+.speed-board__table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+.speed-board__table caption { text-align: left; color: #dfd6bb; padding: 0 0 8px; }
+.speed-board__table th, .speed-board__table td { text-align: left; padding: 10px 5px; border-bottom: 1px solid #ffffff18; }
+.speed-board__table td:nth-child(2) { overflow-wrap: anywhere; }
+.speed-board__table td:last-child, .speed-board__table th:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.speed-board .btn { margin-top: 12px; min-height: 44px; width: 100%; font-size: 12px; }

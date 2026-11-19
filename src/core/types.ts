@@ -71,7 +71,7 @@ export interface Tile {
   latched: boolean;
 }
 
-export type Theme = 'volcano' | 'ice' | 'temple' | 'electric' | 'dimension' | 'ocean' | 'desert' | 'fungal' | 'sky' | 'clockwork' | 'haunted' | 'mirror';
+export type Theme = 'volcano' | 'ice' | 'temple' | 'electric' | 'dimension' | 'ocean' | 'desert' | 'fungal' | 'sky' | 'clockwork' | 'haunted' | 'mirror' | 'jungle' | 'candy' | 'abyss' | 'lunar';
 
 export type Difficulty = 'detente' | 'normal' | 'veteran';
 

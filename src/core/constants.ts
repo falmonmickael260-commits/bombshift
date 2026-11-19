@@ -117,6 +117,10 @@ export const COMBAT = {
 
 /** Probabilites de bonus par bloc detruit (somme <= 1, le reste = rien). */
 export const DROP_TABLE: Readonly<Record<Theme, Readonly<Record<string, number>>>> = {
+  jungle: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
+  candy: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
+  abyss: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
+  lunar: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.06, pierce: 0.04, life: 0.015 },
   volcano: { range: 0.1, bomb: 0.09, speed: 0.06, shield: 0.04, pierce: 0.03, life: 0.012 },
   ice: { range: 0.09, bomb: 0.08, speed: 0.05, shield: 0.05, pierce: 0.035, life: 0.01 },
   temple: { range: 0.08, bomb: 0.07, speed: 0.045, shield: 0.05, pierce: 0.04, life: 0.008 },
@@ -194,6 +198,10 @@ export const THEME_COLORS: Readonly<
     }
   >
 > = {
+  jungle: { floorA: 0x234b32, floorB: 0x2d5837, grout: 0x132b23, wallTop: 0x71914c, wallSide: 0x314b32, blockTop: 0xb08a47, blockSide: 0x61512e, accent: 0xc6ec71, hazard: 0xe7c54d, glow: 0xc2ef84, bg: 0x091e18, fog: 0x36593c },
+  candy: { floorA: 0x634963, floorB: 0x715075, grout: 0x332b45, wallTop: 0xf2b8da, wallSide: 0x87536f, blockTop: 0xf9d6a2, blockSide: 0x9c6d68, accent: 0x95f0e3, hazard: 0xffbc4e, glow: 0xffc0e6, bg: 0x30263f, fog: 0x916a98 },
+  abyss: { floorA: 0x102a48, floorB: 0x16354e, grout: 0x06192c, wallTop: 0x487b93, wallSide: 0x18374b, blockTop: 0x6d789d, blockSide: 0x353d67, accent: 0x66e8ed, hazard: 0xf19aca, glow: 0x87edff, bg: 0x020d23, fog: 0x173f69 },
+  lunar: { floorA: 0x535b70, floorB: 0x626a80, grout: 0x2e344b, wallTop: 0xbcc5d4, wallSide: 0x666f85, blockTop: 0x8e99b5, blockSide: 0x4c5771, accent: 0xffd37b, hazard: 0xceacf5, glow: 0xffe9ac, bg: 0x10152b, fog: 0x3e4664 },
   fungal: {
     floorA: 0x293e36, floorB: 0x2c4336, grout: 0x162b29, wallTop: 0x65405e, wallSide: 0x2e2939,
     blockTop: 0xc67491, blockSide: 0x67506b, accent: 0xb1ee8c, hazard: 0xccde79,

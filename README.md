@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Jeu mobile 2D de labyrinthe a bombes : <b>60 niveaux</b>, <b>3 boss a phases</b>,
+  Jeu mobile 2D de labyrinthe a bombes : <b>80 niveaux</b>, <b>3 boss a phases</b>,
   ennemis avec recherche de chemin et evitement de souffle, progression sauvegardee.
   <br />
   Phaser 3 · TypeScript · Vite · pret pour Capacitor (Android / iOS)
@@ -79,6 +79,12 @@ Cote du joystick, taille des commandes, difficulte, volumes, niveau d'effets,
 secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
+
+## Extension actuelle : niveaux 61 à 80 et top 5 rapidité
+
+La campagne compte désormais **80 niveaux**. Les vingt nouveaux tracés visitent la jungle des totems (61–64), le royaume des confiseries (65–69), les abysses lumineuses (71–74) et la colonie de Séléné (75–79). Les niveaux **70 et 80 sont des mondes miroir**.
+
+Chaque briefing et écran de résultat affiche le **top 5 des meilleurs temps du niveau**, un record par compte Revanche Games, tous modes confondus. Les victoires synchronisées sont classées du plus rapide au plus lent ; une panne réseau ne bloque jamais la partie. Les joueurs invités conservent leurs records locaux. Voir [les détails de l’extension et du classement](docs/LEVELS_80_TOP5.md).
 
 ## Nouvelle extension : niveaux 41 à 60
 
