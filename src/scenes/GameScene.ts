@@ -72,6 +72,7 @@ export interface RunResult {
 }
 
 export interface GameSceneData {
+  onReady?: () => void;
   mapId: MapId;
   /** Affiche les conseils contextuels (premiere decouverte de la carte). */
   showHints?: boolean;
@@ -245,6 +246,7 @@ export class GameScene extends Phaser.Scene {
     audio.playMusic(this.def.theme);
     this.lastCell = { ...this.player.cell };
     this.emitHud(true);
+    this.cfg.onReady?.();
   }
 
   /* ------------------------------------------------------------- world ---- */
@@ -1105,7 +1107,7 @@ export class GameScene extends Phaser.Scene {
    * au milieu d'une explosion serait injuste.
    */
   serialize(): RunSnapshot | null {
-    if (this.destroyed || this.phase === 'victory' || this.phase === 'defeat') return null;
+    if (this.destroyed || !this.grid || !this.player || this.phase === 'victory' || this.phase === 'defeat') return null;
     const tileKinds: number[] = new Array(this.grid.width * this.grid.height);
     const revealed: number[] = [];
     const latched: number[] = [];
