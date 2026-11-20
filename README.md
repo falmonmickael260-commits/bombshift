@@ -80,6 +80,12 @@ secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
 
+## Revenir après un changement d’application
+
+Le passage en arrière-plan met la partie en pause et sauvegarde la tentative. Un point de reprise est également enregistré toutes les cinq secondes pendant le jeu. Si le navigateur recharge la page, la tentative active de cet onglet est restaurée automatiquement **en pause**, sans ajouter de tentative et sans compter le temps d’absence. Quitter volontairement la partie ramène au menu ; la reprise manuelle reste disponible.
+
+Au retour au premier plan, au rétablissement du réseau ou à une restauration de page, le jeu renouvelle sa liaison à la plateforme et retente la synchronisation. Les résultats restent enregistrés localement pendant une panne. Une déconnexion volontaire du compte reste respectée. La restauration nécessite le stockage du navigateur ; un arrêt forcé sans événement peut revenir au dernier point de reprise (jusqu’à cinq secondes auparavant).
+
 ## Extension actuelle : niveaux 81 à 110
 
 Trente nouveaux tracés portent la campagne à **110 niveaux** : récifs du Kraken, royaume du Soleil Noir, terminal ionique, palais des Alizés, forge des Secondes et château de Minuit. Les niveaux **90, 100 et 110** sont en miroir. Les 80 premières cartes sont conservées.

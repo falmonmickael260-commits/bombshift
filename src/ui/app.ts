@@ -1,5 +1,6 @@
 import { AdDemoPreferences, demoStorage, renderAdDemo } from './adDemo';
 import { mountSpeedLeaderboard } from './leaderboard';
+import { RunRecovery, tabStorage } from './runRecovery';
 import Phaser from 'phaser';
 import { audio } from '../core/audio';
 import {
@@ -146,6 +147,7 @@ export class App {
   private wasPlayingBeforeHide = false;
   private debugClock = 0;
   private pendingRun: RunSnapshot | null = null;
+  private readonly recovery = new RunRecovery(tabStorage());
   private completedRun: { result: RunResult; meta: ReturnType<App['recordRunResult']> } | null = null;
   private bootWatchdog: ReturnType<typeof setInterval> | null = null;
   private bootRecoveries = 0;
@@ -259,10 +261,34 @@ export class App {
       if (++entitlementChecks > 12 || this.paidNoAds) { window.clearInterval(entitlementTimer); return; }
       sendReady();
     }, 5000);
-    window.addEventListener('focus', sendReady);
+    let lastReconnect = -Infinity;
+    const reconnect = (): void => {
+      if (document.hidden || performance.now() - lastReconnect < 500) return;
+      lastReconnect = performance.now();
+      // A suspended tab may have missed the acknowledgement of its last save.
+      if (this.accountSyncSaveRetry !== null) window.clearTimeout(this.accountSyncSaveRetry);
+      this.accountSyncSaveRetry = null;
+      this.accountSyncInFlight = null;
+      this.accountSyncLastSent = '';
+      this.accountSyncRequest++;
+      this.accountSyncReady = false;
+      if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
+      sendReady();
+      let attempts = 0;
+      this.accountSyncRetry = window.setInterval(() => {
+        if (this.accountSyncReady || attempts++ >= 20) {
+          if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
+          this.accountSyncRetry = null;
+        } else sendReady();
+      }, 700);
+    };
+    window.addEventListener('focus', reconnect);
+    window.addEventListener('pageshow', reconnect);
+    window.addEventListener('online', reconnect);
     this.save.onChange(() => this.queueAccountProgressSave());
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.queueAccountProgressSave(0);
+      else reconnect();
     });
     window.addEventListener('pagehide', () => this.queueAccountProgressSave(0));
   }
@@ -353,7 +379,17 @@ export class App {
       }
       if (fill) fill.style.width = '100%';
       if (text) text.textContent = 'Pret !';
-      setTimeout(() => this.show('title'), 420);
+      setTimeout(() => {
+        const snap = loadRun();
+        const map = snap ? MAPS.find((candidate) => candidate.id === snap.mapId) : null;
+        if (snap && map && this.recovery.mapId === snap.mapId) {
+          this.save.update((data) => { data.settings.difficulty = snap.difficulty as Difficulty; });
+          this.startRun(map.id, snap, true);
+        } else {
+          this.recovery.clear();
+          this.show('title');
+        }
+      }, 420);
     });
 
     // Filet de securite : si la boucle de jeu n'a pas demarre au bout de
@@ -514,7 +550,7 @@ export class App {
   private persistRun(): void {
     if (this.screen !== 'game' && this.screen !== 'pause') return;
     const snap = this.gameScene?.serialize();
-    if (snap) saveRun(snap);
+    if (snap) { saveRun(snap); this.recovery.mark(snap.mapId); }
   }
 
   private bindStaticButtons(): void {
@@ -591,7 +627,7 @@ export class App {
 
   /* -------------------------------------------------------- partie -------- */
 
-  private startRun(mapId: MapId, snapshot: RunSnapshot | null = null): void {
+  private startRun(mapId: MapId, snapshot: RunSnapshot | null = null, paused = false): void {
     if (!this.ready || !this.game) return;
     const def = getMap(mapId);
     this.selected = def;
@@ -623,6 +659,11 @@ export class App {
     const data: GameSceneData = {
       mapId,
       snapshot,
+      onReady: () => {
+        this.show('game');
+        this.persistRun();
+        if (paused || document.hidden) this.pause();
+      },
       showHints: !(this.save.get().maps[mapId]?.cleared ?? false),
       settings: { ...this.save.get().settings },
       abilities: { ...this.save.get().abilities },
@@ -645,7 +686,6 @@ export class App {
     // sprites, minuteurs et ecouteurs avant la nouvelle tentative.
     setTimeout(() => {
       manager.start(GameScene.KEY, data);
-      this.show('game');
     }, 60);
   }
 
@@ -671,6 +711,7 @@ export class App {
   }
 
   private stopRun(): void {
+    this.recovery.clear();
     const scene = this.gameScene;
     if (scene) {
       if (scene.isPaused) scene.resumeGame();
@@ -759,6 +800,7 @@ export class App {
     const saved = this.save.flush();
     this.queueAccountProgressSave(0);
     clearRun();
+    this.recovery.clear();
     return { victory, newRecord, unlockedMap, unlockedAbility, saved };
   }
 
@@ -871,6 +913,20 @@ export class App {
     });
 
     window.addEventListener('pagehide', () => {
+      if (this.screen === 'game') this.pause();
+      this.persistRun();
+      this.save.flush();
+    });
+
+    // Mobile operating systems can discard a tab without another lifecycle event.
+    window.setInterval(() => {
+      if (this.screen === 'game' && !document.hidden) this.persistRun();
+    }, 5000);
+    window.addEventListener('pageshow', () => {
+      if (this.screen === 'game') this.pause();
+      if (!this.ready) this.recoverStalledBoot();
+    });
+    document.addEventListener('freeze', () => {
       if (this.screen === 'game') this.pause();
       this.persistRun();
       this.save.flush();
