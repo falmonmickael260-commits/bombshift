@@ -5,14 +5,14 @@ import { MAPS, MIRROR_LEVELS, isMirrorLevel, parseMap } from '../maps';
 import { PortalController } from '../gameplay/portals';
 
 describe('extension de campagne', () => {
-  it('atteint quatre-vingts cartes avec des identifiants continus et stables', () => {
-    expect(MAPS).toHaveLength(80);
+  it('atteint cent dix cartes avec des identifiants continus et stables', () => {
+    expect(MAPS).toHaveLength(110);
     expect(MAPS.slice(0, 9).map((m) => m.id)).toEqual([
       'volcano', 'ice', 'temple', 'volcano2', 'ice2', 'temple2', 'volcano3', 'ice3', 'temple3',
     ]);
-    expect(MAPS.slice(9).map((m) => m.id)).toEqual(Array.from({ length: 71 }, (_, i) => `level-${i + 10}`));
-    expect(new Set(MAPS.map((m) => m.id)).size).toBe(80);
-    expect(MAPS.map((m) => m.index)).toEqual(Array.from({ length: 80 }, (_, i) => i));
+    expect(MAPS.slice(9).map((m) => m.id)).toEqual(Array.from({ length: 101 }, (_, i) => `level-${i + 10}`));
+    expect(new Set(MAPS.map((m) => m.id)).size).toBe(110);
+    expect(MAPS.map((m) => m.index)).toEqual(Array.from({ length: 110 }, (_, i) => i));
   });
 
   it('place les commandes miroir exactement aux multiples de dix', () => {
