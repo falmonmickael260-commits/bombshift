@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  Jeu mobile 2D de labyrinthe a bombes : <b>80 niveaux</b>, <b>3 boss a phases</b>,
+  Jeu mobile 2D de labyrinthe a bombes : <b>110 niveaux</b>, <b>3 boss a phases</b>,
   ennemis avec recherche de chemin et evitement de souffle, progression sauvegardee.
   <br />
   Phaser 3 · TypeScript · Vite · pret pour Capacitor (Android / iOS)
@@ -80,7 +80,13 @@ secousses, flashs, indices de danger et vibrations sont reglables.
 
 ---
 
-## Extension actuelle : niveaux 61 à 80 et top 5 rapidité
+## Extension actuelle : niveaux 81 à 110
+
+Trente nouveaux tracés portent la campagne à **110 niveaux** : récifs du Kraken, royaume du Soleil Noir, terminal ionique, palais des Alizés, forge des Secondes et château de Minuit. Les niveaux **90, 100 et 110** sont en miroir. Les 80 premières cartes sont conservées.
+
+La difficulté augmente modérément : 14 ennemis par niveau au lieu de 12, trois consoles au lieu de deux, davantage de couverture destructible et des cycles légèrement resserrés. Les avertissements restent visibles et chaque objectif reste accessible sans passage mortel obligatoire. Le top 5 et la synchronisation de compte couvrent les 110 niveaux.
+
+## Extension précédente : niveaux 61 à 80 et top 5 rapidité
 
 La campagne compte désormais **80 niveaux**. Les vingt nouveaux tracés visitent la jungle des totems (61–64), le royaume des confiseries (65–69), les abysses lumineuses (71–74) et la colonie de Séléné (75–79). Les niveaux **70 et 80 sont des mondes miroir**.
 
