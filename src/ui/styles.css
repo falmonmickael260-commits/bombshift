@@ -862,3 +862,20 @@ input[type="range"]::-moz-range-thumb {
 .speed-board__table td:nth-child(2) { overflow-wrap: anywhere; }
 .speed-board__table td:last-child, .speed-board__table th:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .speed-board .btn { margin-top: 12px; min-height: 44px; width: 100%; font-size: 12px; }
+
+/* Two-player co-op lobby */
+.coop-panel { width: min(580px, 100%); margin: 0 auto; display: flex; flex-direction: column;
+  align-items: stretch; gap: 12px; padding: 22px; }
+.coop-panel h3 { color: #ffcf73; margin: 12px 0 0; font-size: 20px; }
+.coop-panel p { color: #d6dce9; line-height: 1.45; }
+.coop-panel label { color: #d9eeff; font-weight: 700; font-size: 13px; }
+.coop-field { appearance: auto; width: 100%; padding: 14px; color: #fff; background: #152638;
+  border: 1px solid #5b91ae; border-radius: 10px; font: inherit; font-size: 16px; min-height: 50px; }
+.coop-field option { color: #fff; background: #152638; }
+.coop-room { padding: 18px; border-radius: 16px; border: 1px solid #f5c65b;
+  background: linear-gradient(135deg, #2b2534, #12273c); text-align: center; }
+.coop-room[hidden] { display: none; }
+.coop-room strong { display: block; font-size: 30px; letter-spacing: 6px; color: #ffdb77; margin: 12px 0; }
+.coop-room .btn { width: 100%; margin: 7px 0; }
+.coop-room .btn:disabled { opacity: .48; cursor: not-allowed; }
+.coop-status { min-height: 36px; font-size: 14px; text-align: center; color: #d9edff; }
