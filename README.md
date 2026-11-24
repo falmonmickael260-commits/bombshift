@@ -337,3 +337,22 @@ Le solo reste indépendant et hors ligne.
 **Statut :** première version de synchronisation à éprouver sous latence réelle ;
 le créateur fait autorité pour les corrections de position et de carte. Les
 tests multijoueurs à deux appareils sont indispensables avant publication.
+
+### Classement duo et invitations
+
+Le lobby propose **INVITER UN AMI** (partage mobile natif quand disponible),
+la copie d’un lien privé et l’accès par code. Le lien ouvre directement
+l’écran de salon. Chacun renseigne son pseudo avant de jouer.
+
+Le **TOP 10 DUO** affiche les meilleurs temps du couple de pseudos sur chaque
+niveau et sur la campagne. L’horloge est calculée côté serveur, et le résultat
+est enregistré seulement si le partenaire confirme la victoire de l’hôte.
+C’est un classement convivial (sans authentification forte/anticheat). Pour
+une compétition à récompenses, utiliser les identités Revanche Games et
+un moteur autoritaire est nécessaire.
+
+Le serveur persiste les meilleurs scores dans
+`COOP_LEADERBOARD_FILE` (défaut `./data/coop-leaderboard.json`). Sur Railway,
+monter un volume persistant sur `/data` et configurer
+`COOP_LEADERBOARD_FILE=/data/coop-leaderboard.json` pour éviter une remise
+à zéro au redéploiement. Les salons restent éphémères.
