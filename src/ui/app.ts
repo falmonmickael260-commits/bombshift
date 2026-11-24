@@ -1,3 +1,4 @@
+import { CoopClient, type CoopState } from '../multiplayer/client';
 import { AdDemoPreferences, demoStorage, renderAdDemo } from './adDemo';
 import { mountSpeedLeaderboard } from './leaderboard';
 import { RunRecovery, tabStorage } from './runRecovery';
@@ -105,6 +106,7 @@ type ScreenName =
   | 'loading'
   | 'title'
   | 'maps'
+  | 'coop'
   | 'brief'
   | 'settings'
   | 'progress'
@@ -118,6 +120,7 @@ const SCREEN_IDS: Record<Exclude<ScreenName, 'game'>, string> = {
   loading: 'screen-loading',
   title: 'screen-title',
   maps: 'screen-maps',
+  coop: 'screen-coop',
   brief: 'screen-brief',
   settings: 'screen-settings',
   progress: 'screen-progress',
@@ -138,6 +141,11 @@ export class App {
   private disposeLeaderboard: (() => void) | null = null;
   private readonly controls = new TouchControls();
   private readonly hud = new Hud();
+  private readonly coop = new CoopClient();
+  private coopPeerReady = false;
+  private coopSeed: number | null = null;
+  private remoteCoopInput = { moveX: 0, moveY: 0, magnitude: 0, bombPressed: false,
+    abilityPressed: false, ability2Pressed: false };
   private game: Phaser.Game | null = null;
   private screen: ScreenName = 'loading';
   private settingsReturn: ScreenName = 'title';
@@ -166,6 +174,50 @@ export class App {
 
   start(): void {
     this.bindAccountProgressSync();
+    this.coop.onEvent((event) => {
+      switch (event.type) {
+        case 'created':
+          this.coopMessage('Salon ' + event.code + ' créé pour ' + getMap(event.level).name + '.');
+          this.updateCoopRoom(event.code, false);
+          break;
+        case 'joined':
+          this.selected = getMap(event.level);
+          this.coopMessage('Salon rejoint : ' + this.selected.name + '.');
+          this.updateCoopRoom(event.code, false);
+          break;
+        case 'peer-joined':
+          this.coopPeerReady = true;
+          this.coopMessage('Deux joueurs connectés. Lancez la partie !');
+          this.updateCoopRoom(this.coop.code, true);
+          break;
+        case 'peer-left':
+          this.coopPeerReady = false;
+          if (this.screen === 'game' && this.gameScene?.currentPhase === 'playing') {
+            this.stopRun(); this.coop.disconnect(); this.coopSeed = null;
+            this.show('coop');
+          }
+          this.coopMessage('L’autre joueur a quitté le salon.');
+          this.updateCoopRoom(this.coop.code, false);
+          break;
+        case 'started':
+          this.coopSeed = event.seed;
+          this.save.update(d => { d.settings.difficulty = event.difficulty; });
+          this.startRun(event.level);
+          break;
+        case 'input':
+          Object.assign(this.remoteCoopInput, event.input);
+          break;
+        case 'state':
+          this.gameScene?.applyCoopState(event.state as CoopState);
+          break;
+        case 'result':
+          this.gameScene?.finishCoop(event.result.victory);
+          break;
+        case 'error':
+          this.coopMessage(event.message);
+          break;
+      }
+    });
     this.bindStaticButtons();
     this.controls.applySettings(this.save.get().settings);
     this.controls.setPauseHandler(() => this.togglePause());
@@ -477,6 +529,7 @@ export class App {
       const stop = document.getElementById('ad-demo-stop');
       if (stop) stop.hidden = !this.adDemo.state.enabled;
     }
+    if (name === 'coop') this.renderCoopLevels();
     if (name === 'maps') {
       renderMapList(document.getElementById('map-list')!, this.save.get(), (def, locked) => {
         if (locked) {
@@ -548,7 +601,7 @@ export class App {
 
   /** Sauvegarde la tentative en cours (pause, mise en arriere-plan, fermeture). */
   private persistRun(): void {
-    if (this.screen !== 'game' && this.screen !== 'pause') return;
+    if (this.coopSeed !== null || (this.screen !== 'game' && this.screen !== 'pause')) return;
     const snap = this.gameScene?.serialize();
     if (snap) { saveRun(snap); this.recovery.mark(snap.mapId); }
   }
@@ -573,6 +626,28 @@ export class App {
           break;
         case 'play':
           this.show('maps');
+          break;
+        case 'coop':
+          this.coopPeerReady = false; this.coopSeed = null;
+          this.show('coop');
+          break;
+        case 'coop-create':
+          void this.connectCoop('create');
+          break;
+        case 'coop-join':
+          void this.connectCoop('join');
+          break;
+        case 'coop-start':
+          this.coop.start();
+          break;
+        case 'coop-copy':
+          void navigator.clipboard?.writeText(window.location.href.split('?')[0] + '?room=' + this.coop.code);
+          this.coopMessage('Lien d’invitation copié.');
+          break;
+        case 'coop-leave':
+          this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
+          this.updateCoopRoom('', false);
+          this.show('title');
           break;
         case 'resume-run':
           this.resumeSavedRun();
@@ -625,6 +700,64 @@ export class App {
     });
   }
 
+  /* --------------------------------------------------- cooperation -------- */
+  private renderCoopLevels(): void {
+    const select = document.getElementById('coop-level') as HTMLSelectElement | null;
+    if (!select) return;
+    select.replaceChildren();
+    MAPS.forEach(map => {
+      const option = document.createElement('option');
+      option.value = map.id;
+      option.textContent = String(map.index + 1).padStart(2, '0') + ' · ' + map.name;
+      select.appendChild(option);
+    });
+    select.value = this.selected.id;
+    const code = new URLSearchParams(window.location.search).get('room');
+    const codeInput = document.getElementById('coop-code') as HTMLInputElement | null;
+    if (codeInput && code && !this.coop.code) codeInput.value = code.toUpperCase();
+    this.updateCoopRoom(this.coop.code, this.coopPeerReady);
+  }
+
+  private coopMessage(message: string): void {
+    const el = document.getElementById('coop-status');
+    if (el) el.textContent = message;
+  }
+
+  private updateCoopRoom(code: string, peerReady: boolean): void {
+    const room = document.getElementById('coop-room');
+    if (room) room.hidden = !code;
+    const label = document.getElementById('coop-room-code');
+    if (label) label.textContent = code || '—';
+    const button = document.getElementById('coop-launch') as HTMLButtonElement | null;
+    if (button) {
+      button.hidden = !code || this.coop.role === 'guest';
+      button.disabled = !peerReady;
+    }
+  }
+
+  private async connectCoop(mode: 'create' | 'join'): Promise<void> {
+    try {
+      this.coopMessage('Connexion au serveur multijoueur…');
+      await this.coop.connect();
+      this.coopPeerReady = false;
+      this.coopSeed = null;
+      if (mode === 'create') {
+        const select = document.getElementById('coop-level') as HTMLSelectElement;
+        this.selected = getMap(select.value as MapId);
+        this.coop.create(this.selected.id, this.save.get().settings.difficulty);
+      } else {
+        const input = document.getElementById('coop-code') as HTMLInputElement;
+        if (!/^[A-Z2-9]{7}$/.test(input.value.trim().toUpperCase())) {
+          this.coopMessage('Saisissez le code de 7 caractères.');
+          this.coop.disconnect(); return;
+        }
+        this.coop.join(input.value);
+      }
+    } catch (error) {
+      this.coopMessage(error instanceof Error ? error.message : 'Connexion impossible.');
+    }
+  }
+
   /* -------------------------------------------------------- partie -------- */
 
   private startRun(mapId: MapId, snapshot: RunSnapshot | null = null, paused = false): void {
@@ -632,7 +765,7 @@ export class App {
     const def = getMap(mapId);
     this.selected = def;
 
-    if (!snapshot) clearRun();
+    if (!snapshot && this.coopSeed === null) clearRun();
     this.save.update((d) => {
       const p = d.maps[mapId] ?? (d.maps[mapId] = {
         cleared: false,
@@ -659,6 +792,16 @@ export class App {
     const data: GameSceneData = {
       mapId,
       snapshot,
+      ...(this.coopSeed !== null && this.coop.role ? {
+        coop: {
+          role: this.coop.role,
+          seed: this.coopSeed,
+          sendInput: (input: typeof this.remoteCoopInput) => this.coop.sendInput(input),
+          sendState: (state: CoopState) => this.coop.sendState(state),
+          onResult: (victory: boolean) => this.coop.sendResult(victory),
+        },
+        remoteInput: this.remoteCoopInput,
+      } : {}),
       onReady: () => {
         this.show('game');
         this.persistRun();
@@ -723,13 +866,17 @@ export class App {
   }
 
   private togglePause(): void {
-    if (this.screen === 'game') this.pause();
+    if (this.screen === 'game' && this.coopSeed === null) this.pause();
     else if (this.screen === 'pause') this.resume();
   }
 
   private pause(): void {
     const scene = this.gameScene;
     if (!scene || scene.currentPhase !== 'playing') return;
+    if (this.coopSeed !== null) {
+      this.hud.toast('Pause désactivée en coopération en ligne', 'info');
+      return;
+    }
     scene.pauseGame();
     this.persistRun();
     this.controls.reset();
@@ -811,6 +958,9 @@ export class App {
     const { victory, newRecord, unlockedMap, unlockedAbility } = meta;
     audio.stopMusic();
     this.stopRun();
+    if (this.coopSeed !== null) {
+      this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
+    }
 
     renderResult(
       document.getElementById('result-body')!,
@@ -901,7 +1051,7 @@ export class App {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         this.wasPlayingBeforeHide = this.screen === 'game';
-        if (this.wasPlayingBeforeHide) this.pause();
+        if (this.wasPlayingBeforeHide && this.coopSeed === null) this.pause();
         this.persistRun();
         this.save.flush();
         audio.setMuted(true);
@@ -932,7 +1082,7 @@ export class App {
       this.save.flush();
     });
 
-    window.addEventListener('beforeunload', () => this.save.flush());
+    window.addEventListener('beforeunload', () => { this.coop.disconnect(); this.save.flush(); });
 
     // Orientation / redimensionnement : Phaser gere le canvas, on recalcule
     // seulement la taille du jeu.
