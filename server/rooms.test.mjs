@@ -48,12 +48,22 @@ function connectWebsocket(port) {
           next() {
             if (received.length) return Promise.resolve(received.shift());
             return new Promise((res, rej) => {
-              handler = res;
-              const timeout = setTimeout(() => { if (handler === res) { handler = null; rej(new Error('No frame received')); } }, 3000);
-              handler = packet => { clearTimeout(timeout); res(packet); };
+              const onPacket = packet => { clearTimeout(timeout); res(packet); };
+              const timeout = setTimeout(() => {
+                if (handler === onPacket) {
+                  handler = null;
+                  rej(new Error('No frame received'));
+                }
+              }, 3000);
+              handler = onPacket;
             });
           },
-          close() { socket.destroy(); },
+          close() {
+            if (socket.destroyed) return;
+            // Navigateurs : une fermeture WebSocket masquée, puis FIN TCP.
+            const mask = randomBytes(4);
+            socket.end(Buffer.concat([Buffer.from([0x88, 0x80]), mask]));
+          },
         });
       }
       while (buffer.length >= 2) {
