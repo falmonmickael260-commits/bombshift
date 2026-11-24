@@ -124,7 +124,6 @@ test('Two clients can join a four-character room, play and exchange authoritativ
     assert.equal((await host.next()).type, 'peer-left');
   } finally {
     clients.forEach(c=>c.close());
-    child.kill('SIGTERM');
-    await once(child, 'exit').catch(()=>{});
+    if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
   }
 });
