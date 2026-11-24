@@ -14,10 +14,11 @@ export interface CoopState {
 type RoomEvent =
   | { type: 'created' | 'joined'; code: string; level: MapId; difficulty?: Difficulty }
   | { type: 'started'; level: MapId; difficulty: Difficulty; role: CoopRole; seed: number }
-  | { type: 'peer-joined' | 'peer-left' }
+  | { type: 'peer-joined' | 'peer-left'; guest?: string }
   | { type: 'input'; input: InputState }
   | { type: 'state'; state: CoopState }
   | { type: 'result'; result: { victory: boolean } }
+  | { type: 'recorded'; time_ms: number }
   | { type: 'error'; message: string };
 
 export class CoopClient {
@@ -64,12 +65,17 @@ export class CoopClient {
   send(packet: Record<string, unknown>): void {
     if (this.isConnected) this.socket!.send(JSON.stringify(packet));
   }
-  create(level: MapId, difficulty: Difficulty): void { this.send({ type: 'create', level, difficulty }); }
-  join(code: string): void { this.send({ type: 'join', code: code.trim().toUpperCase() }); }
+  create(level: MapId, difficulty: Difficulty, name: string): void { this.send({ type: 'create', level, difficulty, name }); }
+  join(code: string, name: string): void { this.send({ type: 'join', code: code.trim().toUpperCase(), name }); }
   start(): void { this.send({ type: 'start' }); }
   sendInput(input: InputState): void { this.send({ type: 'input', input: { ...input } }); }
   sendState(state: CoopState): void { this.send({ type: 'state', state }); }
   sendResult(victory: boolean): void { this.send({ type: 'result', result: { victory } }); }
+  confirmResult(): void { this.send({ type: 'confirm-result' }); }
+  get apiOrigin(): string {
+    const socketUrl = (import.meta.env.VITE_COOP_WS_URL as string | undefined)?.trim();
+    return socketUrl ? new URL(socketUrl).origin.replace(/^ws/, 'http') : window.location.origin;
+  }
   disconnect(): void {
     if (this.socket) {
       if (this.socket.readyState === WebSocket.OPEN) this.send({ type: 'leave' });
