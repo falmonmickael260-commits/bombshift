@@ -1,3 +1,4 @@
+import { CoopClient, type CoopState } from '../multiplayer/client';
 import { AdDemoPreferences, demoStorage, renderAdDemo } from './adDemo';
 import { mountSpeedLeaderboard } from './leaderboard';
 import { RunRecovery, tabStorage } from './runRecovery';
@@ -105,6 +106,7 @@ type ScreenName =
   | 'loading'
   | 'title'
   | 'maps'
+  | 'coop'
   | 'brief'
   | 'settings'
   | 'progress'
@@ -118,6 +120,7 @@ const SCREEN_IDS: Record<Exclude<ScreenName, 'game'>, string> = {
   loading: 'screen-loading',
   title: 'screen-title',
   maps: 'screen-maps',
+  coop: 'screen-coop',
   brief: 'screen-brief',
   settings: 'screen-settings',
   progress: 'screen-progress',
@@ -138,6 +141,15 @@ export class App {
   private disposeLeaderboard: (() => void) | null = null;
   private readonly controls = new TouchControls();
   private readonly hud = new Hud();
+  private readonly coop = new CoopClient();
+  private coopPeerReady = false;
+  private coopLeaderboardAbort: AbortController | null = null;
+  private coopRoomHost = false;
+  private coopPlatformName: string | null = null;
+  private coopResultPending = false;
+  private coopSeed: number | null = null;
+  private remoteCoopInput = { moveX: 0, moveY: 0, magnitude: 0, bombPressed: false,
+    abilityPressed: false, ability2Pressed: false };
   private game: Phaser.Game | null = null;
   private screen: ScreenName = 'loading';
   private settingsReturn: ScreenName = 'title';
@@ -166,6 +178,56 @@ export class App {
 
   start(): void {
     this.bindAccountProgressSync();
+    this.coop.onEvent((event) => {
+      switch (event.type) {
+        case 'created':
+          this.coopRoomHost = true;
+          this.coopMessage('Salon ' + event.code + ' créé pour ' + getMap(event.level).name + '.');
+          this.updateCoopRoom(event.code, false);
+          break;
+        case 'joined':
+          this.coopRoomHost = false;
+          this.selected = getMap(event.level);
+          this.coopMessage('Salon rejoint : ' + this.selected.name + '.');
+          this.updateCoopRoom(event.code, false);
+          break;
+        case 'peer-joined':
+          this.coopPeerReady = true;
+          this.coopMessage('Deux joueurs connectés. Lancez la partie !');
+          this.updateCoopRoom(this.coop.code, true);
+          break;
+        case 'peer-left':
+          this.coopPeerReady = false;
+          if (this.screen === 'game' && this.gameScene?.currentPhase === 'playing') {
+            this.stopRun(); this.coop.disconnect(); this.coopSeed = null;
+            this.show('coop');
+          }
+          this.coopMessage('L’autre joueur a quitté le salon.');
+          this.updateCoopRoom(this.coop.code, false);
+          break;
+        case 'started':
+          this.coopSeed = event.seed;
+          this.save.update(d => { d.settings.difficulty = event.difficulty; });
+          this.startRun(event.level);
+          break;
+        case 'input':
+          Object.assign(this.remoteCoopInput, event.input);
+          break;
+        case 'state':
+          this.gameScene?.applyCoopState(event.state as CoopState);
+          break;
+        case 'result':
+          if (event.result.victory) this.coop.confirmResult();
+          this.gameScene?.finishCoop(event.result.victory);
+          break;
+        case 'recorded':
+          this.hud.toast('Temps duo enregistré dans le classement !', 'good');
+          break;
+        case 'error':
+          this.coopMessage(event.message);
+          break;
+      }
+    });
     this.bindStaticButtons();
     this.controls.applySettings(this.save.get().settings);
     this.controls.setPauseHandler(() => this.togglePause());
@@ -219,6 +281,12 @@ export class App {
         this.refreshPurchaseStatus();
         if (this.paidNoAds && this.screen === 'ad') this.show('title');
         this.accountSyncReady = true;
+        const identity = data.identity;
+        if (identity && typeof identity === 'object' && typeof identity.username === 'string') {
+          this.coopPlatformName = identity.username.trim().slice(0, 22) || null;
+          const coopName = document.getElementById('coop-name') as HTMLInputElement | null;
+          if (coopName && this.coopPlatformName) coopName.value = this.coopPlatformName;
+        }
         this.accountSyncAuthenticated = data.authenticated === true;
         this.accountSyncLaunch = data.launch;
         if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
@@ -387,7 +455,8 @@ export class App {
           this.startRun(map.id, snap, true);
         } else {
           this.recovery.clear();
-          this.show('title');
+          const params = new URLSearchParams(window.location.search);
+          this.show(params.has('room') || params.has('rg_room') ? 'coop' : 'title');
         }
       }, 420);
     });
@@ -477,6 +546,7 @@ export class App {
       const stop = document.getElementById('ad-demo-stop');
       if (stop) stop.hidden = !this.adDemo.state.enabled;
     }
+    if (name === 'coop') this.renderCoopLevels();
     if (name === 'maps') {
       renderMapList(document.getElementById('map-list')!, this.save.get(), (def, locked) => {
         if (locked) {
@@ -548,7 +618,7 @@ export class App {
 
   /** Sauvegarde la tentative en cours (pause, mise en arriere-plan, fermeture). */
   private persistRun(): void {
-    if (this.screen !== 'game' && this.screen !== 'pause') return;
+    if (this.coopSeed !== null || (this.screen !== 'game' && this.screen !== 'pause')) return;
     const snap = this.gameScene?.serialize();
     if (snap) { saveRun(snap); this.recovery.mark(snap.mapId); }
   }
@@ -573,6 +643,34 @@ export class App {
           break;
         case 'play':
           this.show('maps');
+          break;
+        case 'coop':
+          this.coopPeerReady = false; this.coopSeed = null;
+          this.coopRoomHost = false;
+          this.show('coop');
+          break;
+        case 'coop-create':
+          void this.connectCoop('create');
+          break;
+        case 'coop-join':
+          void this.connectCoop('join');
+          break;
+        case 'coop-start':
+          this.coop.start();
+          break;
+        case 'coop-copy':
+          void this.copyCoopInvitation();
+          break;
+        case 'coop-share':
+          void this.shareCoopInvitation();
+          break;
+        case 'coop-board-refresh':
+          void this.loadCoopLeaderboard();
+          break;
+        case 'coop-leave':
+          this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
+          this.updateCoopRoom('', false);
+          this.show('title');
           break;
         case 'resume-run':
           this.resumeSavedRun();
@@ -625,6 +723,163 @@ export class App {
     });
   }
 
+  /* --------------------------------------------------- cooperation -------- */
+  private renderCoopLevels(): void {
+    const select = document.getElementById('coop-level') as HTMLSelectElement | null;
+    if (!select) return;
+    select.replaceChildren();
+    MAPS.forEach(map => {
+      const option = document.createElement('option');
+      option.value = map.id;
+      option.textContent = String(map.index + 1).padStart(2, '0') + ' · ' + map.name;
+      select.appendChild(option);
+    });
+    select.value = this.selected.id;
+    const boardFilter = document.getElementById('coop-board-filter') as HTMLSelectElement | null;
+    if (boardFilter) {
+      boardFilter.replaceChildren();
+      const all = document.createElement('option');
+      all.value = ''; all.textContent = 'Tous les niveaux'; boardFilter.appendChild(all);
+      MAPS.forEach(map => {
+        const option = document.createElement('option');
+        option.value = map.id;
+        option.textContent = String(map.index + 1).padStart(2, '0') + ' · ' + map.name;
+        boardFilter.appendChild(option);
+      });
+      boardFilter.onchange = () => { void this.loadCoopLeaderboard(); };
+    }
+    void this.loadCoopLeaderboard();
+    const launch = new URLSearchParams(window.location.search);
+    const code = launch.get('rg_room') || launch.get('room');
+    const codeInput = document.getElementById('coop-code') as HTMLInputElement | null;
+    if (codeInput && code && !this.coop.code) codeInput.value = code.toUpperCase();
+    const nameInput = document.getElementById('coop-name') as HTMLInputElement | null;
+    if (nameInput && !nameInput.value) {
+      try { nameInput.value = this.coopPlatformName || localStorage.getItem('bombshift.coop.name') || ''; }
+      catch { nameInput.value = ''; }
+    }
+    this.updateCoopRoom(this.coop.code, this.coopPeerReady);
+  }
+
+  private coopMessage(message: string): void {
+    const el = document.getElementById('coop-status');
+    if (el) el.textContent = message;
+  }
+
+  private updateCoopRoom(code: string, peerReady: boolean): void {
+    const room = document.getElementById('coop-room');
+    if (room) room.hidden = !code;
+    const label = document.getElementById('coop-room-code');
+    if (label) label.textContent = code || '—';
+    const button = document.getElementById('coop-launch') as HTMLButtonElement | null;
+    if (button) {
+      button.hidden = !code || !this.coopRoomHost;
+      button.disabled = !peerReady;
+    }
+  }
+
+  private coopInviteUrl(): string {
+    const onPlatform = this.accountSyncOrigin !== null || new URLSearchParams(location.search).has('rg_token');
+    if (onPlatform) {
+      const origin = this.accountSyncOrigin || 'https://revanchegames-production.up.railway.app';
+      const link = new URL('/play/bombshift', origin);
+      link.searchParams.set('room', this.coop.code);
+      return link.toString();
+    }
+    const link = new URL(window.location.href);
+    link.searchParams.set('room', this.coop.code);
+    link.searchParams.delete('rg_room');
+    link.searchParams.delete('rg_token');
+    return link.toString();
+  }
+
+  private async copyCoopInvitation(): Promise<void> {
+    if (!this.coop.code) return;
+    try {
+      await navigator.clipboard.writeText(this.coopInviteUrl());
+      this.coopMessage('Lien d’invitation copié. Envoie-le à ton partenaire !');
+    } catch {
+      this.coopMessage('Copie ce code : ' + this.coop.code);
+    }
+  }
+
+  private async shareCoopInvitation(): Promise<void> {
+    if (!this.coop.code) return;
+    const message = 'Viens jouer en duo avec moi sur BombShift ! Code : ' + this.coop.code;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'BombShift en duo', text: message, url: this.coopInviteUrl() }); }
+      catch { this.coopMessage('Partage annulé. Code : ' + this.coop.code); }
+    } else await this.copyCoopInvitation();
+  }
+
+  private async loadCoopLeaderboard(): Promise<void> {
+    const container = document.getElementById('coop-board-content');
+    if (!container || this.screen !== 'coop') return;
+    this.coopLeaderboardAbort?.abort();
+    const abort = new AbortController(); this.coopLeaderboardAbort = abort;
+    const filter = document.getElementById('coop-board-filter') as HTMLSelectElement | null;
+    const level = filter?.value || '';
+    container.textContent = 'Chargement du classement duo…';
+    try {
+      const response = await fetch(this.coop.apiOrigin + '/api/coop/leaderboard' +
+        (level ? '?level=' + encodeURIComponent(level) : ''), { signal: abort.signal, cache: 'no-store' });
+      if (!response.ok) throw new Error('Classement indisponible');
+      const data = await response.json() as { entries?: Array<{ host: string; guest: string; level: string; time_ms: number }> };
+      if (abort.signal.aborted) return;
+      container.replaceChildren();
+      if (!data.entries?.length) { container.textContent = 'Aucune victoire en duo enregistrée pour le moment.'; return; }
+      const table = document.createElement('table');
+      table.className = 'speed-board__table';
+      const head = document.createElement('thead');
+      const tr = document.createElement('tr');
+      for (const title of ['Rang', 'Équipe', 'Niveau', 'Temps']) {
+        const th = document.createElement('th'); th.textContent = title; tr.appendChild(th);
+      }
+      head.appendChild(tr); table.appendChild(head);
+      const body = document.createElement('tbody');
+      data.entries.slice(0, 10).forEach((entry, index) => {
+        if (!Number.isFinite(entry.time_ms) || entry.time_ms <= 0) return;
+        const row = document.createElement('tr');
+        const minutes = Math.floor(entry.time_ms / 60000);
+        const seconds = String(Math.floor(entry.time_ms / 1000) % 60).padStart(2, '0');
+        const map = MAPS.find(m => m.id === entry.level);
+        for (const value of [String(index + 1), entry.host + ' + ' + entry.guest,
+          map ? String(map.index + 1) : entry.level, minutes + ':' + seconds]) {
+          const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell);
+        }
+        body.appendChild(row);
+      });
+      table.appendChild(body); container.appendChild(table);
+    } catch {
+      if (!abort.signal.aborted) container.textContent = 'Classement temporairement inaccessible.';
+    }
+  }
+
+  private async connectCoop(mode: 'create' | 'join'): Promise<void> {
+    try {
+      this.coopMessage('Connexion au serveur multijoueur…');
+      await this.coop.connect();
+      const nick = (document.getElementById('coop-name') as HTMLInputElement).value.trim().slice(0, 22) || 'Joueur';
+      try { localStorage.setItem('bombshift.coop.name', nick); } catch { /* stockage optionnel */ }
+      this.coopPeerReady = false;
+      this.coopSeed = null;
+      if (mode === 'create') {
+        const select = document.getElementById('coop-level') as HTMLSelectElement;
+        this.selected = getMap(select.value as MapId);
+        this.coop.create(this.selected.id, this.save.get().settings.difficulty, nick);
+      } else {
+        const input = document.getElementById('coop-code') as HTMLInputElement;
+        if (!/^[A-Z2-9]{7}$/.test(input.value.trim().toUpperCase())) {
+          this.coopMessage('Saisissez le code de 7 caractères.');
+          this.coop.disconnect(); return;
+        }
+        this.coop.join(input.value, nick);
+      }
+    } catch (error) {
+      this.coopMessage(error instanceof Error ? error.message : 'Connexion impossible.');
+    }
+  }
+
   /* -------------------------------------------------------- partie -------- */
 
   private startRun(mapId: MapId, snapshot: RunSnapshot | null = null, paused = false): void {
@@ -632,8 +887,8 @@ export class App {
     const def = getMap(mapId);
     this.selected = def;
 
-    if (!snapshot) clearRun();
-    this.save.update((d) => {
+    if (!snapshot && this.coopSeed === null) clearRun();
+    if (this.coopSeed === null) this.save.update((d) => {
       const p = d.maps[mapId] ?? (d.maps[mapId] = {
         cleared: false,
         bestScore: 0,
@@ -659,10 +914,20 @@ export class App {
     const data: GameSceneData = {
       mapId,
       snapshot,
+      ...(this.coopSeed !== null && this.coop.role ? {
+        coop: {
+          role: this.coop.role,
+          seed: this.coopSeed,
+          sendInput: (input: typeof this.remoteCoopInput) => this.coop.sendInput(input),
+          sendState: (state: CoopState) => this.coop.sendState(state),
+          onResult: (victory: boolean) => this.coop.sendResult(victory),
+        },
+        remoteInput: this.remoteCoopInput,
+      } : {}),
       onReady: () => {
         this.show('game');
         this.persistRun();
-        if (paused || document.hidden) this.pause();
+        if (this.coopSeed === null && (paused || document.hidden)) this.pause();
       },
       showHints: !(this.save.get().maps[mapId]?.cleared ?? false),
       settings: { ...this.save.get().settings },
@@ -675,7 +940,7 @@ export class App {
       },
       onNotify: (text, tone) => this.hud.toast(text, tone),
       onComplete: (result) => {
-        this.completedRun = { result, meta: this.recordRunResult(result) };
+        if (this.coopSeed === null) this.completedRun = { result, meta: this.recordRunResult(result) };
       },
       onEnd: (result) => this.onRunEnd(result),
     };
@@ -723,13 +988,17 @@ export class App {
   }
 
   private togglePause(): void {
-    if (this.screen === 'game') this.pause();
+    if (this.screen === 'game' && this.coopSeed === null) this.pause();
     else if (this.screen === 'pause') this.resume();
   }
 
   private pause(): void {
     const scene = this.gameScene;
     if (!scene || scene.currentPhase !== 'playing') return;
+    if (this.coopSeed !== null) {
+      this.hud.toast('Pause désactivée en coopération en ligne', 'info');
+      return;
+    }
     scene.pauseGame();
     this.persistRun();
     this.controls.reset();
@@ -806,12 +1075,21 @@ export class App {
 
   private onRunEnd(result: RunResult): void {
     const def = getMap(result.mapId);
-    const meta = this.completedRun?.result === result ? this.completedRun.meta : this.recordRunResult(result);
+    const inDuo = this.coopSeed !== null;
+    this.coopResultPending = inDuo;
+    const meta = inDuo
+      ? { victory: result.victory, newRecord: false, unlockedMap: null, unlockedAbility: null, saved: true }
+      : this.completedRun?.result === result ? this.completedRun.meta : this.recordRunResult(result);
     this.completedRun = null;
     const { victory, newRecord, unlockedMap, unlockedAbility } = meta;
     audio.stopMusic();
     this.stopRun();
+    if (this.coopSeed !== null) {
+      this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
+    }
 
+    const isCoopResult = this.coopResultPending;
+    this.coopResultPending = false;
     renderResult(
       document.getElementById('result-body')!,
       { ...result, victory },
@@ -819,7 +1097,7 @@ export class App {
       { newRecord, unlockedMap, unlockedAbility },
       (action) => {
         audio.play('uiClick');
-        if (action === 'retry') this.startRun(result.mapId);
+        if (action === 'retry') { if (isCoopResult) this.show('coop'); else this.startRun(result.mapId); }
         else if (action === 'maps') this.show('maps');
         else this.show('title');
       },
@@ -901,7 +1179,7 @@ export class App {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         this.wasPlayingBeforeHide = this.screen === 'game';
-        if (this.wasPlayingBeforeHide) this.pause();
+        if (this.wasPlayingBeforeHide && this.coopSeed === null) this.pause();
         this.persistRun();
         this.save.flush();
         audio.setMuted(true);
@@ -932,7 +1210,7 @@ export class App {
       this.save.flush();
     });
 
-    window.addEventListener('beforeunload', () => this.save.flush());
+    window.addEventListener('beforeunload', () => { this.coop.disconnect(); this.save.flush(); });
 
     // Orientation / redimensionnement : Phaser gere le canvas, on recalcule
     // seulement la taille du jeu.

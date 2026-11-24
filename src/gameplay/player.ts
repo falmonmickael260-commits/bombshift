@@ -69,6 +69,11 @@ export class Player {
     this.invulnUntil = PLAYER.spawnGraceMs;
   }
 
+  setTint(color: number): void {
+    this.sprite.setTint(color);
+    this.halo.setTint(color);
+  }
+
   get speed(): number {
     return Math.min(MOVE.maxSpeed, MOVE.baseSpeed + this.speedBonus * MOVE.speedStep);
   }
