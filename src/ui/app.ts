@@ -145,6 +145,8 @@ export class App {
   private coopPeerReady = false;
   private coopLeaderboardAbort: AbortController | null = null;
   private coopRoomHost = false;
+  private coopAutoJoined = '';
+  private coopConnecting = false;
   private coopPlatformName: string | null = null;
   private coopResultPending = false;
   private coopSeed: number | null = null;
@@ -202,8 +204,8 @@ export class App {
             this.stopRun(); this.coop.disconnect(); this.coopSeed = null;
             this.show('coop');
           }
-          this.coopMessage('L’autre joueur a quitté le salon.');
-          this.updateCoopRoom(this.coop.code, false);
+          this.coopMessage('Salon fermé : un joueur s’est déconnecté. Crée un nouveau salon.');
+          this.updateCoopRoom('', false);
           break;
         case 'started':
           this.coopSeed = event.seed;
@@ -211,7 +213,12 @@ export class App {
           this.startRun(event.level);
           break;
         case 'input':
-          Object.assign(this.remoteCoopInput, event.input);
+          this.remoteCoopInput.moveX = event.input.moveX;
+          this.remoteCoopInput.moveY = event.input.moveY;
+          this.remoteCoopInput.magnitude = event.input.magnitude;
+          this.remoteCoopInput.bombPressed ||= event.input.bombPressed;
+          this.remoteCoopInput.abilityPressed ||= event.input.abilityPressed;
+          this.remoteCoopInput.ability2Pressed ||= event.input.ability2Pressed;
           break;
         case 'state':
           this.gameScene?.applyCoopState(event.state as CoopState);
@@ -753,6 +760,11 @@ export class App {
     const code = launch.get('rg_room') || launch.get('room');
     const codeInput = document.getElementById('coop-code') as HTMLInputElement | null;
     if (codeInput && code && !this.coop.code) codeInput.value = code.toUpperCase();
+    // Ouverture de l'invitation = entrée automatique dans le salon.
+    if (code && code !== this.coopAutoJoined && !this.coop.code && !this.coopConnecting) {
+      this.coopAutoJoined = code;
+      void this.connectCoop('join');
+    }
     const nameInput = document.getElementById('coop-name') as HTMLInputElement | null;
     if (nameInput && !nameInput.value) {
       try { nameInput.value = this.coopPlatformName || localStorage.getItem('bombshift.coop.name') || ''; }
@@ -797,7 +809,7 @@ export class App {
     if (!this.coop.code) return;
     try {
       await navigator.clipboard.writeText(this.coopInviteUrl());
-      this.coopMessage('Lien d’invitation copié. Envoie-le à ton partenaire !');
+      this.coopMessage('Invitation copiée ! Ton ami rejoint directement en ouvrant le lien.');
     } catch {
       this.coopMessage('Copie ce code : ' + this.coop.code);
     }
@@ -805,7 +817,7 @@ export class App {
 
   private async shareCoopInvitation(): Promise<void> {
     if (!this.coop.code) return;
-    const message = 'Viens jouer en duo avec moi sur BombShift ! Code : ' + this.coop.code;
+    const message = 'Rejoins directement mon salon BombShift Duo !';
     if (navigator.share) {
       try { await navigator.share({ title: 'BombShift en duo', text: message, url: this.coopInviteUrl() }); }
       catch { await this.copyCoopInvitation(); }
@@ -856,6 +868,8 @@ export class App {
   }
 
   private async connectCoop(mode: 'create' | 'join'): Promise<void> {
+    if (this.coopConnecting) return;
+    this.coopConnecting = true;
     try {
       this.coopMessage('Connexion au serveur multijoueur…');
       await this.coop.connect();
@@ -869,14 +883,16 @@ export class App {
         this.coop.create(this.selected.id, this.save.get().settings.difficulty, nick);
       } else {
         const input = document.getElementById('coop-code') as HTMLInputElement;
-        if (!/^[A-Z2-9]{7}$/.test(input.value.trim().toUpperCase())) {
-          this.coopMessage('Saisissez le code de 7 caractères.');
+        if (!/^[A-HJ-NP-Z2-9]{4}$/.test(input.value.trim().toUpperCase())) {
+          this.coopMessage('Code de 4 caractères requis, ou ouvre ton lien d’invitation.');
           this.coop.disconnect(); return;
         }
         this.coop.join(input.value, nick);
       }
     } catch (error) {
       this.coopMessage(error instanceof Error ? error.message : 'Connexion impossible.');
+    } finally {
+      this.coopConnecting = false;
     }
   }
 
