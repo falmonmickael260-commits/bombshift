@@ -43,7 +43,8 @@
             REPRENDRE LA PARTIE
             <span class="btn__sub" id="resume-sub"></span>
           </button>
-          <button class="btn btn--primary" data-action="play">JOUER</button>
+          <button class="btn btn--primary" data-action="play">JOUER SOLO</button>
+          <button class="btn btn--primary" data-action="coop">JOUER À 2 EN LIGNE</button>
           <button class="btn" data-action="progress">PROGRESSION</button>
           <button class="btn" data-action="settings">PARAMETRES</button>
           <button class="btn btn--ghost" data-action="howto">COMMENT JOUER</button>
@@ -66,6 +67,33 @@
           <span class="bar-spacer"></span>
         </header>
         <div class="map-list" id="map-list"></div>
+      </section>
+
+      <!-- Salons coopératifs : un salon privé par niveau, exactement 2 joueurs -->
+      <section id="screen-coop" class="screen">
+        <header class="bar">
+          <button class="icon-btn" data-action="coop-leave" aria-label="Retour">&#8592;</button>
+          <h2>COOP À 2</h2>
+          <span class="bar-spacer"></span>
+        </header>
+        <div class="panel scroll coop-panel">
+          <h3>Créer un salon</h3>
+          <p>Choisis un niveau de la campagne et invite une personne. Ensemble, affrontez les ennemis et les boss.</p>
+          <label for="coop-level">Niveau à jouer</label>
+          <select id="coop-level" class="coop-field"></select>
+          <button class="btn btn--primary" data-action="coop-create">CRÉER UN SALON · 2 JOUEURS</button>
+          <h3>Rejoindre un ami</h3>
+          <label for="coop-code">Code d'invitation</label>
+          <input id="coop-code" class="coop-field" maxlength="7" autocomplete="off" autocapitalize="characters" placeholder="CODE À 7 CARACTÈRES" />
+          <button class="btn" data-action="coop-join">REJOINDRE LE SALON</button>
+          <div id="coop-room" class="coop-room" hidden>
+            <p>Code de ton salon</p>
+            <strong id="coop-room-code">—</strong>
+            <button class="btn btn--ghost" data-action="coop-copy">COPIER LE LIEN D'INVITATION</button>
+            <button class="btn btn--primary" id="coop-launch" data-action="coop-start" disabled>LANCER À 2</button>
+          </div>
+          <p id="coop-status" class="coop-status" role="status" aria-live="polite">Crée un salon ou saisis un code pour jouer à deux.</p>
+        </div>
       </section>
 
       <!-- Briefing -->
