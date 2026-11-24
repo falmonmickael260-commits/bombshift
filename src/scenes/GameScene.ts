@@ -288,7 +288,7 @@ export class GameScene extends Phaser.Scene {
       tileFlags: this.grid.tiles.map(t => Number(t.active) | (t.frame << 1) |
         (Number(t.latched) << 4) | (Number(t.revealed) << 5)),
       enemies: this.enemies.map(e => ({
-        x: e.x, y: e.y, hp: e.hp, alive: e.alive, asleep: e.asleep,
+        kind: e.kind, x: e.x, y: e.y, hp: e.hp, alive: e.alive, asleep: e.asleep,
       })),
       boss: this.boss ? {
         x: this.boss.x, y: this.boss.y, hp: this.boss.hp,
@@ -339,17 +339,18 @@ export class GameScene extends Phaser.Scene {
       }
     }
     if (Array.isArray(state.enemies)) {
-      state.enemies.slice(0, this.enemies.length).forEach((enemy, i) => this.enemies[i].applyNetwork(enemy));
-      // Les renforts invoqués par le boss doivent être visibles aussi.
-      // Ils ne sont pas simulés localement, uniquement répliqués.
-      while (this.enemies.length < Math.min(state.enemies.length, 40)) {
-        const i = this.enemies.length;
-        const source = state.enemies[i];
-        const kind = this.parsed.enemies[i]?.kind ?? 'chaser';
-        this.enemies.push(new Enemy(this.world, kind, cellOf({ x: source.x, y: source.y })));
-        this.enemies[i].applyNetwork(source);
-      }
-      while (this.enemies.length > state.enemies.length) this.enemies.pop()?.destroy();
+      // Les ennemis éliminés disparaissent de la liste de l'hôte. Vérifier
+      // leur type empêche de remplacer visuellement un gardien par un autre.
+      const received = state.enemies.slice(0, 40);
+      while (this.enemies.length > received.length) this.enemies.pop()?.destroy();
+      received.forEach((enemy, i) => {
+        if (this.enemies[i] && this.enemies[i].kind !== enemy.kind) {
+          this.enemies[i].destroy();
+          this.enemies.splice(i, 1, new Enemy(this.world, enemy.kind, cellOf(enemy)));
+        }
+        if (!this.enemies[i]) this.enemies.push(new Enemy(this.world, enemy.kind, cellOf(enemy)));
+        this.enemies[i].applyNetwork(enemy);
+      });
     }
     if (state.boss && this.boss) this.boss.applyNetwork(state.boss);
     if (Array.isArray(state.bombs) && Array.isArray(state.flames))
@@ -624,11 +625,9 @@ export class GameScene extends Phaser.Scene {
     // La solidite des bombes est evaluee avant le deplacement, sur l'emprise
     // complete du corps du joueur.
     const span = bodyCellRange(this.player.body);
-    this.bombs.refreshPlayerSolidity(span.minX, span.minY, span.maxX, span.maxY);
-    if (this.partner) {
-      const ps = bodyCellRange(this.partner.body);
-      this.bombs.refreshPlayerSolidity(ps.minX, ps.minY, ps.maxX, ps.maxY);
-    }
+    const bodies = [span];
+    if (this.partner) bodies.push(bodyCellRange(this.partner.body));
+    this.bombs.refreshPlayerSolidityForBodies(bodies);
     this.bombs.update(dt);
 
     const occupied = new Set<number>();
@@ -1078,7 +1077,7 @@ export class GameScene extends Phaser.Scene {
 
   private tryPlaceBomb(player: Player = this.player): void {
     const cell = player.cell;
-    if (!player.canPlaceBomb(this.bombs.playerBombCount)) {
+    if (!player.canPlaceBomb(this.bombs.playerBombCountFor(player === this.partner ? 'partner' : 'player'))) {
       audio.play('uiBack');
       return;
     }
@@ -1098,6 +1097,7 @@ export class GameScene extends Phaser.Scene {
       player.range,
       usePierce ? BOMB.pierceBlocks : 0,
       slide,
+      player === this.partner ? 'partner' : 'player',
     );
     if (!bomb) return;
     this.stats.bombsPlaced++;
@@ -1120,12 +1120,12 @@ export class GameScene extends Phaser.Scene {
     if (this.bombs.bombAt(cell.x, cell.y)) return;
 
     if (kind === 'shift') {
-      const bomb = this.bombs.place(cell, 'shift', player.range + 1, 0, player.facingVector());
+      const bomb = this.bombs.place(cell, 'shift', player.range + 1, 0, player.facingVector(), player === this.partner ? 'partner' : 'player');
       if (!bomb) return;
       player.startAbilityCooldown();
       this.notify('Bombe SHIFT lancee', 'info');
     } else {
-      const bomb = this.bombs.place(cell, 'slow', player.range + 2, BOMB.pierceBlocks, null);
+      const bomb = this.bombs.place(cell, 'slow', player.range + 2, BOMB.pierceBlocks, null, player === this.partner ? 'partner' : 'player');
       if (!bomb) return;
       player.startAbility2Cooldown();
       this.notify('Charge lente amorcee', 'info');
