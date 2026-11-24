@@ -3,7 +3,7 @@ import { MAPS, parseMap } from '../maps';
 import { defaultMapProgress, defaultSave, migrate } from '../core/save';
 
 describe('extension 81–110',()=>{
-  const pack=MAPS.slice(80);
+  const pack=MAPS.slice(80,110);
   it('ajoute trente tracés distincts, six univers et les trois miroirs attendus',()=>{
     expect(pack).toHaveLength(30);
     expect(pack.filter(m=>m.mirrorControls).map(m=>m.index+1)).toEqual([90,100,110]);
