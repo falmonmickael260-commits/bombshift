@@ -808,7 +808,7 @@ export class App {
     const message = 'Viens jouer en duo avec moi sur BombShift ! Code : ' + this.coop.code;
     if (navigator.share) {
       try { await navigator.share({ title: 'BombShift en duo', text: message, url: this.coopInviteUrl() }); }
-      catch { this.coopMessage('Partage annulé. Code : ' + this.coop.code); }
+      catch { await this.copyCoopInvitation(); }
     } else await this.copyCoopInvitation();
   }
 
