@@ -92,6 +92,8 @@
           <div id="coop-room" class="coop-room" hidden>
             <p>Code de ton salon</p>
             <strong id="coop-room-code">—</strong>
+            <label for="coop-invite-link">Lien direct — aucune saisie de code</label>
+            <input id="coop-invite-link" class="coop-field" type="text" readonly aria-label="Lien direct du salon" onclick="this.select()" />
             <button class="btn btn--ghost" data-action="coop-copy">COPIER LE LIEN D'INVITATION</button>
             <button class="btn" data-action="coop-share">PARTAGER L’INVITATION</button>
             <button class="btn btn--primary" id="coop-launch" data-action="coop-start" disabled>LANCER À 2</button>
