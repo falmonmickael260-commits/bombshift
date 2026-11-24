@@ -13,13 +13,14 @@ permissions:
   id-token: write
 
 concurrency:
-  group: duo-relay-${{ github.ref }}
+  group: duo-relay-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
   build:
     name: Tests et build
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
