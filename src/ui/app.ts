@@ -145,6 +145,7 @@ export class App {
   private coopPeerReady = false;
   private coopLeaderboardAbort: AbortController | null = null;
   private coopRoomHost = false;
+  private coopResultPending = false;
   private coopSeed: number | null = null;
   private remoteCoopInput = { moveX: 0, moveY: 0, magnitude: 0, bombPressed: false,
     abilityPressed: false, ability2Pressed: false };
@@ -869,7 +870,7 @@ export class App {
     this.selected = def;
 
     if (!snapshot && this.coopSeed === null) clearRun();
-    this.save.update((d) => {
+    if (this.coopSeed === null) this.save.update((d) => {
       const p = d.maps[mapId] ?? (d.maps[mapId] = {
         cleared: false,
         bestScore: 0,
@@ -908,7 +909,7 @@ export class App {
       onReady: () => {
         this.show('game');
         this.persistRun();
-        if (paused || document.hidden) this.pause();
+        if (this.coopSeed === null && (paused || document.hidden)) this.pause();
       },
       showHints: !(this.save.get().maps[mapId]?.cleared ?? false),
       settings: { ...this.save.get().settings },
@@ -921,7 +922,7 @@ export class App {
       },
       onNotify: (text, tone) => this.hud.toast(text, tone),
       onComplete: (result) => {
-        this.completedRun = { result, meta: this.recordRunResult(result) };
+        if (this.coopSeed === null) this.completedRun = { result, meta: this.recordRunResult(result) };
       },
       onEnd: (result) => this.onRunEnd(result),
     };
@@ -1056,7 +1057,11 @@ export class App {
 
   private onRunEnd(result: RunResult): void {
     const def = getMap(result.mapId);
-    const meta = this.completedRun?.result === result ? this.completedRun.meta : this.recordRunResult(result);
+    const inDuo = this.coopSeed !== null;
+    this.coopResultPending = inDuo;
+    const meta = inDuo
+      ? { victory: result.victory, newRecord: false, unlockedMap: null, unlockedAbility: null, saved: true }
+      : this.completedRun?.result === result ? this.completedRun.meta : this.recordRunResult(result);
     this.completedRun = null;
     const { victory, newRecord, unlockedMap, unlockedAbility } = meta;
     audio.stopMusic();
@@ -1065,6 +1070,8 @@ export class App {
       this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
     }
 
+    const isCoopResult = this.coopResultPending;
+    this.coopResultPending = false;
     renderResult(
       document.getElementById('result-body')!,
       { ...result, victory },
@@ -1072,7 +1079,7 @@ export class App {
       { newRecord, unlockedMap, unlockedAbility },
       (action) => {
         audio.play('uiClick');
-        if (action === 'retry') this.startRun(result.mapId);
+        if (action === 'retry') { if (isCoopResult) this.show('coop'); else this.startRun(result.mapId); }
         else if (action === 'maps') this.show('maps');
         else this.show('title');
       },
