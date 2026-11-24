@@ -70,6 +70,33 @@ export class ProjectileManager {
     return false;
   }
 
+  snapshot(): Array<{ x: number; y: number; vx: number; vy: number; leftMs: number; radius: number }> {
+    return this.items.map(p => ({
+      x: p.x, y: p.y, vx: p.vx, vy: p.vy, leftMs: Math.max(0, p.dieAt - this.world.elapsedMs), radius: p.radius,
+    }));
+  }
+
+  /** L'invité affiche les projectiles de l'hôte sans recalculer leurs collisions. */
+  applyNetwork(items: readonly { x: number; y: number; vx: number; vy: number; leftMs: number; radius: number }[]): void {
+    while (this.items.length > items.length) this.items.pop()!.sprite.destroy();
+    for (let i = 0; i < items.length; i++) {
+      const state = items[i];
+      if (![state.x, state.y, state.vx, state.vy, state.leftMs, state.radius].every(Number.isFinite)) continue;
+      if (i >= this.items.length) {
+        this.spawn({ from: { x: state.x, y: state.y },
+          dir: { x: state.vx, y: state.vy }, speed: Math.hypot(state.vx, state.vy),
+          lifeMs: state.leftMs, tint: 0xffffff, radius: state.radius });
+      }
+      const p = this.items[i];
+      if (!p) continue;
+      p.x = state.x; p.y = state.y;
+      p.vx = state.vx; p.vy = state.vy;
+      p.radius = state.radius;
+      p.dieAt = this.world.elapsedMs + state.leftMs;
+      p.sprite.setPosition(p.x, p.y).setRotation(Math.atan2(p.vy, p.vx));
+    }
+  }
+
   clear(): void {
     for (const p of this.items) p.sprite.destroy();
     this.items.length = 0;
