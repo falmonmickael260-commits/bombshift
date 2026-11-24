@@ -89,7 +89,7 @@ function connectWebsocket(port) {
 }
 test('Two clients can join a four-character room, play and exchange authoritative state', { timeout: 12000 }, async () => {
   const port = await portAvailable();
-  console.error('duo-test: port allocated', port);
+
   const child = spawn(process.execPath, ['server/index.mjs'], {
     env: { ...process.env, PORT: String(port), COOP_LEADERBOARD_FILE: '/tmp/bombshift-test-leaderboard-' + port + '.json' },
     stdio: 'ignore',
@@ -106,49 +106,49 @@ test('Two clients can join a four-character room, play and exchange authoritativ
       if (ready) break;
     }
     assert.equal(ready, true);
-    console.error('duo-test: health ready');
+
     const host = await connectWebsocket(port); clients.push(host);
-    console.error('duo-test: host websocket connected');
+
     const guest = await connectWebsocket(port); clients.push(guest);
-    console.error('duo-test: guest websocket connected');
+
     host.send({ type:'create', level:'level-140', difficulty:'normal', name:'Alex' });
     const created = await host.next();
-    console.error('duo-test: room created', created.code);
+
     assert.equal(created.type, 'created');
     assert.match(created.code, /^[A-HJ-NP-Z2-9]{4}$/);
     guest.send({ type:'join', code: created.code, name:'Léa' });
     assert.equal((await guest.next()).type, 'joined');
-    console.error('duo-test: guest joined');
+
     assert.equal((await host.next()).type, 'peer-joined');
-    console.error('duo-test: host sees guest');
+
     const third = await connectWebsocket(port); clients.push(third);
-    console.error('duo-test: third connected');
+
     third.send({ type:'join', code: created.code, name:'X' });
     assert.match((await third.next()).message, /complet/);
-    console.error('duo-test: third rejected');
+
     host.send({ type:'start' });
     assert.equal((await host.next()).role, 'host');
-    console.error('duo-test: host started');
+
     assert.equal((await guest.next()).role, 'guest');
-    console.error('duo-test: guest started');
+
     guest.send({ type:'input', input: { moveX: 1, moveY:0, magnitude:1, bombPressed:true } });
     const input = await host.next();
-    console.error('duo-test: input received');
+
     assert.equal(input.type, 'input');
     assert.equal(input.input.bombPressed, true);
     host.send({ type:'state', state: { timeMs: 200, players: [{ x:12,y:14 }, { x:23,y:24 }], bombs:[] } });
     const state = await guest.next();
-    console.error('duo-test: state received');
+
     assert.equal(state.type, 'state');
     assert.equal(state.state.players[1].x, 23);
     guest.send({ type: 'heartbeat' });
     assert.equal((await guest.next()).type, 'heartbeat');
-    console.error('duo-test: heartbeat received');
+
     guest.close();
     assert.equal((await host.next()).type, 'peer-left');
-    console.error('duo-test: peer-left received');
+
   } finally {
-    console.error('duo-test: cleanup');
+
     clients.forEach(c=>c.close());
     if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
   }
