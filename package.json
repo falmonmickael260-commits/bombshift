@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "cap:sync": "npm run build && cap sync",
     "cap:android": "npm run build && cap sync android && cap open android",
-    "cap:ios": "npm run build && cap sync ios && cap open ios"
+    "cap:ios": "npm run build && cap sync ios && cap open ios",
+    "start": "node server/index.mjs",
+    "dev:server": "node server/index.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"
