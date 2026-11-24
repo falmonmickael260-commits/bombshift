@@ -457,13 +457,13 @@ export class App {
       setTimeout(() => {
         const snap = loadRun();
         const map = snap ? MAPS.find((candidate) => candidate.id === snap.mapId) : null;
-        if (snap && map && this.recovery.mapId === snap.mapId) {
+        const invited = params.has('rg_room') || params.has('room');
+        if (!invited && snap && map && this.recovery.mapId === snap.mapId) {
           this.save.update((data) => { data.settings.difficulty = snap.difficulty as Difficulty; });
           this.startRun(map.id, snap, true);
         } else {
           this.recovery.clear();
-          const params = new URLSearchParams(window.location.search);
-          this.show(params.has('room') || params.has('rg_room') ? 'coop' : 'title');
+          this.show(invited ? 'coop' : 'title');
         }
       }, 420);
     });
@@ -716,9 +716,16 @@ export class App {
           this.startRun(this.selected.id);
           break;
         case 'quit':
-          // On conserve la tentative : elle sera proposee a la reprise.
+          // Seul le solo conserve sa tentative. Quitter le duo ferme la connexion
+          // afin de ne jamais relancer une partie solo comme une ancienne room.
           this.persistRun();
           this.stopRun();
+          if (this.coopSeed !== null || this.coop.code) {
+            this.coop.disconnect();
+            this.coopSeed = null;
+            this.coopRoomHost = false;
+            this.coopPeerReady = false;
+          }
           this.show('title');
           break;
       }
@@ -781,6 +788,8 @@ export class App {
   private updateCoopRoom(code: string, peerReady: boolean): void {
     const room = document.getElementById('coop-room');
     if (room) room.hidden = !code;
+    const invitation = document.getElementById('coop-invite-link') as HTMLInputElement | null;
+    if (invitation) invitation.value = code ? this.coopInviteUrl() : '';
     const label = document.getElementById('coop-room-code');
     if (label) label.textContent = code || '—';
     const button = document.getElementById('coop-launch') as HTMLButtonElement | null;
@@ -811,7 +820,12 @@ export class App {
       await navigator.clipboard.writeText(this.coopInviteUrl());
       this.coopMessage('Invitation copiée ! Ton ami rejoint directement en ouvrant le lien.');
     } catch {
-      this.coopMessage('Copie ce code : ' + this.coop.code);
+      const field = document.getElementById('coop-invite-link') as HTMLInputElement | null;
+      if (field) {
+        field.focus(); field.select();
+        try { document.execCommand('copy'); } catch { /* selection pour copie manuelle */ }
+      }
+      this.coopMessage('Le lien est sélectionné : partage-le directement, sans communiquer de code.');
     }
   }
 
