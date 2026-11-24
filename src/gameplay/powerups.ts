@@ -132,6 +132,22 @@ export class PowerUpManager {
     return this.pickups.map((p) => ({ kind: p.kind, cell: { ...p.cell } }));
   }
 
+  /** Recalage des bonus du joueur invité, sans tirages aléatoires locaux. */
+  applyNetwork(items: readonly { kind: PowerUpKind; cell: Vec2 }[]): void {
+    const key = (kind: PowerUpKind, cell: Vec2) => kind + ':' + cell.x + ':' + cell.y;
+    const wanted = new Set(items.map(item => key(item.kind, item.cell)));
+    for (let i = this.pickups.length - 1; i >= 0; i--) {
+      const item = this.pickups[i];
+      if (wanted.has(key(item.kind, item.cell))) continue;
+      item.sprite.destroy();
+      this.pickups.splice(i, 1);
+    }
+    for (const item of items) {
+      if (this.pickups.some(p => key(p.kind, p.cell) === key(item.kind, item.cell))) continue;
+      this.spawn(item.cell, item.kind);
+    }
+  }
+
   clear(): void {
     for (const p of this.pickups) p.sprite.destroy();
     this.pickups.length = 0;
