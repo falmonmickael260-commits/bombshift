@@ -214,6 +214,9 @@ server.on('upgrade', (req, socket, head) => {
   const client = { socket, buffer: Buffer.alloc(0), room: null, windowStart: Date.now(), messages: 0, joinWindow: Date.now(), joinAttempts: 0 };
   CLIENTS.add(client);
   socket.on('data', (chunk) => readFrames(client, chunk));
+  // Un FIN TCP peut arriver avant close, notamment sur mobile ou après
+  // la mise en arrière-plan de la PWA. Libérer le salon immédiatement.
+  socket.on('end', () => { detach(client); CLIENTS.delete(client); });
   socket.on('close', () => { detach(client); CLIENTS.delete(client); });
   socket.on('error', () => { detach(client); CLIENTS.delete(client); });
   if (head.length) readFrames(client, head);
