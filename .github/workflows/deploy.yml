@@ -2,7 +2,7 @@ name: Verification et deploiement
 
 on:
   push:
-    branches: [main, fix/duo-relay-20261124]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -13,14 +13,13 @@ permissions:
   id-token: write
 
 concurrency:
-  group: duo-relay-bounded-${{ github.sha }}
+  group: pages
   cancel-in-progress: true
 
 jobs:
   build:
     name: Tests et build
     runs-on: ubuntu-latest
-    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,7 +32,7 @@ jobs:
       - name: Tests unitaires
         run: npm test
       - name: Tests du serveur duo
-        run: timeout 35s npm run test:server
+        run: npm run test:server
       - name: Build de production
         run: npx vite build
       - uses: actions/configure-pages@v5
