@@ -145,6 +145,7 @@ export class App {
   private coopPeerReady = false;
   private coopLeaderboardAbort: AbortController | null = null;
   private coopRoomHost = false;
+  private coopPlatformName: string | null = null;
   private coopResultPending = false;
   private coopSeed: number | null = null;
   private remoteCoopInput = { moveX: 0, moveY: 0, magnitude: 0, bombPressed: false,
@@ -280,6 +281,12 @@ export class App {
         this.refreshPurchaseStatus();
         if (this.paidNoAds && this.screen === 'ad') this.show('title');
         this.accountSyncReady = true;
+        const identity = data.identity;
+        if (identity && typeof identity === 'object' && typeof identity.username === 'string') {
+          this.coopPlatformName = identity.username.trim().slice(0, 22) || null;
+          const coopName = document.getElementById('coop-name') as HTMLInputElement | null;
+          if (coopName && this.coopPlatformName) coopName.value = this.coopPlatformName;
+        }
         this.accountSyncAuthenticated = data.authenticated === true;
         this.accountSyncLaunch = data.launch;
         if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
@@ -448,7 +455,8 @@ export class App {
           this.startRun(map.id, snap, true);
         } else {
           this.recovery.clear();
-          this.show(new URLSearchParams(window.location.search).has('room') ? 'coop' : 'title');
+          const params = new URLSearchParams(window.location.search);
+          this.show(params.has('room') || params.has('rg_room') ? 'coop' : 'title');
         }
       }, 420);
     });
@@ -741,12 +749,13 @@ export class App {
       boardFilter.onchange = () => { void this.loadCoopLeaderboard(); };
     }
     void this.loadCoopLeaderboard();
-    const code = new URLSearchParams(window.location.search).get('room');
+    const launch = new URLSearchParams(window.location.search);
+    const code = launch.get('rg_room') || launch.get('room');
     const codeInput = document.getElementById('coop-code') as HTMLInputElement | null;
     if (codeInput && code && !this.coop.code) codeInput.value = code.toUpperCase();
     const nameInput = document.getElementById('coop-name') as HTMLInputElement | null;
     if (nameInput && !nameInput.value) {
-      try { nameInput.value = localStorage.getItem('bombshift.coop.name') || ''; }
+      try { nameInput.value = this.coopPlatformName || localStorage.getItem('bombshift.coop.name') || ''; }
       catch { nameInput.value = ''; }
     }
     this.updateCoopRoom(this.coop.code, this.coopPeerReady);
@@ -770,8 +779,17 @@ export class App {
   }
 
   private coopInviteUrl(): string {
+    const onPlatform = this.accountSyncOrigin !== null || new URLSearchParams(location.search).has('rg_token');
+    if (onPlatform) {
+      const origin = this.accountSyncOrigin || 'https://revanchegames-production.up.railway.app';
+      const link = new URL('/play/bombshift', origin);
+      link.searchParams.set('room', this.coop.code);
+      return link.toString();
+    }
     const link = new URL(window.location.href);
     link.searchParams.set('room', this.coop.code);
+    link.searchParams.delete('rg_room');
+    link.searchParams.delete('rg_token');
     return link.toString();
   }
 
