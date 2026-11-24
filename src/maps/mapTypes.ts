@@ -14,7 +14,7 @@ export type MapId =
   | `level-${number}`;
 
 /** Jalons miroir de la campagne actuelle (numéros affichés, à partir de 1). */
-export const MIRROR_LEVELS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110] as const;
+export const MIRROR_LEVELS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140] as const;
 export function isMirrorLevel(index: number): boolean {
   return Number.isInteger(index) && index >= 0 && (index + 1) % 10 === 0;
 }
