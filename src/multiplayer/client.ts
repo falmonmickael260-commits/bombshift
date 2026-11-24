@@ -36,7 +36,7 @@ export class CoopClient {
     return new Promise((resolve, reject) => {
       // An optional external relay can be set when the frontend is hosted on GitHub Pages.
       const relay = (import.meta.env.VITE_COOP_WS_URL as string | undefined)?.trim();
-      const url = relay || window.location.origin.replace(/^http/, 'ws') + '/multiplayer';
+      const url = relay || 'wss://bombshift-duo-production.up.railway.app/multiplayer';
       const socket = new WebSocket(url);
       this.socket = socket;
       const timeout = window.setTimeout(() => {
@@ -74,7 +74,7 @@ export class CoopClient {
   confirmResult(): void { this.send({ type: 'confirm-result' }); }
   get apiOrigin(): string {
     const socketUrl = (import.meta.env.VITE_COOP_WS_URL as string | undefined)?.trim();
-    return socketUrl ? new URL(socketUrl).origin.replace(/^ws/, 'http') : window.location.origin;
+    return socketUrl ? new URL(socketUrl).origin.replace(/^ws/, 'http') : 'https://bombshift-duo-production.up.railway.app';
   }
   disconnect(): void {
     if (this.socket) {
