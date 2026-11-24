@@ -13,7 +13,7 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="description" content="BOMBSHIFT - jeu de labyrinthe a bombes, 60 niveaux, 6 mondes miroir, 3 boss." />
+    <meta name="description" content="BOMBSHIFT - jeu de labyrinthe a bombes, 140 niveaux, 14 mondes miroir, 3 boss." />
     <title>BOMBSHIFT</title>
   </head>
   <body>
@@ -36,14 +36,15 @@
           <div class="logo-wrap logo-wrap--small">
             <img class="logo" src="./logo.png" alt="BOMBSHIFT" width="760" height="380" />
           </div>
-          <p class="tagline">60 niveaux. Six mondes miroir. Une seule meche.</p>
+          <p class="tagline">140 niveaux. Quatorze mondes miroir. Une seule meche.</p>
         </div>
         <nav class="menu">
           <button class="btn btn--resume" id="btn-resume-run" data-action="resume-run" hidden>
             REPRENDRE LA PARTIE
             <span class="btn__sub" id="resume-sub"></span>
           </button>
-          <button class="btn btn--primary" data-action="play">JOUER</button>
+          <button class="btn btn--primary" data-action="play">JOUER SOLO</button>
+          <button class="btn btn--primary" data-action="coop">JOUER À 2 EN LIGNE</button>
           <button class="btn" data-action="progress">PROGRESSION</button>
           <button class="btn" data-action="settings">PARAMETRES</button>
           <button class="btn btn--ghost" data-action="howto">COMMENT JOUER</button>
@@ -66,6 +67,43 @@
           <span class="bar-spacer"></span>
         </header>
         <div class="map-list" id="map-list"></div>
+      </section>
+
+      <!-- Salons coopératifs : un salon privé par niveau, exactement 2 joueurs -->
+      <section id="screen-coop" class="screen">
+        <header class="bar">
+          <button class="icon-btn" data-action="coop-leave" aria-label="Retour">&#8592;</button>
+          <h2>COOP À 2</h2>
+          <span class="bar-spacer"></span>
+        </header>
+        <div class="panel scroll coop-panel">
+          <label for="coop-name">Ton pseudo pour le classement duo</label>
+          <input id="coop-name" class="coop-field" maxlength="22" autocomplete="nickname" placeholder="TON PSEUDO" />
+          <h3>Créer un salon</h3>
+          <p>Choisis un niveau de la campagne et invite une personne. Ensemble, affrontez les ennemis et les boss.</p>
+          <label for="coop-level">Niveau à jouer</label>
+          <select id="coop-level" class="coop-field"></select>
+          <button class="btn btn--primary" data-action="coop-create">CRÉER UN SALON · 2 JOUEURS</button>
+          <h3>Rejoindre un ami</h3>
+          <label for="coop-code">Code d'invitation</label>
+          <input id="coop-code" class="coop-field" maxlength="7" autocomplete="off" autocapitalize="characters" placeholder="CODE À 7 CARACTÈRES" />
+          <button class="btn" data-action="coop-join">REJOINDRE LE SALON</button>
+          <div id="coop-room" class="coop-room" hidden>
+            <p>Code de ton salon</p>
+            <strong id="coop-room-code">—</strong>
+            <button class="btn btn--ghost" data-action="coop-copy">COPIER LE LIEN D'INVITATION</button>
+            <button class="btn" data-action="coop-share">INVITER UN AMI</button>
+            <button class="btn btn--primary" id="coop-launch" data-action="coop-start" disabled>LANCER À 2</button>
+          </div>
+          <p id="coop-status" class="coop-status" role="status" aria-live="polite">Crée un salon ou saisis un code pour jouer à deux.</p>
+          <section class="coop-leaderboard" aria-label="Classement des équipes duo">
+            <h3>CLASSEMENT DUO · TOP 10</h3>
+            <label for="coop-board-filter">Afficher les meilleurs binômes</label>
+            <select id="coop-board-filter" class="coop-field"><option value="">Tous les niveaux</option></select>
+            <button class="btn btn--ghost" data-action="coop-board-refresh">ACTUALISER LE CLASSEMENT</button>
+            <div id="coop-board-content" aria-live="polite">Classement disponible en ligne.</div>
+          </section>
+        </div>
       </section>
 
       <!-- Briefing -->

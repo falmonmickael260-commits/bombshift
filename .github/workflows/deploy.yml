@@ -31,6 +31,8 @@ jobs:
         run: npm run typecheck
       - name: Tests unitaires
         run: npm test
+      - name: Tests du serveur duo
+        run: npm run test:server
       - name: Build de production
         run: npx vite build
       - uses: actions/configure-pages@v5

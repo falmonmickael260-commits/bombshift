@@ -1,3 +1,4 @@
+import type { CoopRole, CoopState } from '../multiplayer/client';
 import { displaceByFlow, flowAt } from '../gameplay/flowFields';
 import { WorldScenery } from '../gameplay/worldScenery';
 import { PortalController } from '../gameplay/portals';
@@ -73,6 +74,8 @@ export interface RunResult {
 
 export interface GameSceneData {
   onReady?: () => void;
+  coop?: { role: CoopRole; seed: number; sendInput: (input: InputState) => void; sendState: (state: CoopState) => void; onResult: (victory: boolean) => void };
+  remoteInput?: InputState;
   mapId: MapId;
   /** Affiche les conseils contextuels (premiere decouverte de la carte). */
   showHints?: boolean;
@@ -107,6 +110,10 @@ export class GameScene extends Phaser.Scene {
   private fxLayer!: Fx;
   private tiles!: TileRenderer;
   private player!: Player;
+  private partner: Player | null = null;
+  private partnerLastCell: Vec2 = { x: -1, y: -1 };
+  private lastCoopStateAt = 0;
+  private lastCoopInputAt = 0;
   private bombs!: BombManager;
   private powerups!: PowerUpManager;
   private projectiles!: ProjectileManager;
@@ -148,6 +155,10 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.secretsFound = new Set();
     this.endingAt = 0;
+    this.partner = null;
+    this.partnerLastCell = { x: -1, y: -1 };
+    this.lastCoopStateAt = 0;
+    this.lastCoopInputAt = 0;
     for (const k of Object.keys(this.damageCauses)) delete this.damageCauses[k];
   }
 
@@ -158,7 +169,7 @@ export class GameScene extends Phaser.Scene {
     this.grid = this.parsed.grid;
     this.portals = new PortalController(this.def.portals ?? []);
     this.danger = new DangerMap(this.grid.width, this.grid.height);
-    this.rng = new Rng(0x51ed + Date.now() % 100000);
+    this.rng = new Rng(this.cfg.coop?.seed ?? (0x51ed + Date.now() % 100000));
     const profile = DIFFICULTIES[settings.difficulty] ?? DIFFICULTIES.normal;
     this.stats = emptyStats(profile.lives);
     this.bonusBlockSet = new Set(this.parsed.bonusBlocks.map((c) => this.grid.idx(c.x, c.y)));
@@ -174,6 +185,12 @@ export class GameScene extends Phaser.Scene {
     this.scenery = new WorldScenery(this, this.grid, this.def, settings);
 
     this.player = new Player(this.world, this.parsed.playerSpawn, profile.lives);
+    if (this.cfg.coop) {
+      const spawn = this.freeCoopSpawn(this.parsed.playerSpawn);
+      this.partner = new Player(this.world, spawn, profile.lives);
+      this.partner.setTint(0x6ff7ff);
+      this.partnerLastCell = { ...spawn };
+    }
     this.bombs = new BombManager(this.world, {
       onTileDestroyed: (cell, kind) => this.onTileDestroyed(cell, kind),
       onBlast: (center, cells) => {
@@ -205,7 +222,7 @@ export class GameScene extends Phaser.Scene {
         this.grid.openGates(1);
         this.refreshAllTiles();
       },
-      onVictory: () => this.endRun(true),
+      onVictory: () => { if (this.cfg.coop?.role !== 'guest') this.endRun(true); },
     });
 
     // Ennemis initiaux : les gardiens memorisent la case qu'ils protegent.
@@ -249,6 +266,49 @@ export class GameScene extends Phaser.Scene {
     this.cfg.onReady?.();
   }
 
+  private freeCoopSpawn(origin: Vec2): Vec2 {
+    const choices = [{ x: origin.x + 1, y: origin.y }, { x: origin.x, y: origin.y + 1 },
+      { x: origin.x - 1, y: origin.y }, { x: origin.x, y: origin.y - 1 }];
+    return choices.find(c => this.grid.inBounds(c.x, c.y) && !this.grid.isSolid(c.x, c.y)
+      && !this.grid.isLethalFloor(c.x, c.y)) ?? { ...origin };
+  }
+
+  private coopState(): CoopState {
+    const state = (p: Player) => ({ x: p.pos.x, y: p.pos.y, lives: p.lives, alive: p.alive });
+    return {
+      players: [state(this.player), state(this.partner ?? this.player)],
+      tiles: this.grid.tiles.map(t => t.kind),
+      bossHp: this.boss?.hp ?? null,
+      bossAlive: this.boss?.alive ?? false,
+      timeMs: this.elapsed,
+    };
+  }
+
+  applyCoopState(state: CoopState): void {
+    if (this.destroyed || this.cfg.coop?.role !== 'guest' || !this.partner) return;
+    for (const [p, source] of [[this.player, state.players?.[0]], [this.partner, state.players?.[1]]] as const) {
+      if (!source || !Number.isFinite(source.x) || !Number.isFinite(source.y)) continue;
+      if (Math.hypot(p.body.x - source.x, p.body.y - source.y) > TILE * 0.65) {
+        p.body.x = source.x; p.body.y = source.y;
+        p.body.vx = 0; p.body.vy = 0;
+      }
+      p.lives = source.lives; p.alive = source.alive;
+    }
+    if (state.tiles?.length === this.grid.tiles.length) {
+      for (let i = 0; i < state.tiles.length; i++) {
+        const t = this.grid.tiles[i];
+        if (t.kind !== state.tiles[i]) {
+          t.kind = state.tiles[i] as TileKind;
+          this.tiles.refresh({ x: i % this.grid.width, y: Math.floor(i / this.grid.width) });
+        }
+      }
+    }
+  }
+
+  finishCoop(victory: boolean): void {
+    if (this.cfg.coop?.role === 'guest' && this.phase === 'playing') this.endRun(victory);
+  }
+
   /* ------------------------------------------------------------- world ---- */
 
   private buildWorld(): World {
@@ -284,10 +344,11 @@ export class GameScene extends Phaser.Scene {
       },
       playerPos: () => self.player.pos,
       playerCell: () => self.player.cell,
-      playerOccupies: (cx, cy) => {
-        const span = bodyCellRange(self.player.body);
+      playerOccupies: (cx, cy) => [self.player, self.partner].some((p) => {
+        if (!p) return false;
+        const span = bodyCellRange(p.body);
         return cx >= span.minX && cx <= span.maxX && cy >= span.minY && cy <= span.maxY;
-      },
+      }),
       actorBlocked: (cx, cy, selfCell) => self.actorBlocked(cx, cy, selfCell),
       playerBlocked: (cx, cy) => self.grid.isSolid(cx, cy) || self.bombs.blocksPlayer(cx, cy),
       notify: (text, tone = 'info') => self.notify(text, tone),
@@ -400,7 +461,8 @@ export class GameScene extends Phaser.Scene {
     const zoom = Math.min(w / (tilesX * TILE), viewH / (tilesY * TILE));
     cam.setZoom(Math.max(CAMERA.minZoom, Math.min(CAMERA.maxZoom, zoom)));
     cam.setBounds(0, 0, this.grid.width * TILE, this.grid.height * TILE);
-    if (this.player) cam.centerOn(this.player.pos.x, this.player.pos.y);
+    const focus = this.cfg.coop?.role === 'guest' ? this.partner ?? this.player : this.player;
+    if (focus) cam.centerOn(focus.pos.x, focus.pos.y);
     this.positionVignette();
   }
 
@@ -444,7 +506,15 @@ export class GameScene extends Phaser.Scene {
     this.hazards.update(dt);
 
     const input = this.cfg.input;
-    const intents = this.player.update(dt, input);
+    const remoteInput = this.cfg.remoteInput;
+    if (this.cfg.coop && this.elapsed - this.lastCoopInputAt > 33) {
+      this.lastCoopInputAt = this.elapsed;
+      this.cfg.coop.sendInput(input);
+    }
+    const primaryInput = this.cfg.coop?.role === 'guest' ? remoteInput ?? input : input;
+    const secondaryInput = this.cfg.coop?.role === 'guest' ? input : remoteInput;
+    const intents = this.player.update(dt, primaryInput);
+    const partnerIntents = this.partner && secondaryInput ? this.partner.update(dt, secondaryInput) : null;
     const progress = this.hazards.mechanismProgress;
     const switched = progress.total > 0 && progress.done >= progress.total;
     const force = flowAt(this.def.flows ?? [], this.player.cell, this.elapsed, false, switched);
@@ -455,17 +525,31 @@ export class GameScene extends Phaser.Scene {
     input.bombPressed = false;
     input.abilityPressed = false;
     input.ability2Pressed = false;
+    if (remoteInput) {
+      remoteInput.bombPressed = false;
+      remoteInput.abilityPressed = false;
+      remoteInput.ability2Pressed = false;
+    }
 
     if (this.phase === 'playing') {
-      if (intents.wantBomb) this.tryPlaceBomb();
-      if (intents.wantAbility) this.tryAbility('shift');
-      if (intents.wantAbility2) this.tryAbility('slow');
+      if (intents.wantBomb) this.tryPlaceBomb(this.player);
+      if (intents.wantAbility) this.tryAbility('shift', this.player);
+      if (intents.wantAbility2) this.tryAbility('slow', this.player);
+      if (this.partner && partnerIntents) {
+        if (partnerIntents.wantBomb) this.tryPlaceBomb(this.partner);
+        if (partnerIntents.wantAbility) this.tryAbility('shift', this.partner);
+        if (partnerIntents.wantAbility2) this.tryAbility('slow', this.partner);
+      }
     }
 
     // La solidite des bombes est evaluee avant le deplacement, sur l'emprise
     // complete du corps du joueur.
     const span = bodyCellRange(this.player.body);
     this.bombs.refreshPlayerSolidity(span.minX, span.minY, span.maxX, span.maxY);
+    if (this.partner) {
+      const ps = bodyCellRange(this.partner.body);
+      this.bombs.refreshPlayerSolidity(ps.minX, ps.minY, ps.maxX, ps.maxY);
+    }
     this.bombs.update(dt);
 
     const occupied = new Set<number>();
@@ -487,9 +571,18 @@ export class GameScene extends Phaser.Scene {
     this.projectiles.update(dt);
     this.resolveDamage();
     this.handleCellEntry();
+    if (this.partner) {
+      const c = this.partner.cell;
+      if (c.x !== this.partnerLastCell.x || c.y !== this.partnerLastCell.y) {
+        this.partnerLastCell = { ...c };
+        this.hazards.onPlayerEnterCell(c);
+        this.objectives.onPlayerEnterCell(c);
+      }
+    }
     this.objectives.update();
     const taken = this.powerups.tryCollect(this.player);
     if (taken) this.stats.powerupsTaken++;
+    if (this.partner && this.powerups.tryCollect(this.partner)) this.stats.powerupsTaken++;
 
     this.cleanupDeadEnemies();
     this.coach.update({
@@ -504,6 +597,10 @@ export class GameScene extends Phaser.Scene {
     this.followPlayer(dt);
     this.emitHud(false);
     this.checkEnd();
+    if (this.cfg.coop?.role === 'host' && this.elapsed - this.lastCoopStateAt >= 350) {
+      this.lastCoopStateAt = this.elapsed;
+      this.cfg.coop.sendState(this.coopState());
+    }
   }
 
   /**
@@ -658,7 +755,7 @@ export class GameScene extends Phaser.Scene {
 
   private followPlayer(dt: number): void {
     const cam = this.cameras.main;
-    const target = this.player.pos;
+    const target = (this.cfg.coop?.role === 'guest' ? this.partner ?? this.player : this.player).pos;
     // En paysage, les commandes occupent les coins bas : on remonte legerement
     // le personnage pour qu'il ne passe jamais sous un bouton.
     const landscape = this.scale.width > this.scale.height;
@@ -714,6 +811,16 @@ export class GameScene extends Phaser.Scene {
     if (this.player.alive && this.projectiles.hitsPlayer(this.player.pos, TILE * 0.3)) {
       this.damagePlayer('projectile');
     }
+    if (this.partner?.alive) {
+      const pc2 = this.partner.cell;
+      if (this.bombs.isFlameAt(pc2.x, pc2.y)) this.damagePlayer('flamme', this.partner);
+      if (this.partner.standingOnLethalFloor()) this.damagePlayer('sol', this.partner);
+      if (this.enemies.some(e => e.alive && Math.hypot(e.pos.x - this.partner!.pos.x, e.pos.y - this.partner!.pos.y) < e.contactRadius + TILE * 0.22))
+        this.damagePlayer('ennemi', this.partner);
+      if (this.boss?.active && this.boss.alive && Math.hypot(this.boss.x - this.partner.pos.x, this.boss.y - this.partner.pos.y) < this.boss.contactRadius + TILE * 0.2)
+        this.damagePlayer('boss', this.partner);
+      if (this.projectiles.hitsPlayer(this.partner.pos, TILE * 0.3)) this.damagePlayer('projectile', this.partner);
+    }
 
     // Flammes contre les ennemis.
     for (const e of this.enemies) {
@@ -741,19 +848,20 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private damagePlayer(cause: string): void {
-    if (!this.player.hit()) return;
+  private damagePlayer(cause: string, target: Player = this.player): void {
+    if (!target.hit()) return;
     this.stats.damageTaken++;
     this.damageCauses[cause] = (this.damageCauses[cause] ?? 0) + 1;
     this.objectives.onPlayerDamaged();
-    if (this.player.lives > 0) {
+    if (target.lives > 0) {
       // Reapparition sur une case sure proche du lieu de la perte : le joueur
       // ne refait pas tout le trajet, mais il ne reapparait jamais dans une
       // zone de souffle ni au contact d'un ennemi. La carte garde son etat.
-      const spot = this.safeRespawnCell(this.player.cell) ?? this.parsed.playerSpawn;
-      this.player.respawn(spot);
-      this.lastCell = { ...spot };
-      this.notify(`Vie perdue - ${this.player.lives} restante(s)`, 'bad');
+      const spot = this.safeRespawnCell(target.cell) ?? this.parsed.playerSpawn;
+      target.respawn(spot);
+      if (target === this.player) this.lastCell = { ...spot };
+      else this.partnerLastCell = { ...spot };
+      this.notify(`Vie perdue - ${target.lives} restante(s)`, 'bad');
     }
     this.emitHud(true);
   }
@@ -876,58 +984,58 @@ export class GameScene extends Phaser.Scene {
     this.powerups.rollForBlock(cell, this.rng, guaranteed);
   }
 
-  private tryPlaceBomb(): void {
-    const cell = this.player.cell;
-    if (!this.player.canPlaceBomb(this.bombs.playerBombCount)) {
+  private tryPlaceBomb(player: Player = this.player): void {
+    const cell = player.cell;
+    if (!player.canPlaceBomb(this.bombs.playerBombCount)) {
       audio.play('uiBack');
       return;
     }
     if (this.bombs.bombAt(cell.x, cell.y)) return;
     if (this.grid.isLethalFloor(cell.x, cell.y)) return;
 
-    const usePierce = this.player.pierceCharges > 0;
+    const usePierce = player.pierceCharges > 0;
     const type: BombType = usePierce ? 'pierce' : 'classic';
     // Sur la glace, une bombe posee en mouvement derape jusqu'a l'obstacle.
     const slide =
-      this.grid.isSlippery(cell.x, cell.y) && this.player.speedMagnitude > 70
-        ? this.player.facingVector()
+      this.grid.isSlippery(cell.x, cell.y) && player.speedMagnitude > 70
+        ? player.facingVector()
         : null;
     const bomb = this.bombs.place(
       cell,
       type,
-      this.player.range,
+      player.range,
       usePierce ? BOMB.pierceBlocks : 0,
       slide,
     );
     if (!bomb) return;
     this.stats.bombsPlaced++;
-    if (usePierce) this.player.pierceCharges--;
+    if (usePierce) player.pierceCharges--;
     this.emitHud(true);
   }
 
-  private tryAbility(kind: 'shift' | 'slow'): void {
+  private tryAbility(kind: 'shift' | 'slow', player: Player = this.player): void {
     const unlocked = kind === 'shift' ? this.cfg.abilities.shift : this.cfg.abilities.slow;
     if (!unlocked) return;
     const ready =
       kind === 'shift'
-        ? this.player.canUseAbility(true)
-        : this.player.canUseAbility2(true);
+        ? player.canUseAbility(true)
+        : player.canUseAbility2(true);
     if (!ready) {
       audio.play('uiBack');
       return;
     }
-    const cell = this.player.cell;
+    const cell = player.cell;
     if (this.bombs.bombAt(cell.x, cell.y)) return;
 
     if (kind === 'shift') {
-      const bomb = this.bombs.place(cell, 'shift', this.player.range + 1, 0, this.player.facingVector());
+      const bomb = this.bombs.place(cell, 'shift', player.range + 1, 0, player.facingVector());
       if (!bomb) return;
-      this.player.startAbilityCooldown();
+      player.startAbilityCooldown();
       this.notify('Bombe SHIFT lancee', 'info');
     } else {
-      const bomb = this.bombs.place(cell, 'slow', this.player.range + 2, BOMB.pierceBlocks, null);
+      const bomb = this.bombs.place(cell, 'slow', player.range + 2, BOMB.pierceBlocks, null);
       if (!bomb) return;
-      this.player.startAbility2Cooldown();
+      player.startAbility2Cooldown();
       this.notify('Charge lente amorcee', 'info');
     }
     this.stats.bombsPlaced++;
@@ -955,21 +1063,22 @@ export class GameScene extends Phaser.Scene {
     this.hudAt = now;
 
     const boss = this.boss;
+    const local = this.cfg.coop?.role === 'guest' ? this.partner ?? this.player : this.player;
     const score = computeScore(
-      { ...this.stats, objectivesDone: this.objectives.completedForScore, livesLeft: this.player.lives },
+      { ...this.stats, objectivesDone: this.objectives.completedForScore, livesLeft: local.lives },
       this.def,
       this.world.difficulty.scoreFactor,
     );
 
     this.cfg.onHud({
-      lives: this.player.lives,
-      maxLives: Math.max(PLAYER.maxLives, this.player.lives),
+      lives: local.lives,
+      maxLives: Math.max(PLAYER.maxLives, local.lives),
       bombsActive: this.bombs.playerBombCount,
-      bombsMax: this.player.maxBombs,
-      range: this.player.range,
-      speed: this.player.speedBonus,
-      pierce: this.player.pierceCharges,
-      shieldMs: Math.max(0, this.player.shieldUntil - this.elapsed),
+      bombsMax: local.maxBombs,
+      range: local.range,
+      speed: local.speedBonus,
+      pierce: local.pierceCharges,
+      shieldMs: Math.max(0, local.shieldUntil - this.elapsed),
       timeMs: this.elapsed,
       score: score.total,
       objectives: this.objectives.list,
@@ -984,10 +1093,10 @@ export class GameScene extends Phaser.Scene {
             }
           : null,
       ability: this.cfg.abilities.shift
-        ? { unlocked: true, ratio: this.player.abilityCooldownRatio, label: 'SHIFT' }
+        ? { unlocked: true, ratio: local.abilityCooldownRatio, label: 'SHIFT' }
         : null,
       ability2: this.cfg.abilities.slow
-        ? { unlocked: true, ratio: this.player.ability2CooldownRatio, label: 'LENTE' }
+        ? { unlocked: true, ratio: local.ability2CooldownRatio, label: 'LENTE' }
         : null,
       phase: this.phase,
     });
@@ -995,7 +1104,8 @@ export class GameScene extends Phaser.Scene {
 
   private checkEnd(): void {
     if (this.phase !== 'playing') return;
-    if (this.player.lives <= 0 && !this.player.alive) {
+    if (this.cfg.coop?.role === 'guest') return;
+    if (this.player.lives <= 0 && !this.player.alive && (!this.partner || !this.partner.alive)) {
       if (this.endingAt === 0) {
         this.endingAt = this.elapsed;
         this.player.playDefeat();
@@ -1010,6 +1120,7 @@ export class GameScene extends Phaser.Scene {
   private endRun(victory: boolean): void {
     if (this.phase === 'victory' || this.phase === 'defeat') return;
     this.phase = victory ? 'victory' : 'defeat';
+    if (this.cfg.coop?.role === 'host') this.cfg.coop.onResult(victory);
 
     if (victory) {
       if (this.stats.damageTaken === 0) this.objectives.markFlawless();
@@ -1091,6 +1202,8 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.objectives?.destroy();
     this.player?.destroy();
+    this.partner?.destroy();
+    this.partner = null;
     this.scenery?.destroy();
     this.scenery = null;
     this.tiles?.destroy();

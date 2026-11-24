@@ -3,7 +3,7 @@ import { MAPS, parseMap } from '../maps';
 import { defaultMapProgress, defaultSave, migrate } from '../core/save';
 
 describe('extension 81–110',()=>{
-  const pack=MAPS.slice(80);
+  const pack=MAPS.slice(80,110);
   it('ajoute trente tracés distincts, six univers et les trois miroirs attendus',()=>{
     expect(pack).toHaveLength(30);
     expect(pack.filter(m=>m.mirrorControls).map(m=>m.index+1)).toEqual([90,100,110]);
@@ -25,6 +25,6 @@ describe('extension 81–110',()=>{
     expect(restored.unlockedMaps).toBe(81);expect(restored.maps).toEqual(save.maps);
     restored.maps['level-109']={...defaultMapProgress(),cleared:true};expect(migrate(restored).unlockedMaps).toBe(110);
     restored.maps['level-110']={...defaultMapProgress(),cleared:true,bestTimeMs:234567};const reloaded=migrate(JSON.parse(JSON.stringify(restored)));
-    expect(reloaded.unlockedMaps).toBe(110);expect(reloaded.maps['level-110'].bestTimeMs).toBe(234567);
+    expect(reloaded.unlockedMaps).toBe(111);expect(reloaded.maps['level-110'].bestTimeMs).toBe(234567);
   });
 });
