@@ -77,6 +77,8 @@
           <span class="bar-spacer"></span>
         </header>
         <div class="panel scroll coop-panel">
+          <label for="coop-name">Ton pseudo pour le classement duo</label>
+          <input id="coop-name" class="coop-field" maxlength="22" autocomplete="nickname" placeholder="TON PSEUDO" />
           <h3>Créer un salon</h3>
           <p>Choisis un niveau de la campagne et invite une personne. Ensemble, affrontez les ennemis et les boss.</p>
           <label for="coop-level">Niveau à jouer</label>
@@ -90,9 +92,17 @@
             <p>Code de ton salon</p>
             <strong id="coop-room-code">—</strong>
             <button class="btn btn--ghost" data-action="coop-copy">COPIER LE LIEN D'INVITATION</button>
+            <button class="btn" data-action="coop-share">INVITER UN AMI</button>
             <button class="btn btn--primary" id="coop-launch" data-action="coop-start" disabled>LANCER À 2</button>
           </div>
           <p id="coop-status" class="coop-status" role="status" aria-live="polite">Crée un salon ou saisis un code pour jouer à deux.</p>
+          <section class="coop-leaderboard" aria-label="Classement des équipes duo">
+            <h3>CLASSEMENT DUO · TOP 10</h3>
+            <label for="coop-board-filter">Afficher les meilleurs binômes</label>
+            <select id="coop-board-filter" class="coop-field"><option value="">Tous les niveaux</option></select>
+            <button class="btn btn--ghost" data-action="coop-board-refresh">ACTUALISER LE CLASSEMENT</button>
+            <div id="coop-board-content" aria-live="polite">Classement disponible en ligne.</div>
+          </section>
         </div>
       </section>
 
