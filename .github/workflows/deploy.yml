@@ -13,7 +13,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: duo-relay-${{ github.sha }}
+  group: duo-relay-bounded-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
       - name: Tests unitaires
         run: npm test
       - name: Tests du serveur duo
-        run: npm run test:server
+        run: timeout 35s npm run test:server
       - name: Build de production
         run: npx vite build
       - uses: actions/configure-pages@v5
