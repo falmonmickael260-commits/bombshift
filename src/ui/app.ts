@@ -143,6 +143,7 @@ export class App {
   private readonly hud = new Hud();
   private readonly coop = new CoopClient();
   private coopPeerReady = false;
+  private coopLeaderboardAbort: AbortController | null = null;
   private coopRoomHost = false;
   private coopSeed: number | null = null;
   private remoteCoopInput = { moveX: 0, moveY: 0, magnitude: 0, bombPressed: false,
@@ -214,7 +215,11 @@ export class App {
           this.gameScene?.applyCoopState(event.state as CoopState);
           break;
         case 'result':
+          if (event.result.victory) this.coop.confirmResult();
           this.gameScene?.finishCoop(event.result.victory);
+          break;
+        case 'recorded':
+          this.hud.toast('Temps duo enregistré dans le classement !', 'good');
           break;
         case 'error':
           this.coopMessage(event.message);
@@ -645,8 +650,13 @@ export class App {
           this.coop.start();
           break;
         case 'coop-copy':
-          void navigator.clipboard?.writeText(window.location.href.split('?')[0] + '?room=' + this.coop.code);
-          this.coopMessage('Lien d’invitation copié.');
+          void this.copyCoopInvitation();
+          break;
+        case 'coop-share':
+          void this.shareCoopInvitation();
+          break;
+        case 'coop-board-refresh':
+          void this.loadCoopLeaderboard();
           break;
         case 'coop-leave':
           this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
@@ -716,9 +726,25 @@ export class App {
       select.appendChild(option);
     });
     select.value = this.selected.id;
+    const boardFilter = document.getElementById('coop-board-filter') as HTMLSelectElement | null;
+    if (boardFilter) {
+      boardFilter.replaceChildren();
+      const all = document.createElement('option');
+      all.value = ''; all.textContent = 'Tous les niveaux'; boardFilter.appendChild(all);
+      MAPS.forEach(map => {
+        const option = document.createElement('option');
+        option.value = map.id;
+        option.textContent = String(map.index + 1).padStart(2, '0') + ' · ' + map.name;
+        boardFilter.appendChild(option);
+      });
+      boardFilter.addEventListener('change', () => { void this.loadCoopLeaderboard(); }, { once: true });
+    }
+    void this.loadCoopLeaderboard();
     const code = new URLSearchParams(window.location.search).get('room');
     const codeInput = document.getElementById('coop-code') as HTMLInputElement | null;
     if (codeInput && code && !this.coop.code) codeInput.value = code.toUpperCase();
+    const nameInput = document.getElementById('coop-name') as HTMLInputElement | null;
+    if (nameInput && !nameInput.value) nameInput.value = localStorage.getItem('bombshift.coop.name') || '';
     this.updateCoopRoom(this.coop.code, this.coopPeerReady);
   }
 
@@ -739,23 +765,93 @@ export class App {
     }
   }
 
+  private coopInviteUrl(): string {
+    const link = new URL(window.location.href);
+    link.searchParams.set('room', this.coop.code);
+    return link.toString();
+  }
+
+  private async copyCoopInvitation(): Promise<void> {
+    if (!this.coop.code) return;
+    try {
+      await navigator.clipboard.writeText(this.coopInviteUrl());
+      this.coopMessage('Lien d’invitation copié. Envoie-le à ton partenaire !');
+    } catch {
+      this.coopMessage('Copie ce code : ' + this.coop.code);
+    }
+  }
+
+  private async shareCoopInvitation(): Promise<void> {
+    if (!this.coop.code) return;
+    const message = 'Viens jouer en duo avec moi sur BombShift ! Code : ' + this.coop.code;
+    if (navigator.share) {
+      try { await navigator.share({ title: 'BombShift en duo', text: message, url: this.coopInviteUrl() }); }
+      catch { this.coopMessage('Partage annulé. Code : ' + this.coop.code); }
+    } else await this.copyCoopInvitation();
+  }
+
+  private async loadCoopLeaderboard(): Promise<void> {
+    const container = document.getElementById('coop-board-content');
+    if (!container || this.screen !== 'coop') return;
+    this.coopLeaderboardAbort?.abort();
+    const abort = new AbortController(); this.coopLeaderboardAbort = abort;
+    const filter = document.getElementById('coop-board-filter') as HTMLSelectElement | null;
+    const level = filter?.value || '';
+    container.textContent = 'Chargement du classement duo…';
+    try {
+      const response = await fetch(this.coop.apiOrigin + '/api/coop/leaderboard' +
+        (level ? '?level=' + encodeURIComponent(level) : ''), { signal: abort.signal, cache: 'no-store' });
+      if (!response.ok) throw new Error('Classement indisponible');
+      const data = await response.json() as { entries?: Array<{ host: string; guest: string; level: string; time_ms: number }> };
+      if (abort.signal.aborted) return;
+      container.replaceChildren();
+      if (!data.entries?.length) { container.textContent = 'Aucune victoire en duo enregistrée pour le moment.'; return; }
+      const table = document.createElement('table');
+      table.className = 'speed-board__table';
+      const head = document.createElement('thead');
+      const tr = document.createElement('tr');
+      for (const title of ['Rang', 'Équipe', 'Niveau', 'Temps']) {
+        const th = document.createElement('th'); th.textContent = title; tr.appendChild(th);
+      }
+      head.appendChild(tr); table.appendChild(head);
+      const body = document.createElement('tbody');
+      data.entries.slice(0, 10).forEach((entry, index) => {
+        if (!Number.isFinite(entry.time_ms) || entry.time_ms <= 0) return;
+        const row = document.createElement('tr');
+        const minutes = Math.floor(entry.time_ms / 60000);
+        const seconds = String(Math.floor(entry.time_ms / 1000) % 60).padStart(2, '0');
+        const map = MAPS.find(m => m.id === entry.level);
+        for (const value of [String(index + 1), entry.host + ' + ' + entry.guest,
+          map ? String(map.index + 1) : entry.level, minutes + ':' + seconds]) {
+          const cell = document.createElement('td'); cell.textContent = value; row.appendChild(cell);
+        }
+        body.appendChild(row);
+      });
+      table.appendChild(body); container.appendChild(table);
+    } catch {
+      if (!abort.signal.aborted) container.textContent = 'Classement temporairement inaccessible.';
+    }
+  }
+
   private async connectCoop(mode: 'create' | 'join'): Promise<void> {
     try {
       this.coopMessage('Connexion au serveur multijoueur…');
       await this.coop.connect();
+      const nick = (document.getElementById('coop-name') as HTMLInputElement).value.trim().slice(0, 22) || 'Joueur';
+      try { localStorage.setItem('bombshift.coop.name', nick); } catch { /* stockage optionnel */ }
       this.coopPeerReady = false;
       this.coopSeed = null;
       if (mode === 'create') {
         const select = document.getElementById('coop-level') as HTMLSelectElement;
         this.selected = getMap(select.value as MapId);
-        this.coop.create(this.selected.id, this.save.get().settings.difficulty);
+        this.coop.create(this.selected.id, this.save.get().settings.difficulty, nick);
       } else {
         const input = document.getElementById('coop-code') as HTMLInputElement;
         if (!/^[A-Z2-9]{7}$/.test(input.value.trim().toUpperCase())) {
           this.coopMessage('Saisissez le code de 7 caractères.');
           this.coop.disconnect(); return;
         }
-        this.coop.join(input.value);
+        this.coop.join(input.value, nick);
       }
     } catch (error) {
       this.coopMessage(error instanceof Error ? error.message : 'Connexion impossible.');
