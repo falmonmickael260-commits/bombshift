@@ -140,6 +140,7 @@ export class GameScene extends Phaser.Scene {
   private compassLabel: Phaser.GameObjects.Text | null = null;
   private dangerAt = 0;
   private portals = new PortalController([]);
+  private partnerPortals = new PortalController([]);
   private scenery: WorldScenery | null = null;
 
   constructor() {
@@ -168,6 +169,7 @@ export class GameScene extends Phaser.Scene {
     this.parsed = parseMap(this.def);
     this.grid = this.parsed.grid;
     this.portals = new PortalController(this.def.portals ?? []);
+    this.partnerPortals = new PortalController(this.def.portals ?? []);
     this.danger = new DangerMap(this.grid.width, this.grid.height);
     this.rng = new Rng(this.cfg.coop?.seed ?? (0x51ed + Date.now() % 100000));
     const profile = DIFFICULTIES[settings.difficulty] ?? DIFFICULTIES.normal;
@@ -274,35 +276,98 @@ export class GameScene extends Phaser.Scene {
   }
 
   private coopState(): CoopState {
-    const state = (p: Player) => ({ x: p.pos.x, y: p.pos.y, lives: p.lives, alive: p.alive });
+    const state = (p: Player) => ({
+      x: p.pos.x, y: p.pos.y, lives: p.lives, alive: p.alive,
+      maxBombs: p.maxBombs, range: p.range, speedBonus: p.speedBonus,
+      pierceCharges: p.pierceCharges, shieldLeftMs: Math.max(0, p.shieldUntil - this.elapsed),
+    });
+    const bombs = this.bombs.snapshot();
     return {
       players: [state(this.player), state(this.partner ?? this.player)],
       tiles: this.grid.tiles.map(t => t.kind),
-      bossHp: this.boss?.hp ?? null,
-      bossAlive: this.boss?.alive ?? false,
+      tileFlags: this.grid.tiles.map(t => Number(t.active) | (t.frame << 1) |
+        (Number(t.latched) << 4) | (Number(t.revealed) << 5)),
+      enemies: this.enemies.map(e => ({
+        kind: e.kind, x: e.x, y: e.y, hp: e.hp, alive: e.alive, asleep: e.asleep,
+      })),
+      boss: this.boss ? {
+        x: this.boss.x, y: this.boss.y, hp: this.boss.hp,
+        active: this.boss.active, alive: this.boss.alive,
+        phase: this.boss.phase, vulnerable: this.boss.vulnerable,
+      } : null,
+      bombs: bombs.bombs,
+      flames: bombs.flames,
+      powerups: this.powerups.list(),
+      projectiles: this.projectiles.snapshot(),
+      propsDone: this.objectives.propsDone,
+      objectives: this.objectives.list.map(o => ({ id: o.id, current: o.current, done: o.done })),
+      bossDead: this.objectives.bossDefeated,
       timeMs: this.elapsed,
     };
   }
 
   applyCoopState(state: CoopState): void {
-    if (this.destroyed || this.cfg.coop?.role !== 'guest' || !this.partner) return;
+    if (this.destroyed || this.cfg.coop?.role !== 'guest' || !this.partner ||
+      !state || !Array.isArray(state.players) || !Number.isFinite(state.timeMs)) return;
+    // L'hôte est la source de vérité : seul l'invité applique ce snapshot.
+    this.elapsed = Math.max(this.elapsed, state.timeMs);
     for (const [p, source] of [[this.player, state.players?.[0]], [this.partner, state.players?.[1]]] as const) {
       if (!source || !Number.isFinite(source.x) || !Number.isFinite(source.y)) continue;
-      if (Math.hypot(p.body.x - source.x, p.body.y - source.y) > TILE * 0.65) {
+      const threshold = p === this.player ? 0 : TILE * 0.4;
+      if (Math.hypot(p.body.x - source.x, p.body.y - source.y) > threshold) {
         p.body.x = source.x; p.body.y = source.y;
         p.body.vx = 0; p.body.vy = 0;
       }
       p.lives = source.lives; p.alive = source.alive;
+      p.maxBombs = source.maxBombs; p.range = source.range;
+      p.speedBonus = source.speedBonus; p.pierceCharges = source.pierceCharges;
+      p.shieldUntil = this.elapsed + source.shieldLeftMs;
+      p.idleUpdate();
     }
-    if (state.tiles?.length === this.grid.tiles.length) {
+    if (state.tiles?.length === this.grid.tiles.length &&
+        state.tileFlags?.length === this.grid.tiles.length) {
       for (let i = 0; i < state.tiles.length; i++) {
-        const t = this.grid.tiles[i];
-        if (t.kind !== state.tiles[i]) {
-          t.kind = state.tiles[i] as TileKind;
-          this.tiles.refresh({ x: i % this.grid.width, y: Math.floor(i / this.grid.width) });
-        }
+        const tile = this.grid.tiles[i], flags = state.tileFlags[i];
+        const frame = (flags >> 1) & 7, active = Boolean(flags & 1);
+        const latched = Boolean(flags & 16), revealed = Boolean(flags & 32);
+        if (tile.kind === state.tiles[i] && tile.frame === frame && tile.active === active &&
+            tile.latched === latched && tile.revealed === revealed) continue;
+        tile.kind = state.tiles[i] as TileKind;
+        tile.frame = frame; tile.active = active;
+        tile.latched = latched; tile.revealed = revealed;
+        this.tiles.refresh({ x: i % this.grid.width, y: Math.floor(i / this.grid.width) });
       }
     }
+    if (Array.isArray(state.enemies)) {
+      // Les ennemis éliminés disparaissent de la liste de l'hôte. Vérifier
+      // leur type empêche de remplacer visuellement un gardien par un autre.
+      const received = state.enemies.slice(0, 40);
+      while (this.enemies.length > received.length) this.enemies.pop()?.destroy();
+      received.forEach((enemy, i) => {
+        if (this.enemies[i] && this.enemies[i].kind !== enemy.kind) {
+          this.enemies[i].destroy();
+          this.enemies.splice(i, 1, new Enemy(this.world, enemy.kind, cellOf(enemy)));
+        }
+        if (!this.enemies[i]) this.enemies.push(new Enemy(this.world, enemy.kind, cellOf(enemy)));
+        this.enemies[i].applyNetwork(enemy);
+      });
+    }
+    if (state.boss && this.boss) this.boss.applyNetwork(state.boss);
+    if (Array.isArray(state.bombs) && Array.isArray(state.flames))
+      this.bombs.applyNetwork(state.bombs, state.flames);
+    if (Array.isArray(state.powerups)) this.powerups.applyNetwork(state.powerups);
+    if (Array.isArray(state.projectiles)) this.projectiles.applyNetwork(state.projectiles);
+    if (Array.isArray(state.propsDone) && Array.isArray(state.objectives)) {
+      const old = this.objectives.list;
+      const changed = state.propsDone.some((value, i) => value !== this.objectives.propsDone[i]) ||
+        state.bossDead !== this.objectives.bossDefeated ||
+        state.objectives.some(o => {
+          const current = old.find(v => v.id === o.id);
+          return !current || current.current !== o.current || current.done !== o.done;
+        });
+      if (changed) this.objectives.restoreState(state.propsDone, state.objectives, state.bossDead);
+    }
+    this.emitHud(true);
   }
 
   finishCoop(victory: boolean): void {
@@ -503,15 +568,30 @@ export class GameScene extends Phaser.Scene {
       this.stats.timeMs = this.elapsed;
     }
 
+    if (this.cfg.coop?.role === 'guest' && this.partner) {
+      // Le joueur invité envoie uniquement ses commandes ; aucun ennemi,
+      // bombe, objectif, piège ou dégât n'est simulé une seconde fois.
+      const input = this.cfg.input;
+      if (this.elapsed - this.lastCoopInputAt >= 33 ||
+        input.bombPressed || input.abilityPressed || input.ability2Pressed) {
+        this.lastCoopInputAt = this.elapsed;
+        this.cfg.coop.sendInput({ ...input });
+      }
+      this.partner.update(dt, input);
+      input.bombPressed = false;
+      input.abilityPressed = false;
+      input.ability2Pressed = false;
+      this.player.idleUpdate();
+      this.followPlayer(dt);
+      this.emitHud(false);
+      return;
+    }
+
     this.hazards.update(dt);
 
     const input = this.cfg.input;
     const remoteInput = this.cfg.remoteInput;
-    if (this.cfg.coop && this.elapsed - this.lastCoopInputAt > 33) {
-      this.lastCoopInputAt = this.elapsed;
-      this.cfg.coop.sendInput(input);
-    }
-    const primaryInput = this.cfg.coop?.role === 'guest' ? remoteInput ?? input : input;
+     const primaryInput = this.cfg.coop?.role === 'guest' ? remoteInput ?? input : input;
     const secondaryInput = this.cfg.coop?.role === 'guest' ? input : remoteInput;
     const intents = this.player.update(dt, primaryInput);
     const partnerIntents = this.partner && secondaryInput ? this.partner.update(dt, secondaryInput) : null;
@@ -545,11 +625,9 @@ export class GameScene extends Phaser.Scene {
     // La solidite des bombes est evaluee avant le deplacement, sur l'emprise
     // complete du corps du joueur.
     const span = bodyCellRange(this.player.body);
-    this.bombs.refreshPlayerSolidity(span.minX, span.minY, span.maxX, span.maxY);
-    if (this.partner) {
-      const ps = bodyCellRange(this.partner.body);
-      this.bombs.refreshPlayerSolidity(ps.minX, ps.minY, ps.maxX, ps.maxY);
-    }
+    const bodies = [span];
+    if (this.partner) bodies.push(bodyCellRange(this.partner.body));
+    this.bombs.refreshPlayerSolidityForBodies(bodies);
     this.bombs.update(dt);
 
     const occupied = new Set<number>();
@@ -575,8 +653,19 @@ export class GameScene extends Phaser.Scene {
       const c = this.partner.cell;
       if (c.x !== this.partnerLastCell.x || c.y !== this.partnerLastCell.y) {
         this.partnerLastCell = { ...c };
-        this.hazards.onPlayerEnterCell(c);
-        this.objectives.onPlayerEnterCell(c);
+        const destination = this.partnerPortals.enter(c, (cell) =>
+          !this.world.playerBlocked(cell.x, cell.y) &&
+          !this.grid.isLethalFloor(cell.x, cell.y) &&
+          !this.bombs.isFlameAt(cell.x, cell.y));
+        if (destination) {
+          const p = centerOf(destination);
+          this.partner.body.x = p.x; this.partner.body.y = p.y;
+          this.partner.body.vx = 0; this.partner.body.vy = 0;
+          this.partnerLastCell = { ...destination };
+        } else {
+          this.hazards.onPlayerEnterCell(c);
+          this.objectives.onPlayerEnterCell(c);
+        }
       }
     }
     this.objectives.update();
@@ -597,7 +686,7 @@ export class GameScene extends Phaser.Scene {
     this.followPlayer(dt);
     this.emitHud(false);
     this.checkEnd();
-    if (this.cfg.coop?.role === 'host' && this.elapsed - this.lastCoopStateAt >= 350) {
+    if (this.cfg.coop?.role === 'host' && this.elapsed - this.lastCoopStateAt >= 120) {
       this.lastCoopStateAt = this.elapsed;
       this.cfg.coop.sendState(this.coopState());
     }
@@ -771,7 +860,9 @@ export class GameScene extends Phaser.Scene {
     const boss = this.boss;
     if (!boss || !boss.alive) return;
     const pc = this.player.cell;
-    if (!boss.active && this.arena.has(this.grid.idx(pc.x, pc.y))) {
+    const partnerCell = this.partner?.cell;
+    if (!boss.active && (this.arena.has(this.grid.idx(pc.x, pc.y)) ||
+      (partnerCell && this.arena.has(this.grid.idx(partnerCell.x, partnerCell.y))))) {
       boss.activate();
       this.notify(`${this.def.bossName} vous defie !`, 'bad');
     }
@@ -986,7 +1077,7 @@ export class GameScene extends Phaser.Scene {
 
   private tryPlaceBomb(player: Player = this.player): void {
     const cell = player.cell;
-    if (!player.canPlaceBomb(this.bombs.playerBombCount)) {
+    if (!player.canPlaceBomb(this.bombs.playerBombCountFor(player === this.partner ? 'partner' : 'player'))) {
       audio.play('uiBack');
       return;
     }
@@ -1006,6 +1097,7 @@ export class GameScene extends Phaser.Scene {
       player.range,
       usePierce ? BOMB.pierceBlocks : 0,
       slide,
+      player === this.partner ? 'partner' : 'player',
     );
     if (!bomb) return;
     this.stats.bombsPlaced++;
@@ -1028,12 +1120,12 @@ export class GameScene extends Phaser.Scene {
     if (this.bombs.bombAt(cell.x, cell.y)) return;
 
     if (kind === 'shift') {
-      const bomb = this.bombs.place(cell, 'shift', player.range + 1, 0, player.facingVector());
+      const bomb = this.bombs.place(cell, 'shift', player.range + 1, 0, player.facingVector(), player === this.partner ? 'partner' : 'player');
       if (!bomb) return;
       player.startAbilityCooldown();
       this.notify('Bombe SHIFT lancee', 'info');
     } else {
-      const bomb = this.bombs.place(cell, 'slow', player.range + 2, BOMB.pierceBlocks, null);
+      const bomb = this.bombs.place(cell, 'slow', player.range + 2, BOMB.pierceBlocks, null, player === this.partner ? 'partner' : 'player');
       if (!bomb) return;
       player.startAbility2Cooldown();
       this.notify('Charge lente amorcee', 'info');

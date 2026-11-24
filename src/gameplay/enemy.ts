@@ -67,6 +67,17 @@ export class Enemy {
     return { x: this.x, y: this.y };
   }
 
+  /** Réplique visuelle d'un ennemi calculé uniquement par l'hôte réseau. */
+  applyNetwork(state: { x: number; y: number; hp: number; alive: boolean; asleep: boolean }): void {
+    if (![state.x, state.y, state.hp].every(Number.isFinite)) return;
+    this.x = state.x; this.y = state.y; this.hp = state.hp;
+    this.alive = state.alive; this.asleep = state.asleep;
+    this.sprite.setPosition(this.x, this.y).setVisible(this.alive);
+    this.shadow.setPosition(this.x, this.y + TILE * 0.28).setVisible(this.alive);
+    if (this.alive && this.asleep) this.sprite.setTint(0x7a7a8c);
+    else this.sprite.clearTint();
+  }
+
   get currentMode(): string {
     return this.mode;
   }

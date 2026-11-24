@@ -17,7 +17,7 @@ export interface Bomb {
   /** Date (ms de jeu) de detonation. */
   explodeAt: number;
   fuseMs: number;
-  owner: 'player' | 'boss';
+  owner: 'player' | 'partner' | 'boss';
   /** Direction de glissement, null si la bombe est posee. */
   slide: Vec2 | null;
   exploded: boolean;
@@ -71,7 +71,11 @@ export class BombManager {
   ) {}
 
   get playerBombCount(): number {
-    return this.bombs.filter((b) => b.owner === 'player' && !b.exploded).length;
+    return this.bombs.filter(b => (b.owner === 'player' || b.owner === 'partner') && !b.exploded).length;
+  }
+
+  playerBombCountFor(owner: 'player' | 'partner'): number {
+    return this.bombs.filter(b => b.owner === owner && !b.exploded).length;
   }
 
   bombAt(cx: number, cy: number): Bomb | null {
@@ -112,7 +116,7 @@ export class BombManager {
     range: number,
     pierce: number,
     slide: Vec2 | null = null,
-    owner: 'player' | 'boss' = 'player',
+    owner: 'player' | 'partner' | 'boss' = 'player',
   ): Bomb | null {
     if (this.bombAt(cell.x, cell.y)) return null;
     if (this.world.grid.isSolid(cell.x, cell.y)) return null;
@@ -363,12 +367,82 @@ export class BombManager {
    * l'emprise reelle de son corps (et non de sa seule case centrale).
    */
   refreshPlayerSolidity(minX: number, minY: number, maxX: number, maxY: number): void {
+    this.refreshPlayerSolidityForBodies([{ minX, minY, maxX, maxY }]);
+  }
+
+  /** La bombe reste traversable tant qu'AU MOINS un joueur l'occupe. */
+  refreshPlayerSolidityForBodies(bodies: readonly { minX: number; minY: number; maxX: number; maxY: number }[]): void {
     for (const b of this.bombs) {
       if (b.exploded || b.solidForPlayer) continue;
-      const overlaps =
-        b.cell.x >= minX && b.cell.x <= maxX && b.cell.y >= minY && b.cell.y <= maxY;
+      const overlaps = bodies.some(body =>
+        b.cell.x >= body.minX && b.cell.x <= body.maxX &&
+        b.cell.y >= body.minY && b.cell.y <= body.maxY);
       if (!overlaps) b.solidForPlayer = true;
     }
+  }
+
+  /** Etat transmis aux appareils invités. L'hôte reste seul maître des explosions. */
+  snapshot(): {
+    bombs: Array<{ id: number; x: number; y: number; type: BombType; range: number;
+      pierce: number; fuseLeftMs: number; slide: Vec2 | null; owner: 'player' | 'partner' | 'boss' }>;
+    flames: Array<{ x: number; y: number; leftMs: number; tint: number; owner: FlameOwner }>;
+  } {
+    return {
+      bombs: this.bombs.filter(b => !b.exploded).map(b => ({
+        id: b.id, x: b.x, y: b.y, type: b.type, range: b.range, pierce: b.pierce,
+        fuseLeftMs: Math.max(0, b.explodeAt - this.world.elapsedMs), slide: b.slide, owner: b.owner,
+      })),
+      flames: [...this.flames.entries()].map(([i, f]) => ({
+        x: i % this.world.grid.width, y: Math.floor(i / this.world.grid.width),
+        leftMs: Math.max(0, f.until - this.world.elapsedMs), tint: f.tint, owner: f.owner,
+      })),
+    };
+  }
+
+  /** L'invité ne recalcule pas les bombes : il affiche celles de l'hôte. */
+  applyNetwork(
+    bombs: readonly { id: number; x: number; y: number; type: BombType; range: number;
+      pierce: number; fuseLeftMs: number; slide: Vec2 | null; owner: 'player' | 'partner' | 'boss' }[],
+    flames: readonly { x: number; y: number; leftMs: number; tint: number; owner: FlameOwner }[],
+  ): void {
+    const keep = new Set(bombs.map(b => b.id));
+    for (let i = this.bombs.length - 1; i >= 0; i--) {
+      const b = this.bombs[i];
+      if (keep.has(b.id)) continue;
+      b.sprite.destroy();
+      this.bombs.splice(i, 1);
+    }
+    for (const data of bombs) {
+      if (![data.id, data.x, data.y, data.fuseLeftMs].every(Number.isFinite)) continue;
+      let bomb = this.bombs.find(b => b.id === data.id);
+      if (!bomb) {
+        const cell = cellOf({ x: data.x, y: data.y });
+        bomb = this.place(cell, data.type, data.range, data.pierce, data.slide, data.owner) ?? undefined;
+        if (!bomb) continue;
+        bomb.id = data.id;
+        this.nextId = Math.max(this.nextId, data.id + 1);
+      }
+      bomb.x = data.x; bomb.y = data.y; bomb.cell = cellOf({ x: data.x, y: data.y });
+      bomb.explodeAt = this.world.elapsedMs + data.fuseLeftMs;
+      bomb.slide = data.slide;
+      bomb.sprite.setPosition(data.x, data.y);
+    }
+    const incoming = new Set(flames.map(f => this.world.grid.idx(f.x, f.y)));
+    for (const [key, flame] of this.flames) {
+      if (incoming.has(key)) continue;
+      flame.sprite.destroy();
+      this.flames.delete(key);
+    }
+    for (const flame of flames) {
+      if (!this.world.grid.inBounds(flame.x, flame.y)) continue;
+      const index = this.world.grid.idx(flame.x, flame.y);
+      const current = this.flames.get(index);
+      if (current) {
+        current.until = this.world.elapsedMs + flame.leftMs;
+        current.owner = flame.owner;
+      } else this.addFlame({ x: flame.x, y: flame.y }, flame.leftMs, flame.tint, undefined, flame.owner);
+    }
+    this.rebuildDanger();
   }
 
   /** Fin de tentative : aucune bombe ni flamme ne doit survivre. */

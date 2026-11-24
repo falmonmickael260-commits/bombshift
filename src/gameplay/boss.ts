@@ -291,6 +291,18 @@ export abstract class Boss {
     }
   }
 
+  /** Réplique du boss provenant exclusivement de l'hôte. */
+  applyNetwork(state: { x: number; y: number; hp: number; active: boolean; alive: boolean; phase: number; vulnerable: boolean }): void {
+    if (![state.x, state.y, state.hp, state.phase].every(Number.isFinite)) return;
+    this.x = state.x; this.y = state.y;
+    this.vulnerable = state.vulnerable;
+    this.restoreState(state.hp, state.active, state.phase, state.alive);
+    this.sprite.setPosition(this.x, this.y).setAlpha(this.vulnerable ? 1 : 0.86);
+    this.shadow.setPosition(this.x, this.y + this.size * 0.26);
+    this.sprite.setVisible(state.alive && state.active);
+    this.shadow.setVisible(state.alive && state.active);
+  }
+
   /** Restaure l'etat du boss lors d'une reprise de partie. */
   restoreState(hp: number, active: boolean, phase: number, alive: boolean): void {
     this.hp = hp;

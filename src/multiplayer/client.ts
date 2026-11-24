@@ -3,12 +3,20 @@ import type { Difficulty } from '../core/types';
 import type { MapId } from '../maps';
 
 export type CoopRole = 'host' | 'guest';
-export interface CoopPlayerState { x: number; y: number; lives: number; alive: boolean; }
+export interface CoopPlayerState { x: number; y: number; lives: number; alive: boolean; maxBombs: number; range: number; speedBonus: number; pierceCharges: number; shieldLeftMs: number; }
 export interface CoopState {
   players: [CoopPlayerState, CoopPlayerState];
   tiles: number[];
-  bossHp: number | null;
-  bossAlive: boolean;
+  tileFlags: number[];
+  enemies: Array<{ kind: 'patroller' | 'chaser' | 'flanker' | 'coward' | 'heavy' | 'guardian'; x: number; y: number; hp: number; alive: boolean; asleep: boolean }>;
+  boss: { x: number; y: number; hp: number; active: boolean; alive: boolean; phase: number; vulnerable: boolean } | null;
+  bombs: Array<{ id: number; x: number; y: number; type: 'classic' | 'pierce' | 'shift' | 'slow'; range: number; pierce: number; fuseLeftMs: number; slide: { x: number; y: number } | null; owner: 'player' | 'partner' | 'boss' }>;
+  flames: Array<{ x: number; y: number; leftMs: number; tint: number; owner: 'player' | 'world' }>;
+  powerups: Array<{ kind: 'range' | 'bomb' | 'speed' | 'shield' | 'pierce' | 'ability' | 'life'; cell: { x: number; y: number } }>;
+  projectiles: Array<{ x: number; y: number; vx: number; vy: number; leftMs: number; radius: number }>;
+  propsDone: boolean[];
+  objectives: Array<{ id: string; current: number; done: boolean }>;
+  bossDead: boolean;
   timeMs: number;
 }
 type RoomEvent =
@@ -25,6 +33,7 @@ export class CoopClient {
   private socket: WebSocket | null = null;
   private listener: ((event: RoomEvent) => void) | null = null;
   private connected = false;
+  private heartbeat: number | null = null;
   role: CoopRole | null = null;
   code = '';
   level: MapId | null = null;
@@ -42,22 +51,36 @@ export class CoopClient {
       const timeout = window.setTimeout(() => {
         if (socket.readyState !== WebSocket.OPEN) { socket.close(); reject(new Error('Serveur multijoueur indisponible.')); }
       }, 9000);
-      socket.onopen = () => { window.clearTimeout(timeout); this.connected = true; resolve(); };
+      socket.onopen = () => {
+        window.clearTimeout(timeout);
+        if (this.socket !== socket) return;
+        this.connected = true;
+        this.heartbeat = window.setInterval(() => this.send({ type: 'heartbeat' }), 20000);
+        resolve();
+      };
       socket.onmessage = (event) => {
+        if (this.socket !== socket) return;
         try {
           const packet = JSON.parse(String(event.data)) as RoomEvent;
           if (packet.type === 'created' || packet.type === 'joined') {
             this.code = packet.code; this.level = packet.level;
           }
           if (packet.type === 'started') { this.role = packet.role; this.level = packet.level; }
-          if (packet.type === 'peer-left') this.role = null;
+          if (packet.type === 'peer-left') {
+            this.role = null;
+            this.code = '';
+            this.level = null;
+          }
           this.listener?.(packet);
         } catch { /* Malformed packets are ignored. */ }
       };
       socket.onerror = () => { if (!this.connected) { window.clearTimeout(timeout); reject(new Error('Connexion au serveur impossible.')); } };
       socket.onclose = () => {
+        if (this.socket !== socket) return;
         const wasConnected = this.connected;
-        this.connected = false; this.role = null;
+        this.connected = false; this.role = null; this.code = ''; this.level = null;
+        if (this.heartbeat !== null) window.clearInterval(this.heartbeat);
+        this.heartbeat = null;
         if (wasConnected) this.listener?.({ type: 'peer-left' });
       };
     });
@@ -77,6 +100,8 @@ export class CoopClient {
     return socketUrl ? new URL(socketUrl).origin.replace(/^ws/, 'http') : 'https://bombshift-duo-production.up.railway.app';
   }
   disconnect(): void {
+    if (this.heartbeat !== null) window.clearInterval(this.heartbeat);
+    this.heartbeat = null;
     if (this.socket) {
       if (this.socket.readyState === WebSocket.OPEN) this.send({ type: 'leave' });
       this.socket.close();
