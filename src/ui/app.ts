@@ -447,7 +447,7 @@ export class App {
           this.startRun(map.id, snap, true);
         } else {
           this.recovery.clear();
-          this.show('title');
+          this.show(new URLSearchParams(window.location.search).has('room') ? 'coop' : 'title');
         }
       }, 420);
     });
@@ -737,14 +737,17 @@ export class App {
         option.textContent = String(map.index + 1).padStart(2, '0') + ' · ' + map.name;
         boardFilter.appendChild(option);
       });
-      boardFilter.addEventListener('change', () => { void this.loadCoopLeaderboard(); }, { once: true });
+      boardFilter.onchange = () => { void this.loadCoopLeaderboard(); };
     }
     void this.loadCoopLeaderboard();
     const code = new URLSearchParams(window.location.search).get('room');
     const codeInput = document.getElementById('coop-code') as HTMLInputElement | null;
     if (codeInput && code && !this.coop.code) codeInput.value = code.toUpperCase();
     const nameInput = document.getElementById('coop-name') as HTMLInputElement | null;
-    if (nameInput && !nameInput.value) nameInput.value = localStorage.getItem('bombshift.coop.name') || '';
+    if (nameInput && !nameInput.value) {
+      try { nameInput.value = localStorage.getItem('bombshift.coop.name') || ''; }
+      catch { nameInput.value = ''; }
+    }
     this.updateCoopRoom(this.coop.code, this.coopPeerReady);
   }
 
