@@ -2,7 +2,7 @@ name: Verification et deploiement
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/duo-relay-20261124]
   pull_request:
     branches: [main]
   workflow_dispatch:
