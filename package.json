@@ -15,7 +15,8 @@
     "cap:android": "npm run build && cap sync android && cap open android",
     "cap:ios": "npm run build && cap sync ios && cap open ios",
     "start": "node server/index.mjs",
-    "dev:server": "node server/index.mjs"
+    "dev:server": "node server/index.mjs",
+    "test:server": "node --test server/*.test.mjs"
   },
   "dependencies": {
     "phaser": "^3.80.1"
