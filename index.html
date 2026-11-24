@@ -85,14 +85,15 @@
           <select id="coop-level" class="coop-field"></select>
           <button class="btn btn--primary" data-action="coop-create">CRÉER UN SALON · 2 JOUEURS</button>
           <h3>Rejoindre un ami</h3>
+          <p>Ouvre simplement son lien d'invitation : le salon se rejoint automatiquement. Le code court n'est utile qu'en secours.</p>
           <label for="coop-code">Code d'invitation</label>
-          <input id="coop-code" class="coop-field" maxlength="7" autocomplete="off" autocapitalize="characters" placeholder="CODE À 7 CARACTÈRES" />
+          <input id="coop-code" class="coop-field" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="CODE À 4 CARACTÈRES" />
           <button class="btn" data-action="coop-join">REJOINDRE LE SALON</button>
           <div id="coop-room" class="coop-room" hidden>
             <p>Code de ton salon</p>
             <strong id="coop-room-code">—</strong>
             <button class="btn btn--ghost" data-action="coop-copy">COPIER LE LIEN D'INVITATION</button>
-            <button class="btn" data-action="coop-share">INVITER UN AMI</button>
+            <button class="btn" data-action="coop-share">PARTAGER L’INVITATION</button>
             <button class="btn btn--primary" id="coop-launch" data-action="coop-start" disabled>LANCER À 2</button>
           </div>
           <p id="coop-status" class="coop-status" role="status" aria-live="polite">Crée un salon ou saisis un code pour jouer à deux.</p>
