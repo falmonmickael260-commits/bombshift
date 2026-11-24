@@ -8,9 +8,9 @@ export interface CoopState {
   players: [CoopPlayerState, CoopPlayerState];
   tiles: number[];
   tileFlags: number[];
-  enemies: Array<{ x: number; y: number; hp: number; alive: boolean; asleep: boolean }>;
+  enemies: Array<{ kind: 'patroller' | 'chaser' | 'flanker' | 'coward' | 'heavy' | 'guardian'; x: number; y: number; hp: number; alive: boolean; asleep: boolean }>;
   boss: { x: number; y: number; hp: number; active: boolean; alive: boolean; phase: number; vulnerable: boolean } | null;
-  bombs: Array<{ id: number; x: number; y: number; type: 'classic' | 'pierce' | 'shift' | 'slow'; range: number; pierce: number; fuseLeftMs: number; slide: { x: number; y: number } | null; owner: 'player' | 'boss' }>;
+  bombs: Array<{ id: number; x: number; y: number; type: 'classic' | 'pierce' | 'shift' | 'slow'; range: number; pierce: number; fuseLeftMs: number; slide: { x: number; y: number } | null; owner: 'player' | 'partner' | 'boss' }>;
   flames: Array<{ x: number; y: number; leftMs: number; tint: number; owner: 'player' | 'world' }>;
   powerups: Array<{ kind: 'range' | 'bomb' | 'speed' | 'shield' | 'pierce' | 'ability' | 'life'; cell: { x: number; y: number } }>;
   projectiles: Array<{ x: number; y: number; vx: number; vy: number; leftMs: number; radius: number }>;
