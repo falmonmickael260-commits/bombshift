@@ -457,6 +457,7 @@ export class App {
       setTimeout(() => {
         const snap = loadRun();
         const map = snap ? MAPS.find((candidate) => candidate.id === snap.mapId) : null;
+        const params = new URLSearchParams(window.location.search);
         const invited = params.has('rg_room') || params.has('room');
         if (!invited && snap && map && this.recovery.mapId === snap.mapId) {
           this.save.update((data) => { data.settings.difficulty = snap.difficulty as Difficulty; });
