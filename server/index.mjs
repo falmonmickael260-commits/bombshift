@@ -53,7 +53,7 @@ function newCode() {
 }
 function validLevel(value) {
   return typeof value === 'string' &&
-    (/^(volcano|ice|temple)(2|3)?$/.test(value) || /^level-(1[0-9]|[2-9][0-9]|10[0-9]|110)$/.test(value));
+    (/^(volcano|ice|temple)(2|3)?$/.test(value) || /^level-(1[0-9]|[2-9][0-9]|10[0-9]|1[1-3][0-9]|140)$/.test(value));
 }
 function handle(client, packet) {
   if (!packet || typeof packet !== 'object') return;
