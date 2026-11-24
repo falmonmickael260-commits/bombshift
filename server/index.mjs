@@ -4,6 +4,7 @@
  * Each room belongs to one campaign level and accepts exactly two players.
  */
 import http from 'node:http';
+import { cleanName, addCoopResult, listCoopResults } from './leaderboard.mjs';
 import { createHash, randomInt } from 'node:crypto';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
@@ -65,7 +66,8 @@ function handle(client, packet) {
     const difficulty = ['detente', 'normal', 'veteran'].includes(packet.difficulty)
       ? packet.difficulty : 'normal';
     const room = { code: newCode(), level: packet.level, difficulty, host: client,
-      guest: null, started: false, createdAt: Date.now() };
+      guest: null, hostName: cleanName(packet.name), guestName: 'Joueur 2',
+      started: false, startedAt: null, finished: false, completedAt: null, createdAt: Date.now() };
     ROOMS.set(room.code, room);
     client.room = room;
     send(client, { type: 'created', code: room.code, level: room.level });
@@ -77,9 +79,9 @@ function handle(client, packet) {
     const room = ROOMS.get(code);
     if (!room) return send(client, { type: 'error', message: 'Salon introuvable ou expiré.' });
     if (room.guest || room.started) return send(client, { type: 'error', message: 'Salon déjà complet.' });
-    room.guest = client; client.room = room;
-    send(client, { type: 'joined', code, level: room.level, difficulty: room.difficulty });
-    send(room.host, { type: 'peer-joined' });
+    room.guest = client; room.guestName = cleanName(packet.name); client.room = room;
+    send(client, { type: 'joined', code, level: room.level, difficulty: room.difficulty, host: room.hostName });
+    send(room.host, { type: 'peer-joined', guest: room.guestName });
     return;
   }
   const room = client.room;
@@ -87,6 +89,7 @@ function handle(client, packet) {
   if (type === 'start') {
     if (client !== room.host || !room.guest || room.started) return;
     room.started = true;
+    room.startedAt = Date.now();
     const seed = randomInt(0x7fffffff);
     send(room.host, { type: 'started', level: room.level, difficulty: room.difficulty, role: 'host', seed });
     send(room.guest, { type: 'started', level: room.level, difficulty: room.difficulty, role: 'guest', seed });
@@ -110,8 +113,22 @@ function handle(client, packet) {
   } else if (type === 'state' && client === room.host && packet.state) {
     // Host-authoritative correction; reject oversized payloads before relaying.
     send(other, { type: 'state', state: packet.state });
-  } else if (type === 'result' && client === room.host && packet.result) {
-    send(other, { type: 'result', result: packet.result });
+  } else if (type === 'result' && client === room.host && packet.result && !room.finished) {
+    room.finished = true;
+    room.completedAt = Date.now();
+    room.hostVictory = packet.result.victory === true;
+    send(other, { type: 'result', result: { victory: room.hostVictory } });
+  } else if (type === 'confirm-result' && client === room.guest && room.finished && room.hostVictory && !room.recorded) {
+    // Both browsers confirm the same outcome; elapsed time comes from the server.
+    room.recorded = true;
+    const elapsed = room.completedAt - room.startedAt;
+    if (elapsed >= 10000 && elapsed <= 2 * 60 * 60 * 1000) {
+      try {
+        addCoopResult({ level: room.level, host: room.hostName, guest: room.guestName, timeMs: elapsed });
+        send(room.host, { type: 'recorded', time_ms: elapsed });
+        send(room.guest, { type: 'recorded', time_ms: elapsed });
+      } catch (error) { console.error('Coop leaderboard storage error:', error); }
+    }
   }
 }
 function readFrames(client, data) {
@@ -152,6 +169,15 @@ function readFrames(client, data) {
   if (client.buffer.length > MAX_MESSAGE + 14) closeFrame(client, 1009);
 }
 const server = http.createServer((req, res) => {
+  if ((req.url || '').startsWith('/api/coop/leaderboard')) {
+    const address = new URL(req.url || '/', 'http://localhost');
+    const level = address.searchParams.get('level');
+    if (level && !validLevel(level)) { res.writeHead(400); return res.end('Invalid level'); }
+    const body = JSON.stringify({ level: level || null, entries: listCoopResults(level) });
+    res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store',
+      'access-control-allow-origin': '*' });
+    return res.end(body);
+  }
   if (req.url === '/health') {
     res.writeHead(200, { 'content-type': 'application/json' });
     return res.end(JSON.stringify({ ok: true, rooms: ROOMS.size }));
