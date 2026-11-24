@@ -15,6 +15,8 @@ const ROOMS = new Map();
 const CLIENTS = new Set();
 const MAX_MESSAGE = 32 * 1024;
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const ROOM_CODE_LENGTH = 4; // 4 caractères faciles à communiquer, invitation par lien prioritaire
+const MAX_JOIN_ATTEMPTS = 6;
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp',
@@ -48,7 +50,7 @@ function detach(client) {
 function newCode() {
   let code;
   do {
-    code = Array.from({ length: 7 }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join('');
+    code = Array.from({ length: ROOM_CODE_LENGTH }, () => CODE_CHARS[randomInt(CODE_CHARS.length)]).join('');
   } while (ROOMS.has(code));
   return code;
 }
@@ -59,6 +61,7 @@ function validLevel(value) {
 function handle(client, packet) {
   if (!packet || typeof packet !== 'object') return;
   const { type } = packet;
+  if (type === 'heartbeat') { send(client, { type: 'heartbeat' }); return; }
   if (type === 'leave') { detach(client); return; }
   if (type === 'create') {
     if (client.room) return send(client, { type: 'error', message: 'Quittez votre salon actuel.' });
@@ -74,6 +77,11 @@ function handle(client, packet) {
     return;
   }
   if (type === 'join') {
+    const now = Date.now();
+    if (now - client.joinWindow > 60000) { client.joinWindow = now; client.joinAttempts = 0; }
+    if (++client.joinAttempts > MAX_JOIN_ATTEMPTS) {
+      return send(client, { type: 'error', message: 'Trop de tentatives. Réessaie dans une minute.' });
+    }
     if (client.room) return send(client, { type: 'error', message: 'Quittez votre salon actuel.' });
     const code = String(packet.code || '').trim().toUpperCase();
     const room = ROOMS.get(code);
@@ -203,9 +211,12 @@ server.on('upgrade', (req, socket, head) => {
   if (typeof key !== 'string' || Buffer.from(key, 'base64').length !== 16) { socket.destroy(); return; }
   const hash = createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
   socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + hash + '\r\n\r\n');
-  const client = { socket, buffer: Buffer.alloc(0), room: null, windowStart: Date.now(), messages: 0 };
+  const client = { socket, buffer: Buffer.alloc(0), room: null, windowStart: Date.now(), messages: 0, joinWindow: Date.now(), joinAttempts: 0 };
   CLIENTS.add(client);
   socket.on('data', (chunk) => readFrames(client, chunk));
+  // Un FIN TCP peut arriver avant close, notamment sur mobile ou après
+  // la mise en arrière-plan de la PWA. Libérer le salon immédiatement.
+  socket.on('end', () => { detach(client); CLIENTS.delete(client); });
   socket.on('close', () => { detach(client); CLIENTS.delete(client); });
   socket.on('error', () => { detach(client); CLIENTS.delete(client); });
   if (head.length) readFrames(client, head);
