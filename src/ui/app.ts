@@ -143,6 +143,7 @@ export class App {
   private readonly hud = new Hud();
   private readonly coop = new CoopClient();
   private coopPeerReady = false;
+  private coopRoomHost = false;
   private coopSeed: number | null = null;
   private remoteCoopInput = { moveX: 0, moveY: 0, magnitude: 0, bombPressed: false,
     abilityPressed: false, ability2Pressed: false };
@@ -177,10 +178,12 @@ export class App {
     this.coop.onEvent((event) => {
       switch (event.type) {
         case 'created':
+          this.coopRoomHost = true;
           this.coopMessage('Salon ' + event.code + ' créé pour ' + getMap(event.level).name + '.');
           this.updateCoopRoom(event.code, false);
           break;
         case 'joined':
+          this.coopRoomHost = false;
           this.selected = getMap(event.level);
           this.coopMessage('Salon rejoint : ' + this.selected.name + '.');
           this.updateCoopRoom(event.code, false);
@@ -629,6 +632,7 @@ export class App {
           break;
         case 'coop':
           this.coopPeerReady = false; this.coopSeed = null;
+          this.coopRoomHost = false;
           this.show('coop');
           break;
         case 'coop-create':
@@ -730,7 +734,7 @@ export class App {
     if (label) label.textContent = code || '—';
     const button = document.getElementById('coop-launch') as HTMLButtonElement | null;
     if (button) {
-      button.hidden = !code || this.coop.role === 'guest';
+      button.hidden = !code || !this.coopRoomHost;
       button.disabled = !peerReady;
     }
   }
