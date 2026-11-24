@@ -417,7 +417,7 @@ export class BombManager {
       let bomb = this.bombs.find(b => b.id === data.id);
       if (!bomb) {
         const cell = cellOf({ x: data.x, y: data.y });
-        bomb = this.place(cell, data.type, data.range, data.pierce, data.slide, data.owner);
+        bomb = this.place(cell, data.type, data.range, data.pierce, data.slide, data.owner) ?? undefined;
         if (!bomb) continue;
         bomb.id = data.id;
         this.nextId = Math.max(this.nextId, data.id + 1);
