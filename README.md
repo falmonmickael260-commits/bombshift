@@ -306,3 +306,34 @@ des sequences de jeu.
 ## Licence
 
 Code, cartes, personnages, boss, textures et musiques originaux.
+
+---
+
+## Coopération en ligne à 2 (salons privés par niveau)
+
+Le mode **JOUER À 2 EN LIGNE** permet de créer un salon pour n'importe quel
+niveau de la campagne. Le créateur reçoit un code privé de 7 caractères,
+qu'il partage avec son partenaire ; le salon est limité à deux connexions.
+Les deux joueurs ont un personnage distinct et posent chacun leurs bombes.
+Le créateur lance la partie lorsque les deux joueurs sont présents.
+
+Le serveur WebSocket est inclus dans `server/index.mjs`, sans dépendance
+supplémentaire. Il héberge le build Vite et gère les salons en mémoire.
+
+```bash
+npm ci
+npm run build
+npm start
+```
+
+Sur Railway, utilisez la commande de build `npm run build` et la commande
+de démarrage `npm start`, avec le port `PORT` fourni par Railway.
+Par défaut, le client utilise `/multiplayer` sur le même domaine.
+Pour conserver GitHub Pages comme frontend, renseignez au moment du build
+`VITE_COOP_WS_URL=wss://VOTRE-SERVICE-RAILWAY/multiplayer`.
+Les salons sont éphémères et seront perdus au redémarrage du service.
+Le solo reste indépendant et hors ligne.
+
+**Statut :** première version de synchronisation à éprouver sous latence réelle ;
+le créateur fait autorité pour les corrections de position et de carte. Les
+tests multijoueurs à deux appareils sont indispensables avant publication.
