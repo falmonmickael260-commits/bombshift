@@ -519,9 +519,10 @@ export class GameScene extends Phaser.Scene {
     // En portrait, on reserve le bas de l'ecran aux commandes : l'arene n'est
     // jamais recouverte par le joystick ou les boutons.
     const portrait = h > w;
-    const reserved = portrait ? Math.min(260, Math.max(150, h * 0.26)) : 0;
-    const viewH = Math.max(120, h - reserved);
-    cam.setViewport(0, 0, w, viewH);
+    // Controls overlay the arena; do not crop the bottom of the canvas.
+    const viewH = h;
+    if(w<32 || h<32) return;
+    cam.setViewport(0, 0, w, h);
 
     const tilesX = portrait ? CAMERA.viewTilesX : CAMERA.viewTilesX + 2;
     const tilesY = portrait ? CAMERA.viewTilesY + 1 : CAMERA.viewTilesY;
@@ -850,7 +851,7 @@ export class GameScene extends Phaser.Scene {
     // En paysage, les commandes occupent les coins bas : on remonte legerement
     // le personnage pour qu'il ne passe jamais sous un bouton.
     const landscape = this.scale.width > this.scale.height;
-    const offsetY = landscape ? (cam.height / cam.zoom) * 0.09 : 0;
+    const offsetY = (cam.height / cam.zoom) * (landscape ? 0.09 : 0.12);
     const lerp = 1 - Math.pow(0.0025, dt / 1000);
     const cx = cam.midPoint.x + (target.x - cam.midPoint.x) * lerp;
     const cy = cam.midPoint.y + (target.y + offsetY - cam.midPoint.y) * lerp;

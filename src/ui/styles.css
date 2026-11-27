@@ -879,3 +879,9 @@ input[type="range"]::-moz-range-thumb {
 .coop-room .btn { width: 100%; margin: 7px 0; }
 .coop-room .btn:disabled { opacity: .48; cursor: not-allowed; }
 .coop-status { min-height: 36px; font-size: 14px; text-align: center; color: #d9edff; }
+
+/* Android iframe resize: the game surface fills its actual containing box. */
+#app { width:100%; height:100%; }
+#game-root { width:100%; height:100%; overflow:hidden; min-height:0; }
+#game-root canvas { position:absolute; inset:0; margin:0 !important; }
+@media (max-height: 450px) { .joystick { --stick-scale: .82; } }

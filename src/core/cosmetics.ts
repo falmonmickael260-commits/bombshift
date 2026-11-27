@@ -55,6 +55,23 @@ function line(c:CanvasRenderingContext2D,pts:number[][],color:string,w=1){c.begi
 function star(c:CanvasRenderingContext2D,x:number,y:number,r:number,col:string){poly(c,[[x,y-r],[x+r*.25,y-r*.25],[x+r,y],[x+r*.25,y+r*.25],[x,y+r],[x-r*.25,y+r*.25],[x-r,y],[x-r*.25,y-r*.25]],col,col,0);}
 function glow(c:CanvasRenderingContext2D,x:number,y:number,r:number,col:string){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,col+'77');g.addColorStop(1,col+'00');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
 function grad(c:CanvasRenderingContext2D,s:Design,x:number,y:number,r:number){const g=c.createRadialGradient(x-r*.35,y-r*.6,1,x,y,r*1.5);g.addColorStop(0,s.light);g.addColorStop(.4,s.main);g.addColorStop(1,s.dark);return g;}
+export const auraDesign=(id:string)=>HERO_SKINS.find(s=>s.id===id && ['rare','epic','legendary','mythic'].includes(s.rarity));
+export const auraTexture=(id:string)=>'aura-'+id;
+function auraFrame(c:CanvasRenderingContext2D,s:Design,f:number){
+ c.clearRect(0,0,96,96); const tier=s.rarity==='mythic'?3:s.rarity==='legendary'?2:s.rarity==='epic'?1:0, phase=f*Math.PI/6;
+ const col=s.light, radius=27+tier*4;
+ const g=c.createRadialGradient(48,48,13,48,48,45);
+ g.addColorStop(0,s.main+'00');g.addColorStop(.55,s.main+'55');g.addColorStop(.82,s.main+'35');g.addColorStop(1,s.main+'00');c.fillStyle=g;c.fillRect(0,0,96,96);
+ c.save();c.translate(48,48);c.rotate(phase);c.strokeStyle=s.main+'b0';c.lineWidth=1.5+tier*.35;c.beginPath();c.arc(0,0,radius,.1,Math.PI*1.65);c.stroke();
+ if(tier>=1){c.strokeStyle=col+'aa';c.lineWidth=1.2;c.beginPath();c.ellipse(0,0,radius+4,radius*.66,.5,0,Math.PI*2);c.stroke();}
+ const count=4+tier*2;
+ for(let i=0;i<count;i++){const a=i*Math.PI*2/count;const r=radius+(i%2?3:-3);const x=Math.cos(a)*r,y=Math.sin(a)*r;
+  if(s.motif==='celestial'||s.motif==='magma'||s.motif==='phoenix'){poly(c,[[x,y-6],[x+2,y-2],[x+3,y+1],[x,y+5],[x-3,y+1]],col,col,0);}
+  else if(s.motif==='samurai'||s.motif==='dragon'){line(c,[[x-4,y+2],[x,y-3],[x+1,y+1],[x+5,y-3]],col,1.8);}
+  else star(c,x,y,2+tier*.55,col);
+ }
+ c.restore();
+}
 function heroFrame(c:CanvasRenderingContext2D,s:Design,f:number){
  const dir=f<4?0:f<8?1:f<12?2:0,walk=f<12,step=walk?Math.sin(f*Math.PI/2):0;
  const m=s.motif,animal=['bear','panda','rabbit','fox'].includes(m),royal=['king','magma','dragon','phoenix'].includes(m);
@@ -66,6 +83,14 @@ function heroFrame(c:CanvasRenderingContext2D,s:Design,f:number){
  if(['mage','spectre','king','magma','ninja'].includes(m))poly(c,[[14,23],[34,23],[38,41],[24,37],[10,41]],s.dark,s.main,1.2);
  for(const sign of [-1,1])box(c,17+sign*5+5,35+(sign*step*1.8),8,9,3,s.dark);
  box(c,14,24,20,15,6,s.main);box(c,10,26+step,7,10,3,s.main);box(c,31,26-step,7,10,3,s.main);
+ line(c,[[16,26],[19,25],[28,25]],s.light,1.2);
+ if(['samurai','king','magma','dragon','phoenix'].includes(m)){for(const sign of [-1,1]){const x=24+sign*11;poly(c,[[x-5,24],[x+5,24],[x+4,30],[x-3,32]],s.dark,s.light,1.1);line(c,[[x-3,27],[x+3,27]],s.main,1.2);}}
+ if(m==='astro'||m==='pilot'){box(c,16,33,16,4,1,s.dark,s.light);ellipse(c,20,35,1,1,s.light,'',0);ellipse(c,28,35,1,1,s.main,'',0);}
+ if(m==='fox'){poly(c,[[31,34],[41,28],[44,34],[40,41],[32,40]],s.main,s.dark);poly(c,[[41,28],[44,34],[40,36],[37,32]],s.light,s.dark,.6);}
+ if(m==='ninja'){line(c,[[11,24],[5,18],[3,21]],s.main,2.7);}
+ if(m==='mage'){star(c,24,35,3.8,s.light);line(c,[[34,28],[39,16],[39,35]],s.light,1.7);star(c,39,15,3,s.light);}
+ if(m==='celestial'){line(c,[[15,36],[33,36]],s.dark,3);}
+ if(m==='toxic'){for(const x of [17,31])ellipse(c,x,30,1.8,2.5,s.light,'',0);}
  if(dir===1){box(c,17,25,14,10,3,s.dark);line(c,[[20,29],[28,29]],s.light,2);}else{
  if(animal){ellipse(c,24,31,6.6,6,s.light,'',0);if(m==='bear'){poly(c,[[24,35],[19,30],[20,27],[24,29],[28,27],[29,30]],'#f4669a','',0);}else star(c,24,31,3,s.main);}
  else{box(c,17,26,14,9,3,s.dark);star(c,24,30,3,s.light);}
@@ -116,11 +141,11 @@ function bombFrame(c:CanvasRenderingContext2D,s:Design,type:BombType,f:number){
 }
 export function drawCosmeticPreview(canvas:HTMLCanvasElement,id:string,frame=0){const c=canvas.getContext('2d');const s=COSMETICS.find(x=>x.id===id);if(!c||!s)return;c.setTransform(canvas.width/48,0,0,canvas.height/48,0,0);if(id.startsWith('hero-'))heroFrame(c,s,frame%4);else bombFrame(c,s,'classic',frame%4);}
 export function buildCosmeticTextures(scene:Phaser.Scene){
- for(const s of HERO_SKINS){makeSheet(scene,heroTexture(s.id),TILE,TILE,15,(c,f)=>heroFrame(c,s,f));}
+ for(const s of HERO_SKINS){makeSheet(scene,heroTexture(s.id),TILE,TILE,15,(c,f)=>heroFrame(c,s,f));if(auraDesign(s.id))makeSheet(scene,auraTexture(s.id),96,96,12,(c,f)=>auraFrame(c,s,f));}
  for(const s of BOMB_SKINS)for(const type of ['classic','pierce','shift','slow'] as const)makeSheet(scene,bombTexture(s.id,type),TILE,TILE,4,(c,f)=>bombFrame(c,s,type,f));
 }
 export function registerCosmeticAnims(scene:Phaser.Scene){
  const add=(key:string,texture:string,frames:number[],frameRate:number,repeat=-1)=>{if(!scene.anims.exists(key))scene.anims.create({key,frames:frames.map(frame=>({key:texture,frame})),frameRate,repeat});};
- for(const s of HERO_SKINS){for(const [action,frames] of Object.entries({down:[0,1,2,3],up:[4,5,6,7],side:[8,9,10,11],hurt:[12],victory:[13],defeat:[14]}))add(heroAnim(s.id,action),heroTexture(s.id),frames,frames.length>1?10:1,frames.length>1?-1:0);}
+ for(const s of HERO_SKINS){if(auraDesign(s.id))add(auraTexture(s.id),auraTexture(s.id),Array.from({length:12},(_,i)=>i),8);for(const [action,frames] of Object.entries({down:[0,1,2,3],up:[4,5,6,7],side:[8,9,10,11],hurt:[12],victory:[13],defeat:[14]}))add(heroAnim(s.id,action),heroTexture(s.id),frames,frames.length>1?10:1,frames.length>1?-1:0);}
  for(const s of BOMB_SKINS)for(const type of ['classic','pierce','shift','slow'] as const)add(bombAnim(s.id,type),bombTexture(s.id,type),[0,1,2,3],6);
 }

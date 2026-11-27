@@ -1,4 +1,4 @@
-import { heroTexture, heroAnim } from '../core/cosmetics';
+import { heroTexture, heroAnim, auraDesign, auraTexture } from '../core/cosmetics';
 import type Phaser from 'phaser';
 import { BOMB, MOVE, PLAYER, TEX, TILE } from '../core/constants';
 import { TileKind, type Dir, type InputState, type Vec2 } from '../core/types';
@@ -36,6 +36,7 @@ export class Player {
   private readonly sprite: Phaser.GameObjects.Sprite;
   private readonly shadow: Phaser.GameObjects.Image;
   private readonly halo: Phaser.GameObjects.Image;
+  private readonly cosmeticAura: Phaser.GameObjects.Sprite | null;
   private readonly shield: Phaser.GameObjects.Image;
   private lastBombAt = -1e9;
   private lastAbilityAt = -1e9;
@@ -62,6 +63,9 @@ export class Player {
 
     this.sprite = world.scene.add.sprite(p.x, p.y, heroTexture(this.skin), 0);
     this.sprite.setDepth(30).setOrigin(0.5, 0.62).setScale(1.08);
+    this.cosmeticAura = auraDesign(this.skin) ? world.scene.add.sprite(p.x,p.y-4,auraTexture(this.skin),0).setDepth(16).setAlpha(.82).setScale(.86) : null;
+    if(this.cosmeticAura && world.settings.effects !== 'low' && !world.settings.reduceFlashes) this.cosmeticAura.play(auraTexture(this.skin));
+    if(this.cosmeticAura && world.settings.effects === 'low') this.cosmeticAura.setAlpha(.38);
 
     this.shield = world.scene.add.image(p.x, p.y, TEX.shield);
     this.shield.setDepth(31).setVisible(false).setScale(0.78);
@@ -190,6 +194,7 @@ export class Player {
     this.shadow.setPosition(this.body.x, this.body.y + TILE * 0.3);
     this.halo.setPosition(this.body.x, this.body.y + TILE * 0.22);
     this.halo.setRotation(this.world.elapsedMs / 1400);
+    this.cosmeticAura?.setPosition(this.body.x,this.body.y-4).setVisible(this.alive);
 
     // Clignotement d'invulnerabilite : lisible sans masquer le personnage.
     const inv = this.world.elapsedMs < this.invulnUntil;
@@ -296,6 +301,7 @@ export class Player {
   playDefeat(): void {
     this.sprite.anims.stop();
     this.sprite.play(heroAnim(this.skin, 'defeat'), true);
+    this.cosmeticAura?.setVisible(false);
     this.shield.setVisible(false);
   }
 
@@ -309,6 +315,7 @@ export class Player {
   }
 
   destroy(): void {
+    this.cosmeticAura?.destroy();
     this.sprite.destroy();
     this.shadow.destroy();
     this.halo.destroy();

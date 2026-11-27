@@ -435,8 +435,8 @@ export class App {
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.NO_CENTER,
-        width: window.innerWidth,
-        height: window.innerHeight,
+        width: Math.max(1, document.getElementById('game-root')?.clientWidth || window.innerWidth),
+        height: Math.max(1, document.getElementById('game-root')?.clientHeight || window.innerHeight),
       },
       render: { antialias: true, powerPreference: 'high-performance' },
       fps: { target: 60, min: 30 },
@@ -1247,11 +1247,27 @@ export class App {
 
     // Orientation / redimensionnement : Phaser gere le canvas, on recalcule
     // seulement la taille du jeu.
+    const root = document.getElementById('game-root');
+    let resizeFrame = 0;
     const onResize = (): void => {
-      this.game?.scale.resize(window.innerWidth, window.innerHeight);
+      if(resizeFrame) cancelAnimationFrame(resizeFrame);
+      resizeFrame=requestAnimationFrame(()=>{
+        resizeFrame=0;
+        const w=Math.round(root?.clientWidth || 0), h=Math.round(root?.clientHeight || 0);
+        const scale=this.game?.scale;
+        if(!scale || w<32 || h<32) return;
+        if(scale.gameSize.width!==w || scale.gameSize.height!==h) scale.resize(w,h);
+        scale.updateBounds();
+      });
     };
+    if(root && typeof ResizeObserver!=='undefined') new ResizeObserver(onResize).observe(root);
     window.addEventListener('resize', onResize);
-    window.addEventListener('orientationchange', () => setTimeout(onResize, 120));
+    window.visualViewport?.addEventListener('resize',onResize);
+    document.addEventListener('fullscreenchange',onResize);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)onResize();});
+    window.addEventListener('pageshow',onResize);
+    window.addEventListener('orientationchange',()=>{onResize();setTimeout(onResize,150);setTimeout(onResize,500);});
+    onResize();
 
     // Empeche le zoom par double-tap et le defilement elastique sur iOS.
     document.addEventListener(
