@@ -24,6 +24,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; cha
 
 function send(client, message) {
   if (client.socket.destroyed) return;
+  if (message.type === 'state' && client.socket.writableLength > 96 * 1024) return;
   const data = Buffer.from(JSON.stringify(message));
   const hdr = data.length < 126
     ? Buffer.from([0x81, data.length])
@@ -211,6 +212,8 @@ server.on('upgrade', (req, socket, head) => {
   if (typeof key !== 'string' || Buffer.from(key, 'base64').length !== 16) { socket.destroy(); return; }
   const hash = createHash('sha1').update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11').digest('base64');
   socket.write('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + hash + '\r\n\r\n');
+  socket.setNoDelay(true);
+  socket.setKeepAlive(true, 15000);
   const client = { socket, buffer: Buffer.alloc(0), room: null, windowStart: Date.now(), messages: 0, joinWindow: Date.now(), joinAttempts: 0 };
   CLIENTS.add(client);
   socket.on('data', (chunk) => readFrames(client, chunk));
