@@ -256,6 +256,8 @@ export class App {
     try {
       const referrerOrigin = document.referrer ? new URL(document.referrer).origin : '';
       const allowedOrigins = [
+        'https://revanchegames.com',
+        'https://www.revanchegames.com',
         'https://revanchegames-production.up.railway.app',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
