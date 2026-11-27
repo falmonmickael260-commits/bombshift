@@ -265,23 +265,14 @@ export class App {
     const params = new URLSearchParams(window.location.search);
     if (window.parent === window || !params.has('rg_token')) return;
 
-    try {
-      const referrerOrigin = document.referrer ? new URL(document.referrer).origin : '';
-      const allowedOrigins = [
-        'https://revanchegames.com',
-        'https://www.revanchegames.com',
-        'https://revanchegames-production.up.railway.app',
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-      ];
-      this.accountSyncOrigin = allowedOrigins.includes(referrerOrigin) ? referrerOrigin : null;
-    } catch { this.accountSyncOrigin = null; }
-    if (!this.accountSyncOrigin) return;
-
-    const sendReady = () => window.parent.postMessage(
-      { type: 'rg:ready', v: 1, game: 'bombshift' },
-      this.accountSyncOrigin!,
-    );
+    const allowedOrigins = ['https://revanchegames.com','https://www.revanchegames.com','https://revanchegames-production.up.railway.app'];
+    if(import.meta.env.DEV)allowedOrigins.push('http://localhost:3000','http://127.0.0.1:3000');
+    // Ready contains no account data. Probe only known platform origins,
+    // including browsers that suppress document.referrer. Pin origin on reply.
+    const sendReady = () => {
+      for(const origin of this.accountSyncOrigin ? [this.accountSyncOrigin] : allowedOrigins)
+        window.parent.postMessage({type:'rg:ready',v:1,game:'bombshift'},origin);
+    };
     sendReady();
     let retries = 0;
     this.accountSyncRetry = window.setInterval(() => {
@@ -294,14 +285,15 @@ export class App {
     }, 700);
 
     window.addEventListener('message', (event: MessageEvent) => {
-      if (event.source !== window.parent || event.origin !== this.accountSyncOrigin) return;
+      if (event.source !== window.parent || !allowedOrigins.includes(event.origin) || (this.accountSyncOrigin && event.origin !== this.accountSyncOrigin)) return;
       const data = event.data;
       if (!data || data.v !== 1 || data.game !== 'bombshift') return;
       if (data.type === 'rg:bootstrap' && typeof data.launch === 'string') {
-        this.paidNoAds = data.noAds === true;
+        this.accountSyncOrigin = event.origin;
+        if(data.entitlementUnavailable !== true) this.paidNoAds = data.noAds === true;
         this.refreshPurchaseStatus();
         if (this.paidNoAds && this.screen === 'ad') this.show('title');
-        this.accountSyncReady = true;
+        this.accountSyncReady = data.syncUnavailable !== true && data.entitlementUnavailable !== true;
         const identity = data.identity;
         if (identity && typeof identity === 'object' && typeof identity.username === 'string') {
           this.coopPlatformName = identity.username.trim().slice(0, 22) || null;
@@ -325,6 +317,7 @@ export class App {
         } else {
           this.setAccountSyncStatus('Progression enregistrée sur cet appareil');
         }
+        if(data.entitlementUnavailable === true && this.accountSyncRetry === null) this.accountSyncRetry = window.setTimeout(sendReady,5000);
       } else if (data.launch !== this.accountSyncLaunch) return;
       else if (data.type === 'rg:purchase-error') {
         this.purchasePending = false;
@@ -342,6 +335,8 @@ export class App {
       } else if (data.type === 'rg:progress-save-error') {
         if (data.requestId !== undefined && data.requestId !== this.accountSyncRequest) return;
         this.accountSyncInFlight = null;
+        if(this.accountSyncSaveRetry!==null)window.clearTimeout(this.accountSyncSaveRetry);
+        this.accountSyncSaveRetry=window.setTimeout(()=>{this.accountSyncSaveRetry=null;this.sendAccountProgress();},10000);
         this.setAccountSyncStatus('Synchronisation du compte indisponible — progression conservée sur cet appareil');
       }
     });
