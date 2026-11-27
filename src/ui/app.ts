@@ -147,6 +147,9 @@ export class App {
   private coopRoomHost = false;
   private coopAutoJoined = '';
   private coopConnecting = false;
+  private coopRequestTimer: number | null = null;
+  private coopConnectionEpoch = 0;
+  private lastRemoteInputAt = 0;
   private coopPlatformName: string | null = null;
   private coopResultPending = false;
   private coopSeed: number | null = null;
@@ -183,22 +186,26 @@ export class App {
     this.coop.onEvent((event) => {
       switch (event.type) {
         case 'created':
+          this.finishCoopRequest();
           this.coopRoomHost = true;
           this.coopMessage('Salon ' + event.code + ' créé pour ' + getMap(event.level).name + '.');
           this.updateCoopRoom(event.code, false);
           break;
         case 'joined':
+          this.finishCoopRequest();
           this.coopRoomHost = false;
           this.selected = getMap(event.level);
           this.coopMessage('Salon rejoint : ' + this.selected.name + '.');
-          this.updateCoopRoom(event.code, false);
+          this.coopPeerReady = true;
+          this.updateCoopRoom(event.code, true);
           break;
         case 'peer-joined':
           this.coopPeerReady = true;
-          this.coopMessage('Deux joueurs connectés. Lancez la partie !');
+          this.coopMessage((event.guest || 'Ton ami') + ' a rejoint. La partie peut commencer !');
           this.updateCoopRoom(this.coop.code, true);
           break;
         case 'peer-left':
+          this.finishCoopRequest();
           this.coopPeerReady = false;
           if (this.screen === 'game' && this.gameScene?.currentPhase === 'playing') {
             this.stopRun(); this.coop.disconnect(); this.coopSeed = null;
@@ -208,11 +215,15 @@ export class App {
           this.updateCoopRoom('', false);
           break;
         case 'started':
+          this.finishCoopRequest();
+          Object.assign(this.remoteCoopInput,{moveX:0,moveY:0,magnitude:0,bombPressed:false,abilityPressed:false,ability2Pressed:false});
+          this.lastRemoteInputAt=performance.now();
           this.coopSeed = event.seed;
           this.save.update(d => { d.settings.difficulty = event.difficulty; });
           this.startRun(event.level);
           break;
         case 'input':
+          this.lastRemoteInputAt=performance.now();
           this.remoteCoopInput.moveX = event.input.moveX;
           this.remoteCoopInput.moveY = event.input.moveY;
           this.remoteCoopInput.magnitude = event.input.magnitude;
@@ -231,6 +242,7 @@ export class App {
           this.hud.toast('Temps duo enregistré dans le classement !', 'good');
           break;
         case 'error':
+          this.finishCoopRequest();
           this.coopMessage(event.message);
           break;
       }
@@ -298,6 +310,7 @@ export class App {
         }
         this.accountSyncAuthenticated = data.authenticated === true;
         this.accountSyncLaunch = data.launch;
+        if(this.coop.code) this.updateCoopRoom(this.coop.code,this.coopPeerReady);
         if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
         this.accountSyncRetry = null;
         if (data.authenticated === true) {
@@ -657,6 +670,7 @@ export class App {
         case 'coop':
           this.coopPeerReady = false; this.coopSeed = null;
           this.coopRoomHost = false;
+          this.coop.disconnect();
           this.show('coop');
           break;
         case 'coop-create':
@@ -666,7 +680,11 @@ export class App {
           void this.connectCoop('join');
           break;
         case 'coop-start':
-          this.coop.start();
+          if(this.coopRoomHost && this.coopPeerReady) this.coop.start();
+          break;
+        case 'coop-invite-friend':
+          if(this.coop.code && this.accountSyncOrigin && this.accountSyncLaunch) window.parent.postMessage({type:'rg:bombshift-invite',v:1,game:'bombshift',launch:this.accountSyncLaunch,room:this.coop.code},this.accountSyncOrigin);
+          else void this.copyCoopInvitation();
           break;
         case 'coop-copy':
           void this.copyCoopInvitation();
@@ -678,6 +696,7 @@ export class App {
           void this.loadCoopLeaderboard();
           break;
         case 'coop-leave':
+          this.coopConnectionEpoch++; this.finishCoopRequest();
           this.coop.disconnect(); this.coopSeed = null; this.coopPeerReady = false;
           this.updateCoopRoom('', false);
           this.show('title');
@@ -791,6 +810,10 @@ export class App {
   private updateCoopRoom(code: string, peerReady: boolean): void {
     const room = document.getElementById('coop-room');
     if (room) room.hidden = !code;
+    const setup=document.getElementById('coop-setup'); if(setup) setup.hidden=!!code;
+    const status=document.getElementById('coop-room-players');if(status)status.textContent=peerReady?'2 / 2 joueurs connectés':'1 / 2 — en attente de ton ami';
+    const invite=document.getElementById('coop-invite-friend');if(invite)invite.hidden=!code||!this.coopRoomHost||!this.accountSyncOrigin;
+    if(this.accountSyncOrigin && this.accountSyncLaunch)window.parent.postMessage({type:'rg:bombshift-room',v:1,game:'bombshift',launch:this.accountSyncLaunch,room:code||null},this.accountSyncOrigin);
     const invitation = document.getElementById('coop-invite-link') as HTMLInputElement | null;
     if (invitation) invitation.value = code ? this.coopInviteUrl() : '';
     const label = document.getElementById('coop-room-code');
@@ -805,7 +828,7 @@ export class App {
   private coopInviteUrl(): string {
     const onPlatform = this.accountSyncOrigin !== null || new URLSearchParams(location.search).has('rg_token');
     if (onPlatform) {
-      const origin = this.accountSyncOrigin || 'https://revanchegames-production.up.railway.app';
+      const origin = this.accountSyncOrigin || 'https://revanchegames.com';
       const link = new URL('/play/bombshift', origin);
       link.searchParams.set('room', this.coop.code);
       return link.toString();
@@ -884,33 +907,32 @@ export class App {
     }
   }
 
+  private finishCoopRequest():void {
+    this.coopConnecting=false;
+    if(this.coopRequestTimer!==null)window.clearTimeout(this.coopRequestTimer);
+    this.coopRequestTimer=null;
+    document.querySelectorAll<HTMLButtonElement>('[data-action="coop-create"],[data-action="coop-join"]').forEach(b=>b.disabled=false);
+  }
   private async connectCoop(mode: 'create' | 'join'): Promise<void> {
-    if (this.coopConnecting) return;
-    this.coopConnecting = true;
+    if(this.coopConnecting||this.coop.code)return;
+    const input=document.getElementById('coop-code') as HTMLInputElement;
+    const code=input.value.trim().toUpperCase();
+    if(mode==='join'&&!/^[A-HJ-NP-Z2-9]{4}$/.test(code)){this.coopMessage('Code invalide. Utilise le lien reçu ou les 4 caractères.');return;}
+    this.coopConnecting=true;
+    const epoch=++this.coopConnectionEpoch;
+    document.querySelectorAll<HTMLButtonElement>('[data-action="coop-create"],[data-action="coop-join"]').forEach(b=>b.disabled=true);
     try {
       this.coopMessage('Connexion au serveur multijoueur…');
       await this.coop.connect();
-      const nick = (document.getElementById('coop-name') as HTMLInputElement).value.trim().slice(0, 22) || 'Joueur';
-      try { localStorage.setItem('bombshift.coop.name', nick); } catch { /* stockage optionnel */ }
-      this.coopPeerReady = false;
-      this.coopSeed = null;
-      if (mode === 'create') {
-        const select = document.getElementById('coop-level') as HTMLSelectElement;
-        this.selected = getMap(select.value as MapId);
-        this.coop.create(this.selected.id, this.save.get().settings.difficulty, nick);
-      } else {
-        const input = document.getElementById('coop-code') as HTMLInputElement;
-        if (!/^[A-HJ-NP-Z2-9]{4}$/.test(input.value.trim().toUpperCase())) {
-          this.coopMessage('Code de 4 caractères requis, ou ouvre ton lien d’invitation.');
-          this.coop.disconnect(); return;
-        }
-        this.coop.join(input.value, nick);
-      }
-    } catch (error) {
-      this.coopMessage(error instanceof Error ? error.message : 'Connexion impossible.');
-    } finally {
-      this.coopConnecting = false;
-    }
+      if(epoch!==this.coopConnectionEpoch||this.screen!=='coop')return;
+      const nick=this.coopPlatformName||(document.getElementById('coop-name') as HTMLInputElement).value.trim().slice(0,22)||'Joueur';
+      try{localStorage.setItem('bombshift.coop.name',nick);}catch{}
+      this.coopPeerReady=false; this.coopSeed=null;
+      this.coopMessage(mode==='create'?'Création du salon…':'Recherche du salon…');
+      this.coopRequestTimer=window.setTimeout(()=>{if(epoch!==this.coopConnectionEpoch)return;this.coop.disconnect();this.finishCoopRequest();this.coopMessage('Le serveur ne répond pas. Réessaie.');},10000);
+      if(mode==='create'){const select=document.getElementById('coop-level') as HTMLSelectElement;this.selected=getMap(select.value as MapId);this.coop.create(this.selected.id,this.save.get().settings.difficulty,nick);}
+      else this.coop.join(code,nick);
+    }catch(error){if(epoch===this.coopConnectionEpoch){this.finishCoopRequest();this.coopMessage(error instanceof Error?error.message:'Connexion impossible.');}}
   }
 
   /* -------------------------------------------------------- partie -------- */
@@ -956,6 +978,7 @@ export class App {
           onResult: (victory: boolean) => this.coop.sendResult(victory),
         },
         remoteInput: this.remoteCoopInput,
+        remoteInputFresh: () => performance.now()-this.lastRemoteInputAt<700,
       } : {}),
       onReady: () => {
         this.show('game');

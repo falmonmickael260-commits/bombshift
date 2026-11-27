@@ -34,6 +34,8 @@ export class CoopClient {
   private listener: ((event: RoomEvent) => void) | null = null;
   private connected = false;
   private heartbeat: number | null = null;
+  private stateFrame = 0;
+  private latestState: CoopState | null = null;
   role: CoopRole | null = null;
   code = '';
   level: MapId | null = null;
@@ -71,7 +73,10 @@ export class CoopClient {
             this.code = '';
             this.level = null;
           }
-          this.listener?.(packet);
+          if(packet.type==='state'){
+            this.latestState=packet.state;
+            if(!this.stateFrame)this.stateFrame=requestAnimationFrame(()=>{this.stateFrame=0;const state=this.latestState;this.latestState=null;if(state&&this.socket===socket)this.listener?.({type:'state',state});});
+          }else this.listener?.(packet);
         } catch { /* Malformed packets are ignored. */ }
       };
       socket.onerror = () => { if (!this.connected) { window.clearTimeout(timeout); reject(new Error('Connexion au serveur impossible.')); } };
@@ -92,7 +97,7 @@ export class CoopClient {
   join(code: string, name: string): void { this.send({ type: 'join', code: code.trim().toUpperCase(), name }); }
   start(): void { this.send({ type: 'start' }); }
   sendInput(input: InputState): void { this.send({ type: 'input', input: { ...input } }); }
-  sendState(state: CoopState): void { this.send({ type: 'state', state }); }
+  sendState(state: CoopState): void { if(this.socket && this.socket.bufferedAmount<96*1024)this.send({ type: 'state', state }); }
   sendResult(victory: boolean): void { this.send({ type: 'result', result: { victory } }); }
   confirmResult(): void { this.send({ type: 'confirm-result' }); }
   get apiOrigin(): string {
@@ -100,6 +105,7 @@ export class CoopClient {
     return socketUrl ? new URL(socketUrl).origin.replace(/^ws/, 'http') : 'https://bombshift-duo-production.up.railway.app';
   }
   disconnect(): void {
+    if(this.stateFrame)cancelAnimationFrame(this.stateFrame);this.stateFrame=0;this.latestState=null;
     if (this.heartbeat !== null) window.clearInterval(this.heartbeat);
     this.heartbeat = null;
     if (this.socket) {

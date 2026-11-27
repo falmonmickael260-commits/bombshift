@@ -77,25 +77,25 @@
           <span class="bar-spacer"></span>
         </header>
         <div class="panel scroll coop-panel">
-          <label for="coop-name">Ton pseudo pour le classement duo</label>
+          <div id="coop-setup" class="coop-setup"><label for="coop-name">Ton pseudo pour le classement duo</label>
           <input id="coop-name" class="coop-field" maxlength="22" autocomplete="nickname" placeholder="TON PSEUDO" />
           <h3>Créer un salon</h3>
           <p>Choisis un niveau de la campagne et invite une personne. Ensemble, affrontez les ennemis et les boss.</p>
           <label for="coop-level">Niveau à jouer</label>
           <select id="coop-level" class="coop-field"></select>
-          <button class="btn btn--primary" data-action="coop-create">CRÉER UN SALON · 2 JOUEURS</button>
+          <button class="btn btn--primary" data-action="coop-create">CRÉER MON SALON</button>
           <h3>Rejoindre un ami</h3>
           <p>Ouvre simplement son lien d'invitation : le salon se rejoint automatiquement. Le code court n'est utile qu'en secours.</p>
           <label for="coop-code">Code d'invitation</label>
           <input id="coop-code" class="coop-field" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="CODE À 4 CARACTÈRES" />
           <button class="btn" data-action="coop-join">REJOINDRE LE SALON</button>
-          <div id="coop-room" class="coop-room" hidden>
+          </div><div id="coop-room" class="coop-room" hidden>
             <p>Code de ton salon</p>
-            <strong id="coop-room-code">—</strong>
+            <strong id="coop-room-code">—</strong><p id="coop-room-players" class="coop-room-players">1 / 2</p><button class="btn btn--primary" id="coop-invite-friend" data-action="coop-invite-friend">INVITER UN AMI REVANCHE GAMES</button>
             <label for="coop-invite-link">Lien direct — aucune saisie de code</label>
             <input id="coop-invite-link" class="coop-field" type="text" readonly aria-label="Lien direct du salon" onclick="this.select()" />
             <button class="btn btn--ghost" data-action="coop-copy">COPIER LE LIEN D'INVITATION</button>
-            <button class="btn" data-action="coop-share">PARTAGER L’INVITATION</button>
+            <button class="btn" data-action="coop-share">PARTAGER LE LIEN</button>
             <button class="btn btn--primary" id="coop-launch" data-action="coop-start" disabled>LANCER À 2</button>
           </div>
           <p id="coop-status" class="coop-status" role="status" aria-live="polite">Crée un salon ou saisis un code pour jouer à deux.</p>

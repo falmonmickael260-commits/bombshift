@@ -34,6 +34,7 @@ export class Enemy {
   private hitUntil = 0;
   private readonly speed: number;
   private mode = 'patrol';
+  private networkTarget: Vec2 | null = null;
 
   constructor(
     private readonly world: World,
@@ -70,12 +71,19 @@ export class Enemy {
   /** Réplique visuelle d'un ennemi calculé uniquement par l'hôte réseau. */
   applyNetwork(state: { x: number; y: number; hp: number; alive: boolean; asleep: boolean }): void {
     if (![state.x, state.y, state.hp].every(Number.isFinite)) return;
-    this.x = state.x; this.y = state.y; this.hp = state.hp;
+    if(!this.networkTarget||Math.hypot(this.x-state.x,this.y-state.y)>TILE*2){this.x=state.x;this.y=state.y;}
+    this.networkTarget={x:state.x,y:state.y};this.hp = state.hp;
     this.alive = state.alive; this.asleep = state.asleep;
     this.sprite.setPosition(this.x, this.y).setVisible(this.alive);
     this.shadow.setPosition(this.x, this.y + TILE * 0.28).setVisible(this.alive);
     if (this.alive && this.asleep) this.sprite.setTint(0x7a7a8c);
     else this.sprite.clearTint();
+  }
+
+  smoothNetwork(dt:number):void {
+    if(!this.networkTarget||!this.alive)return;
+    const a=1-Math.exp(-dt/45);this.x+=(this.networkTarget.x-this.x)*a;this.y+=(this.networkTarget.y-this.y)*a;
+    this.sprite.setPosition(this.x,this.y);this.shadow.setPosition(this.x,this.y+TILE*.28);
   }
 
   get currentMode(): string {

@@ -78,6 +78,7 @@ export interface GameSceneData {
   onReady?: () => void;
   coop?: { role: CoopRole; seed: number; sendInput: (input: InputState) => void; sendState: (state: CoopState) => void; onResult: (victory: boolean) => void };
   remoteInput?: InputState;
+  remoteInputFresh?: () => boolean;
   mapId: MapId;
   /** Affiche les conseils contextuels (premiere decouverte de la carte). */
   showHints?: boolean;
@@ -116,6 +117,8 @@ export class GameScene extends Phaser.Scene {
   private partnerLastCell: Vec2 = { x: -1, y: -1 };
   private lastCoopStateAt = 0;
   private lastCoopInputAt = 0;
+  private remoteHostTarget: Vec2 | null = null;
+  private lastSnapshotTime = -1;
   private bombs!: BombManager;
   private powerups!: PowerUpManager;
   private projectiles!: ProjectileManager;
@@ -162,6 +165,7 @@ export class GameScene extends Phaser.Scene {
     this.partnerLastCell = { x: -1, y: -1 };
     this.lastCoopStateAt = 0;
     this.lastCoopInputAt = 0;
+    this.remoteHostTarget=null;this.lastSnapshotTime=-1;
     for (const k of Object.keys(this.damageCauses)) delete this.damageCauses[k];
   }
 
@@ -312,10 +316,13 @@ export class GameScene extends Phaser.Scene {
     if (this.destroyed || this.cfg.coop?.role !== 'guest' || !this.partner ||
       !state || !Array.isArray(state.players) || !Number.isFinite(state.timeMs)) return;
     // L'hôte est la source de vérité : seul l'invité applique ce snapshot.
+    if(state.timeMs<=this.lastSnapshotTime)return;
+    this.lastSnapshotTime=state.timeMs;
     this.elapsed = Math.max(this.elapsed, state.timeMs);
     for (const [p, source] of [[this.player, state.players?.[0]], [this.partner, state.players?.[1]]] as const) {
       if (!source || !Number.isFinite(source.x) || !Number.isFinite(source.y)) continue;
-      const threshold = p === this.player ? 0 : TILE * 0.4;
+      if(p===this.player){this.remoteHostTarget={x:source.x,y:source.y};}
+      const threshold = p === this.player ? TILE*2 : TILE * 0.65;
       if (Math.hypot(p.body.x - source.x, p.body.y - source.y) > threshold) {
         p.body.x = source.x; p.body.y = source.y;
         p.body.vx = 0; p.body.vy = 0;
@@ -369,7 +376,7 @@ export class GameScene extends Phaser.Scene {
         });
       if (changed) this.objectives.restoreState(state.propsDone, state.objectives, state.bossDead);
     }
-    this.emitHud(true);
+    this.emitHud(false);
   }
 
   finishCoop(victory: boolean): void {
@@ -584,7 +591,9 @@ export class GameScene extends Phaser.Scene {
       input.bombPressed = false;
       input.abilityPressed = false;
       input.ability2Pressed = false;
+      if(this.remoteHostTarget){const a=1-Math.exp(-dt/45);this.player.body.x+=(this.remoteHostTarget.x-this.player.body.x)*a;this.player.body.y+=(this.remoteHostTarget.y-this.player.body.y)*a;}
       this.player.idleUpdate();
+      for(const enemy of this.enemies)enemy.smoothNetwork(dt);
       this.followPlayer(dt);
       this.emitHud(false);
       return;
@@ -594,6 +603,7 @@ export class GameScene extends Phaser.Scene {
 
     const input = this.cfg.input;
     const remoteInput = this.cfg.remoteInput;
+    if(remoteInput&&this.cfg.remoteInputFresh&&!this.cfg.remoteInputFresh())Object.assign(remoteInput,{moveX:0,moveY:0,magnitude:0,bombPressed:false,abilityPressed:false,ability2Pressed:false});
      const primaryInput = this.cfg.coop?.role === 'guest' ? remoteInput ?? input : input;
     const secondaryInput = this.cfg.coop?.role === 'guest' ? input : remoteInput;
     const intents = this.player.update(dt, primaryInput);
@@ -689,7 +699,7 @@ export class GameScene extends Phaser.Scene {
     this.followPlayer(dt);
     this.emitHud(false);
     this.checkEnd();
-    if (this.cfg.coop?.role === 'host' && this.elapsed - this.lastCoopStateAt >= 120) {
+    if (this.cfg.coop?.role === 'host' && this.elapsed - this.lastCoopStateAt >= 67) {
       this.lastCoopStateAt = this.elapsed;
       this.cfg.coop.sendState(this.coopState());
     }
