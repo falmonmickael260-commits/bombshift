@@ -887,3 +887,20 @@ input[type="range"]::-moz-range-thumb {
 @media (max-height: 450px) { .joystick { --stick-scale: .82; } }
 
 .coop-setup{display:flex;flex-direction:column;gap:12px}.coop-room-players{font-weight:bold;color:#8ef0c8!important}.coop-room #coop-room-code{font-size:clamp(34px,8vw,52px);letter-spacing:.18em;color:#ffe5a0}.coop-room #coop-invite-friend{background:linear-gradient(135deg,#7453c8,#216fb1);border-color:#a6ddff;color:white}.coop-panel{min-height:0;overscroll-behavior:contain}.coop-setup .btn:disabled{opacity:.5}
+
+.skin-menu{background:linear-gradient(115deg,#5331a4,#ab397e);border-color:#f6b6ff;color:white;box-shadow:0 0 20px #a855f744}
+#screen-shop{background:radial-gradient(ellipse at top,#35265b,#12101f 65%);min-height:0}
+.skin-shop-body{flex:1;min-height:0;overflow-y:auto;touch-action:pan-y;overscroll-behavior:contain;padding:8px;max-width:920px;width:100%;margin:auto}
+.skin-shop-top{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#ffe299}
+.skin-status{font-size:13px;color:#d9d4e5;min-height:20px}
+.skin-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:12px 0}
+.skin-button{font:inherit;font-size:13px;min-height:42px;border-radius:10px;border:1px solid #a48acb77;background:#34254d;color:#fff;padding:7px;cursor:pointer}
+.skin-button.selected{background:#8850c8;border-color:#e4c4ff}
+.skin-button:disabled{opacity:.5;cursor:default}
+.skin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:10px}
+.skin-card{min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--rarity,#6d6885);border-radius:16px;background:linear-gradient(155deg,#30233e,#151324);box-shadow:inset 0 0 20px color-mix(in srgb,var(--rarity,#888) 12%,transparent)}
+.skin-art{aspect-ratio:1;display:grid;place-items:center;background:radial-gradient(circle,color-mix(in srgb,var(--rarity) 32%,transparent),transparent 70%)}
+.skin-art canvas{width:100%;max-width:160px;height:auto;object-fit:contain}
+.skin-card h3{margin:0;font-size:15px;flex:1}.skin-rarity{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--rarity)}
+.skin-chest{padding:18px;border:1px solid #c9a15c;border-radius:20px;text-align:center;background:radial-gradient(ellipse at top,#50326a,#1a1428);line-height:1.55}.skin-chest-icon{font-size:72px}.skin-chest .skin-button{width:100%}
+@media(min-width:650px){.skin-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}

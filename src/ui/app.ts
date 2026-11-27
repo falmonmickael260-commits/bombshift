@@ -1,3 +1,4 @@
+import { CosmeticShop } from './cosmeticShop';
 import { CoopClient, type CoopState } from '../multiplayer/client';
 import { AdDemoPreferences, demoStorage, renderAdDemo } from './adDemo';
 import { mountSpeedLeaderboard } from './leaderboard';
@@ -103,6 +104,7 @@ function mergeProgress(remote: unknown, local: Readonly<SaveData>): SaveData {
 }
 
 type ScreenName =
+  | 'shop'
   | 'loading'
   | 'title'
   | 'maps'
@@ -117,6 +119,7 @@ type ScreenName =
   | 'game';
 
 const SCREEN_IDS: Record<Exclude<ScreenName, 'game'>, string> = {
+  shop: 'screen-shop',
   loading: 'screen-loading',
   title: 'screen-title',
   maps: 'screen-maps',
@@ -136,6 +139,9 @@ const SCREEN_IDS: Record<Exclude<ScreenName, 'game'>, string> = {
  */
 export class App {
   private readonly save = new SaveManager();
+  private shop: CosmeticShop | null = null;
+  private shopRequestId=0;
+  private shopPending=new Map<number,{resolve:(value:any)=>void;reject:(error:Error)=>void;timer:number}>();
   private readonly adDemo = new AdDemoPreferences(demoStorage());
   private disposeAd: (() => void) | null = null;
   private disposeLeaderboard: (() => void) | null = null;
@@ -302,6 +308,7 @@ export class App {
         }
         this.accountSyncAuthenticated = data.authenticated === true;
         this.accountSyncLaunch = data.launch;
+        if(this.accountSyncAuthenticated){this.shop??=new CosmeticShop(document.getElementById('skin-shop-body')!,this.requestCosmetics.bind(this));void this.shop.refresh();}
         if(this.coop.code) this.updateCoopRoom(this.coop.code,this.coopPeerReady);
         if (this.accountSyncRetry !== null) window.clearInterval(this.accountSyncRetry);
         this.accountSyncRetry = null;
@@ -319,6 +326,7 @@ export class App {
         }
         if(data.entitlementUnavailable === true && this.accountSyncRetry === null) this.accountSyncRetry = window.setTimeout(sendReady,5000);
       } else if (data.launch !== this.accountSyncLaunch) return;
+      else if(data.type==='rg:cosmetics-result'){const pending=this.shopPending.get(data.requestId);if(!pending)return;clearTimeout(pending.timer);this.shopPending.delete(data.requestId);if(data.error||!data.result)pending.reject(new Error(data.error||'Boutique indisponible.'));else pending.resolve(data.result);}
       else if (data.type === 'rg:purchase-error') {
         this.purchasePending = false;
         this.refreshPurchaseStatus(typeof data.error === 'string' ? data.error : 'Paiement indisponible.');
@@ -537,7 +545,13 @@ export class App {
 
   /* ----------------------------------------------------------- ecrans ---- */
 
+  private requestCosmetics(action:string,item?:string,price?:number,requestKey?:string):Promise<any>{
+    if(!this.accountSyncOrigin||!this.accountSyncLaunch||!this.accountSyncAuthenticated)return Promise.reject(new Error('Connecte-toi à Revanche Games pour acheter.'));
+    return new Promise((resolve,reject)=>{const requestId=++this.shopRequestId;const timer=window.setTimeout(()=>{this.shopPending.delete(requestId);reject(new Error('Réponse indisponible. Actualise ta collection avant de réessayer.'));},15000);this.shopPending.set(requestId,{resolve,reject,timer});window.parent.postMessage({type:'rg:cosmetics',v:1,game:'bombshift',launch:this.accountSyncLaunch,requestId,action,item,price,requestKey},this.accountSyncOrigin!);});
+  }
   private show(name: ScreenName): void {
+    if(name!=='shop')this.shop?.close();
+    else{this.shop??=new CosmeticShop(document.getElementById('skin-shop-body')!,this.requestCosmetics.bind(this));this.shop.open();}
     this.disposeLeaderboard?.();
     this.disposeLeaderboard = null;
     if (this.screen === 'ad' && name !== 'ad') { this.disposeAd?.(); this.disposeAd = null; }
@@ -658,6 +672,9 @@ export class App {
         case 'ad-demo-stop':
           this.adDemo.set({ enabled: false, removed: false });
           this.show('title');
+          break;
+        case 'shop':
+          this.show('shop');
           break;
         case 'play':
           this.show('maps');
@@ -962,6 +979,8 @@ export class App {
     this.controls.setAbilities(this.save.get().abilities.shift, this.save.get().abilities.slow);
 
     const data: GameSceneData = {
+      heroSkin:this.shop?.hero,
+      bombSkin:this.shop?.bomb,
       mapId,
       snapshot,
       ...(this.coopSeed !== null && this.coop.role ? {
