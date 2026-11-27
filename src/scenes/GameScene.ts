@@ -73,6 +73,8 @@ export interface RunResult {
 }
 
 export interface GameSceneData {
+  heroSkin?: string;
+  bombSkin?: string;
   onReady?: () => void;
   coop?: { role: CoopRole; seed: number; sendInput: (input: InputState) => void; sendState: (state: CoopState) => void; onResult: (victory: boolean) => void };
   remoteInput?: InputState;
@@ -186,11 +188,11 @@ export class GameScene extends Phaser.Scene {
     this.drawPortals();
     this.scenery = new WorldScenery(this, this.grid, this.def, settings);
 
-    this.player = new Player(this.world, this.parsed.playerSpawn, profile.lives);
+    this.player = new Player(this.world, this.parsed.playerSpawn, profile.lives, this.cfg.coop?.role === 'guest' ? undefined : this.cfg.heroSkin);
     if (this.cfg.coop) {
       const spawn = this.freeCoopSpawn(this.parsed.playerSpawn);
-      this.partner = new Player(this.world, spawn, profile.lives);
-      this.partner.setTint(0x6ff7ff);
+      this.partner = new Player(this.world, spawn, profile.lives, this.cfg.coop.role === 'guest' ? this.cfg.heroSkin : undefined);
+      if (this.cfg.coop.role !== 'guest' || !this.cfg.heroSkin || this.cfg.heroSkin === 'hero-default') this.partner.setTint(0x6ff7ff);
       this.partnerLastCell = { ...spawn };
     }
     this.bombs = new BombManager(this.world, {
@@ -201,7 +203,7 @@ export class GameScene extends Phaser.Scene {
         this.powerups.onBlastCells(cells);
         void center;
       },
-    });
+    }, this.cfg.bombSkin, this.cfg.coop?.role === 'guest' ? 'partner' : 'player');
     this.powerups = new PowerUpManager(this.world, this.def.theme);
     this.projectiles = new ProjectileManager(this.world);
 

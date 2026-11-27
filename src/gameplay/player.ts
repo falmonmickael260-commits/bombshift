@@ -1,3 +1,4 @@
+import { heroTexture, heroAnim } from '../core/cosmetics';
 import type Phaser from 'phaser';
 import { BOMB, MOVE, PLAYER, TEX, TILE } from '../core/constants';
 import { TileKind, type Dir, type InputState, type Vec2 } from '../core/types';
@@ -46,6 +47,7 @@ export class Player {
     private readonly world: World,
     spawn: Vec2,
     lives: number = PLAYER.startLives,
+    private readonly skin = 'hero-default',
   ) {
     const p = centerOf(spawn);
     this.body = { x: p.x, y: p.y, vx: 0, vy: 0, radius: TILE * MOVE.radius };
@@ -58,7 +60,7 @@ export class Player {
     this.shadow = world.scene.add.image(p.x, p.y + TILE * 0.3, TEX.shadow);
     this.shadow.setDepth(14).setAlpha(0.55).setScale(0.78);
 
-    this.sprite = world.scene.add.sprite(p.x, p.y, TEX.player, 0);
+    this.sprite = world.scene.add.sprite(p.x, p.y, heroTexture(this.skin), 0);
     this.sprite.setDepth(30).setOrigin(0.5, 0.62).setScale(1.08);
 
     this.shield = world.scene.add.image(p.x, p.y, TEX.shield);
@@ -166,7 +168,7 @@ export class Player {
   private updateAnim(): void {
     if (!this.sprite.scene) return;
     const key =
-      this.dir === 'up' ? 'player-up' : this.dir === 'down' ? 'player-down' : 'player-side';
+      heroAnim(this.skin, this.dir === 'up' ? 'up' : this.dir === 'down' ? 'down' : 'side');
     if (this.dir === 'left') this.sprite.setFlipX(true);
     else if (this.dir === 'right') this.sprite.setFlipX(false);
 
@@ -221,7 +223,7 @@ export class Player {
     }
     this.world.fx.flash(0xff3b3b, 160);
     this.world.fx.shake(0.009, 240);
-    this.sprite.play('player-hurt', true);
+    this.sprite.play(heroAnim(this.skin, 'hurt'), true);
     this.world.scene.time.delayedCall(260, () => this.updateAnim());
 
     // Les ameliorations temporaires de la tentative sont partiellement perdues :
@@ -280,7 +282,7 @@ export class Player {
 
   playVictory(): void {
     this.sprite.anims.stop();
-    this.sprite.play('player-victory', true);
+    this.sprite.play(heroAnim(this.skin, 'victory'), true);
     this.world.scene.tweens.add({
       targets: this.sprite,
       y: this.body.y - 10,
@@ -293,7 +295,7 @@ export class Player {
 
   playDefeat(): void {
     this.sprite.anims.stop();
-    this.sprite.play('player-defeat', true);
+    this.sprite.play(heroAnim(this.skin, 'defeat'), true);
     this.shield.setVisible(false);
   }
 

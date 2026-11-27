@@ -1,3 +1,4 @@
+import { buildCosmeticTextures, registerCosmeticAnims } from '../core/cosmetics';
 import { buildBiomeTextures } from '../core/biomeArt';
 import Phaser from 'phaser';
 import { registerAnims } from '../core/anims';
@@ -26,6 +27,8 @@ export class BootScene extends Phaser.Scene {
     buildParticleTextures(this);
     buildCharacterTextures(this);
     registerAnims(this, THEMES);
+    buildCosmeticTextures(this);
+    registerCosmeticAnims(this);
     this.game.events.emit(BootScene.READY_EVENT);
   }
 }

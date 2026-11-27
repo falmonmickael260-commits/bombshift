@@ -1,3 +1,4 @@
+import { bombTexture, bombAnim } from '../core/cosmetics';
 import { displaceByFlow, flowAt } from './flowFields';
 import Phaser from 'phaser';
 import { BOMB, TEX, TILE } from '../core/constants';
@@ -68,6 +69,8 @@ export class BombManager {
   constructor(
     private readonly world: World,
     private readonly hooks: BombHooks,
+    private readonly skin = 'bomb-default',
+    private readonly localOwner: 'player'|'partner' = 'player',
   ) {}
 
   get playerBombCount(): number {
@@ -123,9 +126,10 @@ export class BombManager {
 
     const p = centerOf(cell);
     const fuseMs = type === 'slow' ? BOMB.slowFuseMs : BOMB.fuseMs;
-    const sprite = this.world.scene.add.sprite(p.x, p.y, `${TEX.bomb}-${type}`, 0);
+    const appearance = owner === this.localOwner ? this.skin : 'bomb-default';
+    const sprite = this.world.scene.add.sprite(p.x, p.y, bombTexture(appearance, type), 0);
     sprite.setDepth(25).setOrigin(0.5, 0.58);
-    sprite.play(`bomb-${type}`, true);
+    sprite.play(bombAnim(appearance, type), true);
 
     const bomb: Bomb = {
       id: this.nextId++,
